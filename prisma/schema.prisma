@@ -1,0 +1,326 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  OWNER // Role for Owner of company
+  ADMIN // Role for Admin Unit
+  USER // Role for regular users
+}
+
+enum Status {
+  New
+  InProgress
+  Pause
+  Complete
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  role         Role     @default(USER) // Role of the user
+  jobeTitle    String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  ownedCompany Company? @relation("OwnerCompany")
+  admin        Unit?    @relation(fields: [adminID], references: [id])
+  adminID      String?  @unique
+  Unit         Unit?    @relation("UnitMember", fields: [unitId], references: [id], onDelete: Cascade) // Member in unit
+  unitId       String?
+  Company      Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId    String?
+
+  Notification Notification[]
+  Team         TeamMember[]
+  Task         Task[]
+
+  @@index([unitId])
+  @@index([companyId])
+}
+
+model Company {
+  id             String   @id @default(uuid())
+  name           String
+  companyEmail   String   @unique
+  companyAddress String
+  companyPhone   String
+  companyOwner   User     @relation("OwnerCompany", fields: [ownerId], references: [id])
+  ownerId        String   @unique
+  logo           String
+  state          String
+  formJur        String
+  registre       String
+  nif            String
+  secteur        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subscription Subscription?
+  units        Unit[]
+  invitations  Invitation[]
+  users        User[]
+  Notification Notification[]
+
+  @@index([ownerId])
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  startAt   DateTime
+  endAt     DateTime
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  active    Boolean
+  Company   Company  @relation(fields: [companyId], references: [id])
+  companyId String   @unique
+  Plan      Plan     @relation(fields: [planId], references: [id])
+  planId    String
+
+  @@index([companyId])
+}
+
+model Plan {
+  id                 String         @id @default(uuid())
+  name               String
+  monthlyCost        Float
+  maxUnits           Int?
+  maxProjects        Int?
+  maxTasksPerProject Int?
+  userLimit          Int?
+  subscriptions      Subscription[]
+}
+
+model Invitation {
+  id        String           @id @default(uuid())
+  email     String           @unique
+  Unit      Unit             @relation(fields: [unitId], references: [id])
+  unitId    String
+  status    InvitationStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  Company   Company          @relation(fields: [companyId], references: [id])
+  companyId String
+  role      Role             @default(USER)
+  jobeTilte String?
+
+  @@index([companyId])
+  @@index([unitId])
+}
+
+model Unit {
+  id           String         @id @default(uuid())
+  name         String
+  address      String
+  phone        String
+  email        String         @unique
+  Company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId    String
+  admin        User?
+  adminId      String?        @unique
+  members      User[]         @relation("UnitMember") // Members in the unit
+  invitations  Invitation[]
+  projects     Project[]
+  clients      Client[]
+  Notification Notification[]
+  Task         Task[]
+  Lane         Lane[]
+  Tag          Tag[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([companyId])
+  @@index([adminId])
+}
+
+model Notification {
+  id           String  @id @default(uuid())
+  notification String
+  companyId    String
+  unitId       String?
+  userId       String
+
+  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Unit    Unit?   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([unitId])
+  @@index([userId])
+}
+
+model Project {
+  id         String    @id @default(uuid())
+  name       String
+  code       String
+  type       String
+  montantHT  Float
+  montantTTC Float
+  ods        DateTime?
+  delai      String
+  status     Status    @default(New)
+  signe      Boolean   @default(false)
+  Client     Client    @relation(fields: [clientId], references: [id])
+  clientId   String
+  Unit       Unit      @relation(fields: [unitId], references: [id])
+  unitId     String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  phases     Phase[]
+  team       Team?
+
+  @@index([unitId])
+}
+
+model Team {
+  id        String       @id @default(uuid())
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String       @unique // Added unique constraint
+  members   TeamMember[] // Added members relation
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([projectId])
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  role      String // Role of the user in the team
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, userId]) // Prevent duplicate team members
+  @@index([teamId])
+}
+
+model Phase {
+  id        String    @id @default(uuid())
+  name      String
+  code      String
+  montantHT Float
+  start     DateTime?
+  end       DateTime?
+  status    Status    @default(New)
+  obs       String?
+  Project   Project   @relation(fields: [projectId], references: [id])
+  projectId String
+  // New relation to Product
+  Product   Product?  @relation(fields: [productId], references: [id]) // One Phase has one Product
+  productId String?   @unique // Ensure that each Phase can only have one Product
+
+  @@index([projectId])
+}
+
+model Product {
+  id          String       @id @default(uuid())
+  date        DateTime
+  taux        Float
+  montantProd Float
+  Phase       Phase?       @relation // One Product can have one Phase
+  phaseId     String?      @unique
+  Productions Production[] // One Product can have many Productions
+
+  @@index([phaseId])
+}
+
+model Production {
+  id        String   @id @default(uuid())
+  date      DateTime
+  taux      Float
+  mntProd   Float
+  Product   Product  @relation(fields: [productId], references: [id]) // Link to Product
+  productId String // Foreign key for Product
+
+  @@index([productId])
+}
+
+model Client {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  wilaya   String?
+  phone    String?
+  email    String?   @unique
+  projects Project[]
+  unit     Unit      @relation(fields: [unitId], references: [id])
+  unitId   String
+
+  @@index([unitId])
+}
+
+model Task {
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  startDate      DateTime? @default(now())
+  dueDate        DateTime?
+  endDate        DateTime?
+  complete       Boolean   @default(false)
+  assignedUserId String?
+  Assigned       User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull) // Relation for multiple team members assigned to the task
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Lane           Lane?     @relation(fields: [laneId], references: [id])
+  laneId         String?
+  order          Int       @default(0)
+  Tags           Tag[]
+  Unit           Unit      @relation(fields: [unitId], references: [id])
+  unitId         String
+
+  @@index([laneId])
+  @@index([unitId])
+  @@index([assignedUserId])
+}
+
+model Lane {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Unit      Unit     @relation(fields: [unitId], references: [id])
+  unitId    String
+  Tasks     Task[]
+  order     Int      @default(0)
+
+  @@index([unitId])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Unit   Unit   @relation(fields: [unitId], references: [id])
+  unitId String
+  Task   Task[]
+
+  @@index([unitId])
+}
