@@ -57,7 +57,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import CustomModal from "@/components/global/custom-model";
 import ProjectForm from "@/components/forms/project-form";
-import { formatAmount } from "@/lib/format-utils";
+import { formatAmount } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 

@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { upsertPhase } from "@/lib/queries";
-import { formatAmount, parseFormattedNumber } from "@/lib/format-utils";
+import { formatAmount, parseFormattedNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Form,

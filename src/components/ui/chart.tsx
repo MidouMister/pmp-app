@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
-import { formatAmount } from "@/lib/format-utils";
+import { formatAmount } from "@/lib/utils";
 
 import { cn } from "@/lib/utils";
 

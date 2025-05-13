@@ -802,7 +802,15 @@ export const getProjectDetails = async (projectId: string) => {
     },
     include: {
       Client: true,
-      phases: true,
+      phases: {
+        include: {
+          Product: {
+            include: {
+              Productions: true,
+            },
+          },
+        },
+      },
       team: {
         include: {
           members: {

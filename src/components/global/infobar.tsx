@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 import { Bell } from "lucide-react";
-import { formatDate } from "@/lib/format-utils";
+import { formatDate } from "@/lib/utils";
 import { Role } from "@prisma/client";
 import { Card } from "../ui/card";
 import { Switch } from "../ui/switch";

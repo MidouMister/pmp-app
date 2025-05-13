@@ -3,6 +3,8 @@ import {
   Notification,
   Phase,
   Prisma,
+  Product,
+  Production,
   Project,
   Role,
   Team,
@@ -68,7 +70,11 @@ export type UsersWithUnit = Prisma.PromiseReturnType<typeof getUsersWithUnit>;
 
 export type ProjectWithDetails = Project & {
   Client: Client;
-  phases: Phase[];
+  phases: (Phase & {
+    Product?: Product & {
+      Productions?: Production[];
+    };
+  })[];
   team?:
     | (Team & {
         members: (TeamMember & {

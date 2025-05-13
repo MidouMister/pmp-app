@@ -56,7 +56,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { formatAmount } from "@/lib/format-utils";
+import { formatAmount } from "@/lib/utils";
 import Link from "next/link";
 interface ProjectCardProps {
   project: Project & { Client: { name: string } };
@@ -330,12 +330,12 @@ const ProjectCard = ({ project, unitId }: ProjectCardProps) => {
           )}
         >
           {project.signe ? (
-            <div className="flex items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 rounded-full text-xs font-medium border-[1px] border-emerald-400">
+            <div className="flex items-center text-emerald-600  px-3 py-1.5 rounded-full text-xs font-medium border-[1px] border-emerald-400">
               <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
               Signé
             </div>
           ) : (
-            <div className="flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full text-xs font-medium border-[1px] border-amber-400">
+            <div className="flex items-center text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-full text-xs font-medium border-[1px] border-amber-400">
               <XCircle className="h-3.5 w-3.5 mr-1.5" />
               Non signé
             </div>

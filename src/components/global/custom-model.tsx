@@ -31,12 +31,6 @@ const CustomModal = ({ children, defaultOpen, subheading, title }: Props) => {
           {children}
         </DialogHeader>
       </DialogContent>
-      <style jsx>{`
-        /* Masquer le bouton de fermeture par défaut de Radix */
-        [data-radix-dialog-close] {
-          display: none !important;
-        }
-      `}</style>
     </Dialog>
   );
 };

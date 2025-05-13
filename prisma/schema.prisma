@@ -245,7 +245,7 @@ model Product {
   montantProd Float
   Phase       Phase?       @relation // One Product can have one Phase
   phaseId     String?      @unique
-  Productions Production[] // One Product can have many Productions
+  Productions Production[] @relation("ProductProductions") // One Product can have many Productions
 
   @@index([phaseId])
 }
@@ -254,8 +254,8 @@ model Production {
   id        String   @id @default(uuid())
   date      DateTime
   taux      Float
-  mntProd   Float
-  Product   Product  @relation(fields: [productId], references: [id]) // Link to Product
+  montant   Float // montant produit calculé
+  Product   Product  @relation("ProductProductions", fields: [productId], references: [id], onDelete: Cascade) // Link to Product
   productId String // Foreign key for Product
 
   @@index([productId])

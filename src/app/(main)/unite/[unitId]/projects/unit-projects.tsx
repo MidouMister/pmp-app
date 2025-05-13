@@ -9,7 +9,7 @@ import {
   DollarSign,
   Calculator,
 } from "lucide-react";
-import { formatAmount } from "@/lib/format-utils";
+import { formatAmount } from "@/lib/utils";
 import { columns } from "./columns";
 import DataTable from "./data-table";
 
