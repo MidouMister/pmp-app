@@ -12,6 +12,7 @@ import {
   Unit,
   User,
 } from "@prisma/client";
+import { updateProductTaux, validateProductionTaux } from "./utils";
 
 const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
@@ -1128,5 +1129,261 @@ export const getUnitUsers = async (unitId: string) => {
   } catch (error) {
     console.log(error);
     return [];
+  }
+};
+
+// Récupérer une phase par ID
+export const getPhaseById = async (phaseId: string) => {
+  try {
+    if (!phaseId) {
+      throw new Error("ID de la phase requis");
+    }
+
+    const phase = await db.phase.findUnique({
+      where: { id: phaseId },
+    });
+
+    if (!phase) {
+      throw new Error("Phase non trouvée");
+    }
+
+    return phase;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la phase:", error);
+    throw error;
+  }
+};
+
+// Récupérer un produit par ID ou par phaseId
+export const getProductById = async (id?: string, phaseId?: string) => {
+  try {
+    if (!id && !phaseId) {
+      throw new Error("ID du produit ou ID de la phase requis");
+    }
+
+    let product;
+    if (id) {
+      product = await db.product.findUnique({
+        where: { id },
+        include: {
+          Productions: true,
+          Phase: true,
+        },
+      });
+    } else if (phaseId) {
+      product = await db.product.findUnique({
+        where: { phaseId },
+        include: {
+          Productions: true,
+          Phase: true,
+        },
+      });
+    }
+
+    if (!product) {
+      throw new Error("Produit non trouvé");
+    }
+
+    return product;
+  } catch (error) {
+    console.error("Erreur lors de la récupération du produit:", error);
+    throw error;
+  }
+};
+
+// Créer un nouveau produit pour une phase
+export const createProduct = async (phaseId: string) => {
+  try {
+    if (!phaseId) {
+      throw new Error("ID de la phase requis");
+    }
+
+    // Vérifier si la phase existe
+    const phase = await db.phase.findUnique({
+      where: { id: phaseId },
+    });
+
+    if (!phase) {
+      throw new Error("Phase non trouvée");
+    }
+
+    // Vérifier si un produit existe déjà pour cette phase
+    const existingProduct = await db.product.findUnique({
+      where: { phaseId },
+    });
+
+    if (existingProduct) {
+      throw new Error("Un produit existe déjà pour cette phase");
+    }
+
+    // Créer le produit avec taux initial à 0%
+    const product = await db.product.create({
+      data: {
+        phaseId,
+        date: new Date(),
+        taux: 0,
+        montantProd: 0,
+      },
+    });
+
+    return product;
+  } catch (error) {
+    console.error("Erreur lors de la création du produit:", error);
+    throw error;
+  }
+};
+
+// Supprimer un produit
+export const deleteProduct = async (id: string) => {
+  try {
+    if (!id) {
+      throw new Error("ID du produit requis");
+    }
+
+    // Vérifier si le produit existe
+    const product = await db.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new Error("Produit non trouvé");
+    }
+
+    // Supprimer le produit (les productions seront supprimées en cascade)
+    await db.product.delete({
+      where: { id },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la suppression du produit:", error);
+    throw error;
+  }
+};
+
+// Récupérer toutes les productions d'un produit
+export const getProductionsByProductId = async (productId: string) => {
+  try {
+    if (!productId) {
+      throw new Error("ID du produit requis");
+    }
+
+    const productions = await db.production.findMany({
+      where: { productId },
+      orderBy: { date: "desc" },
+    });
+
+    return productions;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des productions:", error);
+    throw error;
+  }
+};
+
+// Créer une nouvelle production
+export const createProduction = async (
+  productId: string,
+  date: Date,
+  taux: number
+) => {
+  try {
+    if (!productId || !date || taux === undefined) {
+      throw new Error("Tous les champs sont requis");
+    }
+
+    // Valider le taux de production
+    const validation = await validateProductionTaux(productId, taux);
+    if (!validation.valid) {
+      throw new Error(validation.message);
+    }
+
+    // Créer la production
+    const production = await db.production.create({
+      data: {
+        productId,
+        date: new Date(date),
+        taux,
+        mntProd: validation.montantProduit || 0,
+      },
+    });
+
+    // Mettre à jour le taux total du produit
+    await updateProductTaux(productId);
+
+    return production;
+  } catch (error) {
+    console.error("Erreur lors de la création de la production:", error);
+    throw error;
+  }
+};
+
+// Mettre à jour une production
+export const updateProduction = async (
+  id: string,
+  productId: string,
+  date: Date,
+  taux: number
+) => {
+  try {
+    if (!id || !productId || !date || taux === undefined) {
+      throw new Error("Tous les champs sont requis");
+    }
+
+    // Valider le taux de production
+    const validation = await validateProductionTaux(productId, taux, id);
+    if (!validation.valid) {
+      throw new Error(validation.message);
+    }
+
+    // Mettre à jour la production
+    const production = await db.production.update({
+      where: { id },
+      data: {
+        date: new Date(date),
+        taux,
+        mntProd: validation.montantProduit || 0,
+      },
+    });
+
+    // Mettre à jour le taux total du produit
+    await updateProductTaux(productId);
+
+    return production;
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la production:", error);
+    throw error;
+  }
+};
+
+// Supprimer une production
+export const deleteProduction = async (id: string) => {
+  try {
+    if (!id) {
+      throw new Error("ID de la production requis");
+    }
+
+    // Récupérer la production pour connaître son productId avant suppression
+    const production = await db.production.findUnique({
+      where: { id },
+    });
+
+    if (!production) {
+      throw new Error("Production non trouvée");
+    }
+
+    const productId = production.productId;
+
+    // Supprimer la production
+    await db.production.delete({
+      where: { id },
+    });
+
+    // Mettre à jour le taux total du produit
+    await updateProductTaux(productId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la production:", error);
+    throw error;
   }
 };
