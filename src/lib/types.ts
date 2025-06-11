@@ -83,3 +83,28 @@ export type ProjectWithDetails = Project & {
       })
     | null;
 };
+
+// Interface pour les productions d'unité avec détails
+export interface ProductionWithDetails {
+  id: string;
+  date: Date;
+  taux: number;
+  mntProd: number;
+  productId: string;
+  // Relations
+  Product: {
+    id: string;
+    Phase: {
+      id: string;
+      name: string;
+      code: string;
+      montantHT: number;
+      projectId: string;
+      Project: {
+        id: string;
+        code: string;
+        name: string;
+      };
+    };
+  };
+}

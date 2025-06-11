@@ -4,6 +4,7 @@ import Unauthorized from "@/components/unauthorized";
 import Loading from "@/components/global/loading";
 import { Suspense } from "react";
 import ProjectDashboard from "./project-dashboard";
+import { ProjectWithDetails } from "@/lib/types";
 
 type Params = Promise<{ unitId: string; projectId: string }>;
 
@@ -44,7 +45,10 @@ const ProjectPage = async ({ params }: { params: Params }) => {
         </div>
       }
     >
-      <ProjectDashboard project={projectDetails} unitId={unitId} />
+      <ProjectDashboard
+        project={projectDetails as ProjectWithDetails}
+        unitId={unitId}
+      />
     </Suspense>
   );
 };

@@ -681,6 +681,30 @@ export const getUnitProjects = async (unitId: string) => {
   }
 };
 
+// Récupérer les projets d'une unité avec leurs phases pour le filtre du DataTable
+export const getProjectsByUnitId = async (unitId: string) => {
+  try {
+    const projects = await db.project.findMany({
+      where: {
+        unitId,
+      },
+      include: {
+        phases: true,
+      },
+      orderBy: {
+        code: "asc",
+      },
+    });
+    return projects;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des projets de l'unité:",
+      error
+    );
+    return [];
+  }
+};
+
 // Récupérer un projet par son ID
 export const getProjectById = async (projectId: string) => {
   try {
@@ -1171,13 +1195,21 @@ export const getProductById = async (id?: string, phaseId?: string) => {
         },
       });
     } else if (phaseId) {
-      product = await db.product.findUnique({
-        where: { phaseId },
+      // Récupérer d'abord la phase pour obtenir le produit associé
+      const phase = await db.phase.findUnique({
+        where: { id: phaseId },
         include: {
-          Productions: true,
-          Phase: true,
+          Product: {
+            include: {
+              Productions: true,
+            },
+          },
         },
       });
+
+      if (phase && phase.Product) {
+        product = phase.Product;
+      }
     }
 
     if (!product) {
@@ -1201,6 +1233,9 @@ export const createProduct = async (phaseId: string) => {
     // Vérifier si la phase existe
     const phase = await db.phase.findUnique({
       where: { id: phaseId },
+      include: {
+        Product: true,
+      },
     });
 
     if (!phase) {
@@ -1208,11 +1243,7 @@ export const createProduct = async (phaseId: string) => {
     }
 
     // Vérifier si un produit existe déjà pour cette phase
-    const existingProduct = await db.product.findUnique({
-      where: { phaseId },
-    });
-
-    if (existingProduct) {
+    if (phase.Product) {
       throw new Error("Un produit existe déjà pour cette phase");
     }
 
@@ -1351,6 +1382,64 @@ export const updateProduction = async (
     return production;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de la production:", error);
+    throw error;
+  }
+};
+
+// Récupérer toutes les productions d'une unité avec détails
+export const getUnitProductionsWithDetails = async (unitId: string) => {
+  try {
+    if (!unitId) {
+      throw new Error("ID de l'unité requis");
+    }
+
+    // Récupérer les projets de l'unité avec leurs phases, produits et productions
+    const projects = await db.project.findMany({
+      where: { unitId },
+      include: {
+        phases: {
+          include: {
+            Product: {
+              include: {
+                Productions: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Transformer les données pour obtenir une liste plate de productions avec détails
+    const productions = projects.flatMap((project) =>
+      project.phases.flatMap(
+        (phase) =>
+          phase.Product?.Productions?.map((production) => ({
+            ...production,
+            Product: {
+              id: phase.Product!.id,
+              Phase: {
+                id: phase.id,
+                name: phase.name,
+                code: phase.code,
+                montantHT: phase.montantHT,
+                projectId: phase.projectId,
+                Project: {
+                  id: project.id,
+                  code: project.code,
+                  name: project.name,
+                },
+              },
+            },
+          })) || []
+      )
+    );
+
+    return productions;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des productions de l'unité:",
+      error
+    );
     throw error;
   }
 };

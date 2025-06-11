@@ -33,6 +33,7 @@ import {
   Check,
   Loader2,
   Info,
+  Sparkles,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -52,7 +53,7 @@ import { formatAmount, formatDate } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
-import { Client, Project, Status } from "@prisma/client";
+import { type Client, type Project, Status } from "@prisma/client";
 import { getUnitClients, upsertProject } from "@/lib/queries";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/providers/modal-provider";
@@ -100,9 +101,12 @@ interface ProjectFormProps {
   project?: Project;
 }
 
-export default function ProjectForm({ unitId, project }: ProjectFormProps) {
+export default function ModernProjectForm({
+  unitId,
+  project,
+}: ProjectFormProps) {
   const router = useRouter();
-  const { setClose } = useModal(); // Add setOpen here
+  const { setClose } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
@@ -151,6 +155,7 @@ export default function ProjectForm({ unitId, project }: ProjectFormProps) {
       setFormattedMontantTTC(formatNumber(project.montantTTC));
     }
   }, [project]);
+
   const odsValue = form.watch("ods");
   useEffect(() => {
     console.log("Valeur ODS mise à jour:", odsValue);
@@ -223,9 +228,21 @@ export default function ProjectForm({ unitId, project }: ProjectFormProps) {
 
   if (isLoadingClients) {
     return (
-      <div className="flex items-center justify-center p-8 animate-pulse">
-        <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        Chargement des clients...
+      <div className="flex items-center justify-center p-12">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 blur-xl rounded-full" />
+          <div className="relative bg-card border border-border/50 rounded-xl px-8 py-6 shadow-lg backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <div className="absolute inset-0 h-6 w-6 animate-ping rounded-full bg-primary/20" />
+              </div>
+              <span className="text-sm font-medium text-foreground">
+                Chargement des clients...
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -233,465 +250,591 @@ export default function ProjectForm({ unitId, project }: ProjectFormProps) {
   if (loadError) {
     return (
       <div className="p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-sm">
-          <p>{loadError}</p>
-          <Button
-            variant="outline"
-            className="mt-2 hover:bg-red-100 transition-colors"
-            onClick={() => window.location.reload()}
-          >
-            Réessayer
-          </Button>
+        <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-br from-red-50 via-red-50 to-red-100 dark:from-red-950/50 dark:via-red-900/30 dark:to-red-950/50 dark:border-red-800/50 px-6 py-5 shadow-lg">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-pink-500/5" />
+          <div className="relative">
+            <p className="text-red-700 dark:text-red-300 font-medium">
+              {loadError}
+            </p>
+            <Button
+              variant="outline"
+              className="mt-3 border-red-200 bg-white/50 hover:bg-red-100 dark:border-red-700 dark:bg-red-900/20 dark:hover:bg-red-800/30 transition-all duration-200"
+              onClick={() => window.location.reload()}
+            >
+              Réessayer
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-2">
-          {/* Informations générales */}
-          <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              Informations générales
-            </h3>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      <div className="relative">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-60 h-60 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl" />
+        </div>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom*</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Textarea
-                        placeholder="Nom du projet"
-                        {...field}
-                        className={cn(
-                          "pr-16 min-h-[80px] resize-none transition-all duration-300",
-                          form.formState.errors.name
-                            ? "border-red-500 focus:ring-red-500"
-                            : field.value
-                            ? "border-green-500 focus:ring-green-500"
-                            : ""
-                        )}
-                        title={field.value}
-                        rows={2}
-                      />
-                      <span className="absolute right-3 top-6 text-xs text-muted-foreground">
-                        {field.value.length}/100
-                      </span>
+        <div className="relative max-w-4xl mx-auto p-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl shadow-lg mb-4">
+              <Sparkles className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-2">
+              {project ? "Modifier le projet" : "Nouveau projet"}
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Remplissez les informations ci-dessous pour{" "}
+              {project ? "modifier" : "créer"} votre projet
+            </p>
+          </div>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Informations générales */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                      <User className="h-5 w-5 text-white" />
                     </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <h3 className="text-xl font-semibold">
+                      Informations générales
+                    </h3>
+                  </div>
 
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Code*</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        placeholder="Code du projet"
-                        {...field}
-                        className={cn(
-                          "pl-10 transition-all duration-300",
-                          form.formState.errors.code
-                            ? "border-red-500 focus:ring-red-500"
-                            : field.value
-                            ? "border-green-500 focus:ring-green-500"
-                            : ""
-                        )}
-                      />
-                      <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type*</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Type du projet"
-                      {...field}
-                      className={cn(
-                        "transition-all duration-300",
-                        form.formState.errors.type
-                          ? "border-red-500 focus:ring-red-500"
-                          : field.value
-                          ? "border-green-500 focus:ring-green-500"
-                          : ""
+                  <div className="grid gap-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90">
+                            Nom du projet*
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <Textarea
+                                placeholder="Décrivez votre projet..."
+                                {...field}
+                                className={cn(
+                                  "min-h-[100px] resize-none transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                  "focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-background",
+                                  "group-hover:border-border",
+                                  form.formState.errors.name
+                                    ? "border-red-500 focus:ring-red-500/20"
+                                    : field.value
+                                    ? "border-green-500/50 focus:ring-green-500/20"
+                                    : ""
+                                )}
+                                rows={3}
+                              />
+                              <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    "text-xs transition-colors",
+                                    field.value.length > 80
+                                      ? "text-amber-600"
+                                      : "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value.length}/100
+                                </span>
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="clientId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client*</FormLabel>
-                  <div className="flex gap-2 items-center">
-                    <div className="flex-1">
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger
-                            className={cn(
-                              form.formState.errors.clientId
-                                ? "border-red-500 focus:ring-red-500"
-                                : field.value
-                                ? "border-green-500 focus:ring-green-500"
-                                : ""
-                            )}
-                          >
-                            <SelectValue
-                              placeholder="Sélectionner un client"
-                              className="truncate"
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clients.length > 0 ? (
-                            clients.map((client) => (
-                              <SelectItem
-                                key={client.id}
-                                value={client.id}
-                                className="truncate"
-                              >
-                                {client.name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-clients" disabled>
-                              Aucun client disponible
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <ClientModal
-                      unitId={unitId}
-                      onClientCreated={(newClientId, newClientName) => {
-                        // Ajouter le nouveau client à la liste
-                        setClients((prevClients) => [
-                          ...prevClients,
-                          { id: newClientId, name: newClientName } as Client,
-                        ]);
-                        // Sélectionner le nouveau client
-                        field.onChange(newClientId);
-                        toast.success("Nouveau client ajouté et sélectionné");
-                      }}
-                    />
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Informations financières */}
-          <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
-              Informations financières
-            </h3>
-            <div className="flex flex-col gap-4">
-              <FormField
-                control={form.control}
-                name="montantHT"
-                render={({ field: { ...restField } }) => (
-                  <FormItem>
-                    <FormLabel>Montant HT*</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="text"
-                          placeholder="Montant HT"
-                          defaultValue={formattedMontantHT}
-                          onInput={handleMontantHTChange}
-                          className={cn(
-                            "pl-12 transition-all duration-300",
-                            form.formState.errors.montantHT
-                              ? "border-red-500 focus:ring-red-500"
-                              : restField.value
-                              ? "border-green-500 focus:ring-green-500"
-                              : ""
-                          )}
-                          {...restField}
-                        />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                          DA
-                        </span>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="montantTTC"
-                render={() => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      Montant TTC*
-                      <span className="text-xs bg-blue-100 dark:bg-accent text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">
-                        Calculé
-                      </span>
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type="text"
-                          placeholder="Montant TTC"
-                          value={formattedMontantTTC}
-                          className="pl-12 bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
-                          readOnly
-                          tabIndex={-1}
-                        />
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                          DA
-                        </span>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Planification */}
-          <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Planification
-            </h3>
-            <div className="flex flex-col gap-4">
-              <FormField
-                control={form.control}
-                name="ods"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date ODS</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal transition-all duration-300",
-                              !field.value && "text-muted-foreground",
-                              form.formState.errors.ods
-                                ? "border-red-500 focus:ring-red-500"
-                                : field.value
-                                ? "border-green-500 focus:ring-green-500"
-                                : ""
-                            )}
-                            type="button"
-                          >
-                            {field.value ? (
-                              formatDate(field.value)
-                            ) : (
-                              <span>Sélectionner une date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value || undefined}
-                          onSelect={(date) => {
-                            field.onChange(date); // Met à jour directement la valeur
-                          }}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                          locale={fr}
-                          weekStartsOn={1}
-                          formatters={{
-                            formatCaption: (date) => {
-                              return date.toLocaleString("fr", {
-                                month: "long",
-                                year: "numeric",
-                              });
-                            },
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="delai"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      Délai*
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              Indiquez le délai estimé pour le projet (ex. : 30
-                              jours)
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Délai du projet"
-                        {...field}
-                        className={cn(
-                          "transition-all duration-300",
-                          form.formState.errors.delai
-                            ? "border-red-500 focus:ring-red-500"
-                            : field.value
-                            ? "border-green-500 focus:ring-green-500"
-                            : ""
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="code"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-foreground/90">
+                              Code du projet*
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  placeholder="PRJ-2024-001"
+                                  {...field}
+                                  className={cn(
+                                    "pl-11 transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                    "focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-background",
+                                    form.formState.errors.code
+                                      ? "border-red-500 focus:ring-red-500/20"
+                                      : field.value
+                                      ? "border-green-500/50 focus:ring-green-500/20"
+                                      : ""
+                                  )}
+                                />
+                                <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
 
-          {/* Statut */}
-          <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              <Tag className="h-5 w-5 text-primary" />
-              Statut
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Statut*</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className={cn(
-                            form.formState.errors.status
-                              ? "border-red-500 focus:ring-red-500"
-                              : field.value
-                              ? "border-green-500 focus:ring-green-500"
-                              : ""
-                          )}
-                        >
-                          <SelectValue placeholder="Sélectionner un statut" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={Status.New}>Nouveau</SelectItem>
-                        <SelectItem value={Status.InProgress}>
-                          En cours
-                        </SelectItem>
-                        <SelectItem value={Status.Pause}>En pause</SelectItem>
-                        <SelectItem value={Status.Complete}>Terminé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="signe"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-white dark:bg-gray-700">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="transition-all duration-300"
+                      <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-foreground/90">
+                              Type de projet*
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Site web, Application mobile..."
+                                {...field}
+                                className={cn(
+                                  "transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                  "focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-background",
+                                  form.formState.errors.type
+                                    ? "border-red-500 focus:ring-red-500/20"
+                                    : field.value
+                                    ? "border-green-500/50 focus:ring-green-500/20"
+                                    : ""
+                                )}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Contrat signé</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Cochez si le contrat a été signé par le client
-                      </p>
                     </div>
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
 
-          {/* Boutons d’action */}
-          <div className="flex justify-end gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClearForm}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900 transition-all duration-300 transform hover:scale-105"
-            >
-              <X className="h-4 w-4" />
-              Effacer tout
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-2  transition-all duration-300 transform hover:scale-105"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4" />
-                  {project ? "Modifier le projet" : "Créer le projet"}
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </Form>
+                    <FormField
+                      control={form.control}
+                      name="clientId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90">
+                            Client*
+                          </FormLabel>
+                          <div className="flex gap-3">
+                            <div className="flex-1">
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    className={cn(
+                                      "transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                      "focus:border-primary/50 focus:ring-2 focus:ring-primary/20",
+                                      form.formState.errors.clientId
+                                        ? "border-red-500 focus:ring-red-500/20"
+                                        : field.value
+                                        ? "border-green-500/50 focus:ring-green-500/20"
+                                        : ""
+                                    )}
+                                  >
+                                    <SelectValue placeholder="Sélectionner un client" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {clients.length > 0 ? (
+                                    clients.map((client) => (
+                                      <SelectItem
+                                        key={client.id}
+                                        value={client.id}
+                                      >
+                                        {client.name}
+                                      </SelectItem>
+                                    ))
+                                  ) : (
+                                    <SelectItem value="no-clients" disabled>
+                                      Aucun client disponible
+                                    </SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <ClientModal
+                              unitId={unitId}
+                              onClientCreated={(newClientId, newClientName) => {
+                                setClients((prevClients) => [
+                                  ...prevClients,
+                                  {
+                                    id: newClientId,
+                                    name: newClientName,
+                                  } as Client,
+                                ]);
+                                field.onChange(newClientId);
+                                toast.success(
+                                  "Nouveau client ajouté et sélectionné"
+                                );
+                              }}
+                            />
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations financières */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+                      <DollarSign className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold">
+                      Informations financières
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="montantHT"
+                      render={({ field: { ...restField } }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90">
+                            Montant HT*
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type="text"
+                                placeholder="0,00"
+                                defaultValue={formattedMontantHT}
+                                onInput={handleMontantHTChange}
+                                className={cn(
+                                  "pl-12 transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                  "focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-background",
+                                  form.formState.errors.montantHT
+                                    ? "border-red-500 focus:ring-red-500/20"
+                                    : restField.value
+                                    ? "border-green-500/50 focus:ring-green-500/20"
+                                    : ""
+                                )}
+                                {...restField}
+                              />
+                              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  DA
+                                </span>
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="montantTTC"
+                      render={() => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90 flex items-center gap-2">
+                            Montant TTC*
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-blue-700 dark:text-blue-300 text-xs rounded-full border border-blue-200/50 dark:border-blue-700/50">
+                              <Sparkles className="h-3 w-3" />
+                              Auto
+                            </span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type="text"
+                                placeholder="0,00"
+                                value={formattedMontantTTC}
+                                className="pl-12 bg-muted/50 border-border/30 cursor-not-allowed"
+                                readOnly
+                                tabIndex={-1}
+                              />
+                              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  DA
+                                </span>
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Planification */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold">Planification</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="ods"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-sm font-medium text-foreground/90">
+                            Date ODS
+                          </FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal transition-all duration-300",
+                                    "border-border/50 bg-background/50 backdrop-blur-sm",
+                                    "hover:border-border hover:bg-background",
+                                    !field.value && "text-muted-foreground",
+                                    form.formState.errors.ods
+                                      ? "border-red-500 focus:ring-red-500/20"
+                                      : field.value
+                                      ? "border-green-500/50 focus:ring-green-500/20"
+                                      : ""
+                                  )}
+                                  type="button"
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? (
+                                    formatDate(field.value)
+                                  ) : (
+                                    <span>Sélectionner une date</span>
+                                  )}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={(date) => {
+                                  field.onChange(date);
+                                }}
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                                locale={fr}
+                                weekStartsOn={1}
+                                formatters={{
+                                  formatCaption: (date) => {
+                                    return date.toLocaleString("fr", {
+                                      month: "long",
+                                      year: "numeric",
+                                    });
+                                  },
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="delai"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90 flex items-center gap-2">
+                            Délai*
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    Indiquez le délai estimé pour le projet (ex.
+                                    : 30 jours)
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="30 jours, 2 mois..."
+                              {...field}
+                              className={cn(
+                                "transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                "focus:border-primary/50 focus:ring-2 focus:ring-primary/20 focus:bg-background",
+                                form.formState.errors.delai
+                                  ? "border-red-500 focus:ring-red-500/20"
+                                  : field.value
+                                  ? "border-green-500/50 focus:ring-green-500/20"
+                                  : ""
+                              )}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Statut */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                      <Tag className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold">
+                      Statut et validation
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90">
+                            Statut du projet*
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger
+                                className={cn(
+                                  "transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm",
+                                  "focus:border-primary/50 focus:ring-2 focus:ring-primary/20",
+                                  form.formState.errors.status
+                                    ? "border-red-500 focus:ring-red-500/20"
+                                    : field.value
+                                    ? "border-green-500/50 focus:ring-green-500/20"
+                                    : ""
+                                )}
+                              >
+                                <SelectValue placeholder="Sélectionner un statut" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value={Status.New}>
+                                🆕 Nouveau
+                              </SelectItem>
+                              <SelectItem value={Status.InProgress}>
+                                ⚡ En cours
+                              </SelectItem>
+                              <SelectItem value={Status.Pause}>
+                                ⏸️ En pause
+                              </SelectItem>
+                              <SelectItem value={Status.Complete}>
+                                ✅ Terminé
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="signe"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground/90">
+                            Validation contractuelle
+                          </FormLabel>
+                          <div className="mt-2">
+                            <div
+                              className={cn(
+                                "flex items-start space-x-4 rounded-xl border p-4 transition-all duration-300",
+                                "border-border/50 bg-background/30 backdrop-blur-sm",
+                                field.value
+                                  ? "border-green-500/50 bg-green-500/5"
+                                  : "hover:border-border hover:bg-background/50"
+                              )}
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  className="mt-0.5 transition-all duration-300"
+                                />
+                              </FormControl>
+                              <div className="grid gap-1.5 leading-none">
+                                <div className="font-medium">Contrat signé</div>
+                                <p className="text-sm text-muted-foreground">
+                                  Confirmer que le contrat a été signé par le
+                                  client
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Boutons d'action */}
+              <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClearForm}
+                  disabled={isSubmitting}
+                  className="group flex items-center gap-2 transition-all duration-300 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/50 hover:scale-105"
+                >
+                  <X className="h-4 w-4 transition-transform group-hover:rotate-90" />
+                  Effacer tout
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="group flex items-center gap-2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4 transition-transform group-hover:scale-110" />
+                      {project ? "Modifier le projet" : "Créer le projet"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -231,9 +231,8 @@ model Phase {
   obs       String?
   Project   Project   @relation(fields: [projectId], references: [id])
   projectId String
-  // New relation to Product
-  Product   Product?  @relation(fields: [productId], references: [id]) // One Phase has one Product
-  productId String?   @unique // Ensure that each Phase can only have one Product
+  // Relation to Product (one-to-one)
+  Product   Product?
 
   @@index([projectId])
 }
@@ -243,8 +242,8 @@ model Product {
   date        DateTime
   taux        Float
   montantProd Float
-  Phase       Phase?       @relation // One Product can have one Phase
-  phaseId     String?      @unique
+  Phase       Phase        @relation(fields: [phaseId], references: [id])
+  phaseId     String       @unique
   Productions Production[] @relation("ProductProductions") // One Product can have many Productions
 
   @@index([phaseId])
@@ -254,7 +253,7 @@ model Production {
   id        String   @id @default(uuid())
   date      DateTime
   taux      Float
-  montant   Float // montant produit calculé
+  mntProd   Float // montant produit calculé
   Product   Product  @relation("ProductProductions", fields: [productId], references: [id], onDelete: Cascade) // Link to Product
   productId String // Foreign key for Product
 

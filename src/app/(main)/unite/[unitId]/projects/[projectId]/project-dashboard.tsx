@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -109,6 +110,16 @@ const getStatusIcon = (status: string) => {
 };
 
 const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
+  // Ajoutez ceci au début de votre composant pour déboguer
+  console.log(
+    "Project phases:",
+    project.phases.map((phase) => ({
+      name: phase.name,
+      hasProduct: !!phase.Product,
+      product: phase.Product,
+    }))
+  );
+
   const { setOpen } = useModal();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
@@ -197,6 +208,7 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
 
       const product = await response.json();
       toast.success("Production initialisée avec succès");
+      router.refresh();
       return product.id;
     } catch (error: any) {
       toast.error(

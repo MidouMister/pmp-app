@@ -35,7 +35,7 @@ interface DataTableProps<TData, TValue> {
 export default function DataTable<TData, TValue>({
   columns,
   data,
-  filterValue,
+
   actionButtonText,
   modalChildren,
 }: DataTableProps<TData, TValue>) {

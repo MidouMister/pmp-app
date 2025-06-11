@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,6 +60,7 @@ interface ProductionFormProps {
 
 export default function ProductionForm({
   productId,
+
   phaseId,
   production,
   phaseData,
