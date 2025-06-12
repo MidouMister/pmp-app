@@ -28,15 +28,15 @@ import { useModal } from "@/providers/modal-provider";
 import { cn, formatAmount } from "@/lib/utils";
 import { formatMonthYear } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import type { Phase, Project } from "@prisma/client";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Phase, Project } from "@prisma/client";
+} from "../ui/select";
+import { Badge } from "../ui/badge";
 
 // Schéma de validation pour le formulaire de production unitaire
 const unitProductionFormSchema = z.object({
@@ -106,7 +106,7 @@ export default function UnitProductionForm({
       const phase = availablePhases.find((p) => p.id === phaseId);
       if (phase) {
         setPhaseMontantHT(phase.montantHT);
-        
+
         // Vérifier si la phase a un produit associé
         if (phase.Product) {
           setSelectedPhase(phase.Product.id);
@@ -165,12 +165,19 @@ export default function UnitProductionForm({
       // Calculer le montant produit
       const montant = calculateMontantProduit(data.taux);
 
-      // Vérifier si un produit existe pour cette phase
-      let productId = selectedPhase;
-      const selectedPhaseObj = availablePhases.find(p => p.id === data.phaseId);
+      // Récupérer la phase sélectionnée
+      const selectedPhaseObj = availablePhases.find(
+        (p) => p.id === data.phaseId
+      );
+
+      // Déterminer le productId à utiliser
+      let productId;
       
-      // Si aucun produit n'existe, en créer un
-      if (selectedPhaseObj && !selectedPhaseObj.Product) {
+      // Si la phase a un produit associé, utiliser son ID
+      if (selectedPhaseObj?.Product) {
+        productId = selectedPhaseObj.Product.id;
+      } else {
+        // Sinon, créer un nouveau produit
         productId = await createProductForPhase(data.phaseId);
         
         // Si la création du produit a échoué, arrêter le processus
@@ -212,111 +219,133 @@ export default function UnitProductionForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="projectId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Projet</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setSelectedProject(value);
-                  // Réinitialiser la phase sélectionnée
-                  form.setValue("phaseId", "");
-                  setSelectedPhase("");
-                  setPhaseMontantHT(0);
-                  setMontantProduit(0);
-                }}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un projet" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="text-xs font-normal h-5 px-1.5"
-                        >
-                          {project.code}
-                        </Badge>
-                        <span>{project.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Section Sélection Projet et Phase */}
+        <div className="space-y-6 p-6 rounded-lg border overflow-hidden">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="font-semibold ">Projet et Phase</h3>
+          </div>
+          <FormField
+            control={form.control}
+            name="projectId"
+            render={({ field }) => (
+              <FormItem className="flex flex-col ">
+                <FormLabel>Projet</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    setSelectedProject(value);
+                    // Réinitialiser la phase sélectionnée
+                    form.setValue("phaseId", "");
+                    setSelectedPhase("");
+                    setPhaseMontantHT(0);
+                    setMontantProduit(0);
+                  }}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-12 text-left">
+                      <SelectValue placeholder="Sélectionner un projet" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem
+                        key={project.id}
+                        value={project.id}
+                        className="py-3"
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-medium h-6 px-2 min-w-fit"
+                          >
+                            {project.code}
+                          </Badge>
+                          <span className="font-medium text-sm">
+                            {project.name}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="phaseId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phase</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setSelectedPhase(value);
-                  // Récupérer le montant HT de la phase sélectionnée
-                  const phase = availablePhases.find((p) => p.id === value);
-                  if (phase) {
-                    setPhaseMontantHT(phase.montantHT);
-                    // Recalculer le montant produit
-                    const taux = form.getValues("taux");
-                    calculateMontantProduit(taux);
-                  }
-                }}
-                defaultValue={field.value}
-                disabled={!selectedProject}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une phase" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availablePhases.map((phase) => (
-                    <SelectItem key={phase.id} value={phase.id}>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="text-xs font-normal h-5 px-1.5"
-                        >
-                          {phase.code}
-                        </Badge>
-                        <span>{phase.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="phaseId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phase</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    setSelectedPhase(value);
+                    // Récupérer le montant HT de la phase sélectionnée
+                    const phase = availablePhases.find((p) => p.id === value);
+                    if (phase) {
+                      setPhaseMontantHT(phase.montantHT);
+                      // Recalculer le montant produit
+                      const taux = form.getValues("taux");
+                      calculateMontantProduit(taux);
+                    }
+                  }}
+                  defaultValue={field.value}
+                  disabled={!selectedProject}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-12 text-left">
+                      <SelectValue placeholder="Sélectionner une phase" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {availablePhases.map((phase) => (
+                      <SelectItem
+                        key={phase.id}
+                        value={phase.id}
+                        className="py-3"
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-medium h-6 px-2 min-w-fit"
+                          >
+                            {phase.code}
+                          </Badge>
+                          <span className="font-medium text-sm">
+                            {phase.name}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {/* Affichage du montant HT de la phase */}
         {selectedPhase && (
-          <div className="p-4 bg-muted rounded-md">
-            <div className="mb-2">
-              <h3 className="text-sm font-medium">Montant HT de la phase</h3>
-              <p className="text-lg font-semibold">
+          <div className="p-5 bg-muted/50 rounded-lg border">
+            <div className="mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Montant HT de la phase
+              </h3>
+              <p className="text-xl font-semibold mt-1">
                 {formatAmount(phaseMontantHT)}
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-medium">Montant produit calculé</h3>
-              <p className="text-lg font-semibold text-primary">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Montant produit calculé
+              </h3>
+              <p className="text-xl font-semibold text-primary mt-1">
                 {formatAmount(montantProduit)}
               </p>
             </div>
@@ -378,7 +407,9 @@ export default function UnitProductionForm({
                   {...field}
                   onChange={(e) => {
                     field.onChange(e);
-                    calculateMontantProduit(parseFloat(e.target.value) || 0);
+                    calculateMontantProduit(
+                      Number.parseFloat(e.target.value) || 0
+                    );
                   }}
                 />
               </FormControl>

@@ -16,25 +16,14 @@ async function UniteProduction({ params }: { params: Params }) {
   const productions = await getUnitProductionsWithDetails(unitId);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto ">
       <Card>
-        {/* <CardHeader>
-          <CardTitle>Productions de l&apos;unité</CardTitle>
-          <CardDescription>
-            Gérez les productions de l&apos;unité, filtrez par projet, phase ou
-            période.
-          </CardDescription>
-        </CardHeader> */}
         <CardContent>
           <DataTable
             columns={columns}
             data={productions}
             projects={projects}
-            modalChildren={
-              <UnitProductionForm
-                projects={projects}
-              />
-            }
+            modalChildren={<UnitProductionForm projects={projects} />}
           />
         </CardContent>
       </Card>

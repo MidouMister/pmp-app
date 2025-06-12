@@ -71,8 +71,10 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const [dateFromMonth, setDateFromMonth] = useState<string>("");
+  const [dateFromYear, setDateFromYear] = useState<string>("");
+  const [dateToMonth, setDateToMonth] = useState<string>("");
+  const [dateToYear, setDateToYear] = useState<string>("");
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedPhase, setSelectedPhase] = useState<string>("");
 
@@ -87,20 +89,84 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
   const filteredData = useMemo(() => {
     let filtered = [...data];
 
-    // Filtre par plage de dates
-    if (dateFrom || dateTo) {
+    // Filtre par plage de dates (format mois/année)
+    if (
+      (dateFromMonth && dateFromMonth !== "all_months") ||
+      (dateFromYear && dateFromYear !== "all_years") ||
+      (dateToMonth && dateToMonth !== "all_months") ||
+      (dateToYear && dateToYear !== "all_years")
+    ) {
       filtered = filtered.filter((item) => {
         const itemDate = new Date(item.date);
         let isValid = true;
 
-        if (dateFrom) {
-          const fromDate = new Date(dateFrom);
+        // Vérifier la date de début
+        if (
+          dateFromMonth &&
+          dateFromMonth !== "all_months" &&
+          dateFromYear &&
+          dateFromYear !== "all_years"
+        ) {
+          const fromDate = new Date(
+            parseInt(dateFromYear),
+            parseInt(dateFromMonth) - 1,
+            1
+          );
+          isValid = isValid && itemDate >= fromDate;
+        } else if (dateFromYear && dateFromYear !== "all_years") {
+          // Seulement l'année est spécifiée
+          const fromDate = new Date(parseInt(dateFromYear), 0, 1);
+          isValid = isValid && itemDate >= fromDate;
+        } else if (dateFromMonth && dateFromMonth !== "all_months") {
+          // Seulement le mois est spécifié, on utilise l'année courante
+          const currentYear = new Date().getFullYear();
+          const fromDate = new Date(
+            currentYear,
+            parseInt(dateFromMonth) - 1,
+            1
+          );
           isValid = isValid && itemDate >= fromDate;
         }
 
-        if (dateTo) {
-          const toDate = new Date(dateTo);
+        // Vérifier la date de fin
+        if (
+          dateToMonth &&
+          dateToMonth !== "all_months" &&
+          dateToYear &&
+          dateToYear !== "all_years"
+        ) {
+          // Dernier jour du mois spécifié
+          const toDate = new Date(
+            parseInt(dateToYear),
+            parseInt(dateToMonth),
+            0
+          );
           toDate.setHours(23, 59, 59, 999);
+          isValid = isValid && itemDate <= toDate;
+        } else if (dateToYear && dateToYear !== "all_years") {
+          // Dernier jour de l'année spécifiée
+          const toDate = new Date(
+            parseInt(dateToYear),
+            11,
+            31,
+            23,
+            59,
+            59,
+            999
+          );
+          isValid = isValid && itemDate <= toDate;
+        } else if (dateToMonth && dateToMonth !== "all_months") {
+          // Dernier jour du mois spécifié de l'année courante
+          const currentYear = new Date().getFullYear();
+          const toDate = new Date(
+            currentYear,
+            parseInt(dateToMonth),
+            0,
+            23,
+            59,
+            59,
+            999
+          );
           isValid = isValid && itemDate <= toDate;
         }
 
@@ -139,7 +205,16 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
     }
 
     return filtered;
-  }, [data, dateFrom, dateTo, selectedProject, selectedPhase, globalFilter]);
+  }, [
+    data,
+    dateFromMonth,
+    dateFromYear,
+    dateToMonth,
+    dateToYear,
+    selectedProject,
+    selectedPhase,
+    globalFilter,
+  ]);
 
   const table = useReactTable({
     data: filteredData as TData[],
@@ -159,8 +234,10 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
   });
 
   const handleResetFilters = () => {
-    setDateFrom("");
-    setDateTo("");
+    setDateFromMonth("all_months");
+    setDateFromYear("all_years");
+    setDateToMonth("all_months");
+    setDateToYear("all_years");
     setSelectedProject("");
     setSelectedPhase("");
     setGlobalFilter("");
@@ -170,10 +247,11 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
     setSelectedProject(value);
     setSelectedPhase("");
   };
-
   const activeFiltersCount = [
-    dateFrom,
-    dateTo,
+    dateFromMonth && dateFromMonth !== "all_months" ? dateFromMonth : null,
+    dateFromYear && dateFromYear !== "all_years" ? dateFromYear : null,
+    dateToMonth && dateToMonth !== "all_months" ? dateToMonth : null,
+    dateToYear && dateToYear !== "all_years" ? dateToYear : null,
     selectedProject,
     selectedPhase,
     globalFilter,
@@ -294,112 +372,191 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="date-from"
-                className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
-              >
-                <Calendar className="h-3.5 w-3.5" />
-                Date de début
-              </Label>
-              <Input
-                id="date-from"
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="h-9 text-sm"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Première colonne - Filtres de date */}
+            <div className="space-y-4">
+              {/* Date de début */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="date-from"
+                  className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  Date de début
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={dateFromMonth}
+                    onValueChange={setDateFromMonth}
+                  >
+                    <SelectTrigger id="month-from" className="h-9 text-sm">
+                      <SelectValue placeholder="Mois" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_months">Tous les mois</SelectItem>
+                      <SelectItem value="1">Janvier</SelectItem>
+                      <SelectItem value="2">Février</SelectItem>
+                      <SelectItem value="3">Mars</SelectItem>
+                      <SelectItem value="4">Avril</SelectItem>
+                      <SelectItem value="5">Mai</SelectItem>
+                      <SelectItem value="6">Juin</SelectItem>
+                      <SelectItem value="7">Juillet</SelectItem>
+                      <SelectItem value="8">Août</SelectItem>
+                      <SelectItem value="9">Septembre</SelectItem>
+                      <SelectItem value="10">Octobre</SelectItem>
+                      <SelectItem value="11">Novembre</SelectItem>
+                      <SelectItem value="12">Décembre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={dateFromYear} onValueChange={setDateFromYear}>
+                    <SelectTrigger id="year-from" className="h-9 text-sm">
+                      <SelectValue placeholder="Année" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_years">
+                        Toutes les années
+                      </SelectItem>
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const year = new Date().getFullYear() - 5 + i;
+                        return (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Date de fin */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="date-to"
+                  className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  Date de fin
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={dateToMonth} onValueChange={setDateToMonth}>
+                    <SelectTrigger id="month-to" className="h-9 text-sm">
+                      <SelectValue placeholder="Mois" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_months">Tous les mois</SelectItem>
+                      <SelectItem value="1">Janvier</SelectItem>
+                      <SelectItem value="2">Février</SelectItem>
+                      <SelectItem value="3">Mars</SelectItem>
+                      <SelectItem value="4">Avril</SelectItem>
+                      <SelectItem value="5">Mai</SelectItem>
+                      <SelectItem value="6">Juin</SelectItem>
+                      <SelectItem value="7">Juillet</SelectItem>
+                      <SelectItem value="8">Août</SelectItem>
+                      <SelectItem value="9">Septembre</SelectItem>
+                      <SelectItem value="10">Octobre</SelectItem>
+                      <SelectItem value="11">Novembre</SelectItem>
+                      <SelectItem value="12">Décembre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={dateToYear} onValueChange={setDateToYear}>
+                    <SelectTrigger id="year-to" className="h-9 text-sm">
+                      <SelectValue placeholder="Année" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_years">
+                        Toutes les années
+                      </SelectItem>
+                      {Array.from({ length: 10 }, (_, i) => {
+                        const year = new Date().getFullYear() - 5 + i;
+                        return (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="date-to"
-                className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
-              >
-                <Calendar className="h-3.5 w-3.5" />
-                Date de fin
-              </Label>
-              <Input
-                id="date-to"
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="h-9 text-sm"
-              />
-            </div>
+            {/* Deuxième colonne - Filtres projet et phase */}
+            <div className="space-y-4">
+              {/* Projet */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="project-filter"
+                  className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
+                >
+                  <Building className="h-3.5 w-3.5" />
+                  Projet
+                </Label>
+                <Select
+                  value={selectedProject || "all"}
+                  onValueChange={(value) =>
+                    handleProjectChange(value === "all" ? "" : value)
+                  }
+                >
+                  <SelectTrigger id="project-filter" className="h-9 text-sm">
+                    <SelectValue placeholder="Tous les projets" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les projets</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-normal h-5 px-1.5"
+                          >
+                            {project.code}
+                          </Badge>
+                          <span>{project.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="project-filter"
-                className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
-              >
-                <Building className="h-3.5 w-3.5" />
-                Projet
-              </Label>
-              <Select
-                value={selectedProject || "all"}
-                onValueChange={(value) =>
-                  handleProjectChange(value === "all" ? "" : value)
-                }
-              >
-                <SelectTrigger id="project-filter" className="h-9 text-sm">
-                  <SelectValue placeholder="Tous les projets" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les projets</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="text-xs font-normal h-5 px-1.5"
-                        >
-                          {project.code}
-                        </Badge>
-                        <span>{project.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="phase-filter"
-                className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                Phase
-              </Label>
-              <Select
-                value={selectedPhase || "all"}
-                onValueChange={(value) =>
-                  setSelectedPhase(value === "all" ? "" : value)
-                }
-                disabled={!selectedProject}
-              >
-                <SelectTrigger id="phase-filter" className="h-9 text-sm">
-                  <SelectValue placeholder="Toutes les phases" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les phases</SelectItem>
-                  {availablePhases.map((phase) => (
-                    <SelectItem key={phase.id} value={phase.id}>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className="text-xs font-normal h-5 px-1.5"
-                        >
-                          {phase.code}
-                        </Badge>
-                        <span>{phase.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Phase */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="phase-filter"
+                  className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Phase
+                </Label>
+                <Select
+                  value={selectedPhase || "all"}
+                  onValueChange={(value) =>
+                    setSelectedPhase(value === "all" ? "" : value)
+                  }
+                  disabled={!selectedProject}
+                >
+                  <SelectTrigger id="phase-filter" className="h-9 text-sm">
+                    <SelectValue placeholder="Toutes les phases" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les phases</SelectItem>
+                    {availablePhases.map((phase) => (
+                      <SelectItem key={phase.id} value={phase.id}>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-normal h-5 px-1.5"
+                          >
+                            {phase.code}
+                          </Badge>
+                          <span>{phase.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardContent>

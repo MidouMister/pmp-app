@@ -1242,9 +1242,9 @@ export const createProduct = async (phaseId: string) => {
       throw new Error("Phase non trouvée");
     }
 
-    // Vérifier si un produit existe déjà pour cette phase
+    // Si un produit existe déjà pour cette phase, le retourner au lieu de lancer une erreur
     if (phase.Product) {
-      throw new Error("Un produit existe déjà pour cette phase");
+      return phase.Product;
     }
 
     // Créer le produit avec taux initial à 0%
