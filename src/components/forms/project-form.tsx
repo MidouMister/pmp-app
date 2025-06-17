@@ -74,7 +74,7 @@ const formSchema = z.object({
   name: z
     .string()
     .min(2, { message: "Le nom doit contenir au moins 2 caractères" })
-    .max(100, { message: "Le nom ne peut pas dépasser 100 caractères" })
+    .max(250, { message: "Le nom ne peut pas dépasser 250 caractères" })
     .transform((value) => value.trim()),
   code: z
     .string()
@@ -338,7 +338,7 @@ export default function ModernProjectForm({
                                 <span
                                   className={cn(
                                     "text-xs transition-colors",
-                                    field.value.length > 80
+                                    field.value.length > 250
                                       ? "text-amber-600"
                                       : "text-muted-foreground"
                                   )}

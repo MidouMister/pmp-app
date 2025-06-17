@@ -372,7 +372,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex gap-6  ">
             {/* Première colonne - Filtres de date */}
             <div className="space-y-4">
               {/* Date de début */}
@@ -384,7 +384,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
                   <Calendar className="h-3.5 w-3.5" />
                   Date de début
                 </Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex  gap-2">
                   <Select
                     value={dateFromMonth}
                     onValueChange={setDateFromMonth}
@@ -438,7 +438,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
                   <Calendar className="h-3.5 w-3.5" />
                   Date de fin
                 </Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex gap-2">
                   <Select value={dateToMonth} onValueChange={setDateToMonth}>
                     <SelectTrigger id="month-to" className="h-9 text-sm">
                       <SelectValue placeholder="Mois" />
@@ -508,11 +508,13 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
-                            className="text-xs font-normal h-5 px-1.5"
+                            className="text-xs font-normal h-5 px-1.5 font-mono rounded-md shadow-sm border border-border bg-primary/10 text-primary "
                           >
                             {project.code}
                           </Badge>
-                          <span>{project.name}</span>
+                          <span className="break-words whitespace-normal line-clamp-3 text-left leading-4 text-xs max-w-[600px] text-primary ">
+                            {project.name}
+                          </span>
                         </div>
                       </SelectItem>
                     ))}

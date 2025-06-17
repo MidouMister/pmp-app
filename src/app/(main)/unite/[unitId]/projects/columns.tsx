@@ -1,7 +1,9 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
-import { Project, Status } from "@prisma/client";
+import type React from "react";
+
+import type { ColumnDef } from "@tanstack/react-table";
+import { type Project, Status } from "@prisma/client";
 
 import {
   DropdownMenu,
@@ -83,21 +85,25 @@ export const columns: ColumnDef<Project & { Client: { name: string } }>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 font-medium">
+              <div className="flex items-start gap-2 font-medium min-w-0 w-full">
                 <Link
                   href={`/unite/${row.original.unitId}/projects/${row.original.id}`}
+                  className="block min-w-0 max-w-[400px] leading-5 text-sm hover:text-primary transition-colors"
                 >
-                  {name}
+                  <span className="block break-words whitespace-normal line-clamp-3 text-left">
+                    {name.toLocaleUpperCase().toWellFormed()}
+                  </span>
                 </Link>
               </div>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Projet: {name}</p>
+            <TooltipContent side="top" className="max-w-[400px]">
+              <p className="break-words">{name}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );
     },
+    size: 350,
   },
   {
     accessorKey: "code",
@@ -113,7 +119,7 @@ export const columns: ColumnDef<Project & { Client: { name: string } }>[] = [
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900"
+            className="font-mono text-xs rounded-md shadow-sm border border-border bg-primary/10 text-primary transition-all duration-200"
           >
             {code}
           </Badge>
@@ -133,7 +139,7 @@ export const columns: ColumnDef<Project & { Client: { name: string } }>[] = [
       const client = row.original.Client.name;
       return (
         <div className="flex items-center gap-2">
-          <span>{client}</span>
+          <span className="font-semibold text-green-500">{client}</span>
         </div>
       );
     },
@@ -147,10 +153,10 @@ export const columns: ColumnDef<Project & { Client: { name: string } }>[] = [
       </div>
     ),
     cell: ({ row }) => {
-      const montant = parseFloat(row.getValue("montantTTC"));
+      const montant = Number.parseFloat(row.getValue("montantTTC"));
       const formattedMontant = formatAmount(montant);
 
-      return <div className="font-medium">{formattedMontant}</div>;
+      return <div className="font-semibold">{formattedMontant}</div>;
     },
   },
   {
@@ -204,25 +210,25 @@ export const columns: ColumnDef<Project & { Client: { name: string } }>[] = [
           label: "Nouveau",
           icon: AlertCircle,
           className:
-            "bg-[#57acea]/10 text-[#57acea] dark:bg-[#57acea]/20 dark:text-[#57acea] border-[1px] border-[#57acea]",
+            " text-[#57acea]  dark:text-[#57acea] border-[1px] border-[#57acea]",
         },
         [Status.InProgress]: {
           label: "En cours",
           icon: Clock,
           className:
-            "bg-amber-600/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-[1px] border-amber-400",
+            " text-amber-600  dark:text-amber-400 border-[1px] border-amber-400",
         },
         [Status.Pause]: {
           label: "En pause",
           icon: Pause,
           className:
-            "bg-orange-600/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-[1px] border-orange-400",
+            " text-orange-600  dark:text-orange-400 border-[1px] border-orange-400",
         },
         [Status.Complete]: {
           label: "Terminé",
           icon: CheckCircle2,
           className:
-            "bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400 border-[1px] border-green-400",
+            " text-green-600  dark:text-green-400 border-[1px] border-green-400",
         },
       };
 
@@ -256,12 +262,14 @@ export const columns: ColumnDef<Project & { Client: { name: string } }>[] = [
     cell: ({ row }) => {
       const type = row.getValue("type") as string;
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-start gap-2 min-w-0 w-[100px]">
           <Badge
             variant="outline"
-            className="bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+            className="font-mono text-xs rounded-md shadow-sm border border-border bg-purple-600/10 text-purple-400 transition-all duration-200"
           >
-            {type}
+            <span className="block break-words whitespace-normal line-clamp-2 text-left leading-4 text-xs">
+              {type.toLocaleUpperCase().toWellFormed()}
+            </span>
           </Badge>
         </div>
       );

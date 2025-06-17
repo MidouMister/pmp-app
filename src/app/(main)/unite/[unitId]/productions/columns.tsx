@@ -7,7 +7,6 @@ import {
   Calendar,
   DollarSign,
   Edit,
-  Eye,
   FileText,
   MoreHorizontal,
   Percent,
@@ -18,6 +17,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatAmount, formatMonthYear } from "@/lib/utils";
+import CustomModal from "@/components/global/custom-model";
+import ProductionForm from "@/components/forms/production-form";
 
 import {
   DropdownMenu,
@@ -42,11 +43,12 @@ import { useRouter } from "next/navigation";
 import { ProductionWithDetails } from "@/lib/types";
 import { deleteProduction } from "@/lib/queries";
 import { toast } from "sonner";
+import { useModal } from "@/providers/modal-provider";
 
 // Actions Cell Component
 const ActionsCell = ({ production }: { production: ProductionWithDetails }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
+  const { setOpen, setClose } = useModal();
   const router = useRouter();
 
   const handleDelete = async () => {
@@ -77,16 +79,29 @@ const ActionsCell = ({ production }: { production: ProductionWithDetails }) => {
           <DropdownMenuItem
             className="cursor-pointer"
             onClick={() => {
-              // View logic
-            }}
-          >
-            <Eye className="mr-2 h-4 w-4" />
-            Voir
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => {
-              // Edit logic
+              const modal = (
+                <CustomModal
+                  title="Modifier la production"
+                  subheading="Mettre à jour les informations de production"
+                >
+                  <ProductionForm
+                    productId={production.productId}
+                    phaseId={production.Product.Phase.id}
+                    production={{
+                      id: production.id,
+                      date: new Date(production.date),
+                      taux: production.taux,
+                      mntProd: production.mntProd,
+                    }}
+                    phaseData={{
+                      montantHT: production.Product.Phase.montantHT,
+                    }}
+                    onSuccess={() => setClose()}
+                    onCancel={() => setClose()}
+                  />
+                </CustomModal>
+              );
+              setOpen(modal);
             }}
           >
             <Edit className="mr-2 h-4 w-4" />
