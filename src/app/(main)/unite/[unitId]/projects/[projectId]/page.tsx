@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Unauthorized from "@/components/unauthorized";
 import Loading from "@/components/global/loading";
 import { Suspense } from "react";
-import ProjectDashboard from "./project-dashboard";
+import ProjectDashboard from "./_components/project-dashboard";
 import { ProjectWithDetails } from "@/lib/types";
 
 type Params = Promise<{ unitId: string; projectId: string }>;

@@ -101,10 +101,7 @@ interface ProjectFormProps {
   project?: Project;
 }
 
-export default function ModernProjectForm({
-  unitId,
-  project,
-}: ProjectFormProps) {
+export default function ProjectForm({ unitId, project }: ProjectFormProps) {
   const router = useRouter();
   const { setClose } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
