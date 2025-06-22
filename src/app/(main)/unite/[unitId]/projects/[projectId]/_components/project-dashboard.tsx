@@ -24,21 +24,6 @@ import TeamTab from "./team-tab";
 import ProductionTab from "./production-tab";
 import { ProjectWithDetails } from "@/lib/types";
 
-// // Types pour les données du projet
-// type ProjectWithRelations = Project & {
-//   phases: (Phase & {
-//     Product?: Product & {
-//       Productions?: Production[];
-//     };
-//   })[];
-//   team?: {
-//     id: string;
-//     TeamMembers: (TeamMember & {
-//       user: User;
-//     })[];
-//   };
-// };
-
 interface ProjectDashboardProps {
   project: ProjectWithDetails;
   unitId: string;
@@ -254,13 +239,6 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
   ) => {
     setSelectedPhaseForDetails(phase);
     setIsProductionDetailsOpen(true);
-  };
-
-  // Gestion des formulaires
-  const handleProjectFormSuccess = () => {
-    setIsEditProjectOpen(false);
-    router.refresh();
-    toast.success("Projet mis à jour avec succès");
   };
 
   const handlePhaseFormSuccess = () => {

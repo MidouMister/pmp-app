@@ -139,9 +139,9 @@ export const verifyAndAcceptInvitation = async () => {
       unitId: invitationExists.unitId,
     });
     if (userDetails) {
-      await (
-        await clerkClient()
-      ).users.updateUserMetadata(user.id, {
+      // Await the clerkClient() function call first
+      const clerk = await clerkClient();
+      await clerk.users.updateUserMetadata(user.id, {
         // Use clerkClient() as a function
         privateMetadata: {
           role: userDetails.role || "USER", // add jobeTilte
@@ -149,7 +149,7 @@ export const verifyAndAcceptInvitation = async () => {
       });
       // delete invitation from db
       await db.invitation.delete({ where: { email: userDetails.email } });
-
+      await clerk.invitations.revokeInvitation(userDetails.email);
       return userDetails.companyId;
     } else return null;
   } else {
@@ -203,16 +203,19 @@ export const initUser = async (newUser: Partial<User>) => {
       jobeTitle: newUser.jobeTitle,
     },
   });
-
-  await (
-    await clerkClient()
-  ).users.updateUserMetadata(user.id, {
-    privateMetadata: {
-      role: newUser.role || "USER",
-    },
-  });
-
-  return userData;
+  try {
+    // Await the clerkClient() function call first
+    const clerk = await clerkClient();
+    await clerk.users.updateUserMetadata(user.id, {
+      privateMetadata: {
+        role: newUser.role || "USER",
+      },
+    });
+    return userData;
+  } catch (error) {
+    console.error("Clerk metadata update error:", error);
+    throw error;
+  }
 };
 export const deleteCompany = async (companyId: string) => {
   const response = await db.company.delete({
@@ -461,14 +464,21 @@ export const getUser = async (id: string) => {
   return user;
 };
 export const deleteUser = async (userId: string) => {
-  (await clerkClient()).users.updateUserMetadata(userId, {
-    privateMetadata: {
-      role: undefined,
-    },
-  });
-  const deletedUser = await db.user.delete({ where: { id: userId } });
+  try {
+    // Await the clerkClient() function call first
+    const clerk = await clerkClient();
+    await clerk.users.updateUserMetadata(userId, {
+      privateMetadata: {
+        role: undefined,
+      },
+    });
+    const deletedUser = await db.user.delete({ where: { id: userId } });
 
-  return deletedUser;
+    return deletedUser;
+  } catch (error) {
+    console.error("Clerk metadata update error:", error);
+    throw error;
+  }
 };
 export const getCompanyUnits = async (companyId: string) => {
   const units = await db.unit.findMany({
@@ -505,19 +515,25 @@ export const sendInvitation = async (
     });
   }
 
+  console.log(response);
+
   try {
-    await (
-      await clerkClient()
-    ).invitations.createInvitation({
+    // Await the clerkClient() function call first
+    const clerk = await clerkClient();
+
+    await clerk.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: process.env.NEXT_PUBLIC_URL,
+      redirectUrl: process.env.NEXT_PUBLIC_URL || "",
       publicMetadata: {
         throughInvitation: true,
         role,
       },
+      ignoreExisting: true, // Add this to handle existing invitations/users
     });
+
+    console.log(`Clerk invitation sent successfully to ${email}`);
   } catch (error) {
-    console.log(error);
+    console.error("Clerk invitation error:", error);
     throw error;
   }
 
