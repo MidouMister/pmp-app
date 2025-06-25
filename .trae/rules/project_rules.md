@@ -14,3 +14,4 @@ Project Management Project is a project management tool that allows users to cre
     for types and interfaces , always use and write in the lib/types.ts file.
     put all forms in the components/forms.
     for Amounts and dates, use functions from the lib/utils.ts file.
+    use CustomModal from the components/global/custom-model.tsx file. or CustomSheet from the components/global/custom-sheet.for opening modals and sheets for Forms.

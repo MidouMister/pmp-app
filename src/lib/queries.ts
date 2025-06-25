@@ -6,13 +6,18 @@ import { redirect } from "next/navigation";
 import {
   Client,
   Company,
+  Lane,
   Phase,
+  Prisma,
   Project,
   Role,
+  Tag,
+  Task,
   Unit,
   User,
 } from "@prisma/client";
 import { updateProductTaux, validateProductionTaux } from "./utils";
+import { v4 } from "uuid";
 
 const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
@@ -427,6 +432,13 @@ export const createOrUpdateSubscription = async (
     return null;
   }
 };
+export const getUnitDetails = async (unitId: string) => {
+  const response = await db.unit.findUnique({
+    where: { id: unitId },
+  });
+  return response;
+};
+
 export const upsertUnit = async (unit: Unit) => {
   if (!unit.email) return null;
   const companyOwner = await db.user.findFirst({
@@ -1491,4 +1503,177 @@ export const deleteProduction = async (id: string) => {
     console.error("Erreur lors de la suppression de la production:", error);
     throw error;
   }
+};
+export const getTasksWithTags = async (unitId: string) => {
+  const response = await db.task.findMany({
+    where: {
+      Lane: {
+        unitId,
+      },
+    },
+    include: {
+      Tags: true,
+      Assigned: true,
+    },
+  });
+
+  return response;
+};
+export const upsertTag = async (
+  unitId: string,
+  tag: Prisma.TagUncheckedCreateInput
+) => {
+  const response = await db.tag.upsert({
+    where: { id: tag.id || v4(), unitId: unitId },
+    update: tag,
+    create: { ...tag, unitId: unitId },
+  });
+
+  return response;
+};
+export const getTagsForUnit = async (unitId: string) => {
+  const response = await db.unit.findUnique({
+    where: { id: unitId },
+    select: { Tag: true },
+  });
+  return response;
+};
+export const deleteTag = async (tagId: string) => {
+  const response = await db.tag.delete({ where: { id: tagId } });
+  return response;
+};
+export const upsertTask = async (
+  task: Prisma.TaskUncheckedCreateInput,
+  tags: Tag[]
+) => {
+  let order: number;
+  if (!task.order) {
+    const tasks = await db.task.findMany({
+      where: { laneId: task.laneId },
+    });
+    order = tasks.length;
+  } else {
+    order = task.order;
+  }
+
+  const response = await db.task.upsert({
+    where: {
+      id: task.id || v4(),
+    },
+    update: { ...task, Tags: { set: tags } },
+    create: { ...task, Tags: { connect: tags }, order },
+    include: {
+      Assigned: true,
+      Tags: true,
+      Lane: true,
+    },
+  });
+
+  return response;
+};
+export const deleteTask = async (taskId: string) => {
+  const response = await db.task.delete({
+    where: {
+      id: taskId,
+    },
+  });
+
+  return response;
+};
+export const getLanesWithTaskAndTags = async (unitId: string) => {
+  const response = await db.lane.findMany({
+    where: {
+      unitId,
+    },
+    orderBy: { order: "asc" },
+    include: {
+      Tasks: {
+        orderBy: {
+          order: "asc",
+        },
+        include: {
+          Tags: true,
+          Assigned: true,
+        },
+      },
+    },
+  });
+  return response;
+};
+export const upsertLane = async (lane: Prisma.LaneUncheckedCreateInput) => {
+  let order: number;
+
+  if (!lane.order) {
+    const lanes = await db.lane.findMany({
+      where: {
+        unitId: lane.unitId,
+      },
+    });
+
+    order = lanes.length;
+  } else {
+    order = lane.order;
+  }
+
+  const response = await db.lane.upsert({
+    where: { id: lane.id || v4() },
+    update: lane,
+    create: { ...lane, order },
+  });
+
+  return response;
+};
+export const deleteLane = async (laneId: string) => {
+  const resposne = await db.lane.delete({ where: { id: laneId } });
+  return resposne;
+};
+export const updateTaskOrder = async (tasks: Task[]) => {
+  try {
+    const updateTrans = tasks.map((task) =>
+      db.task.update({
+        where: {
+          id: task.id,
+        },
+        data: {
+          order: task.order,
+          laneId: task.laneId,
+        },
+      })
+    );
+
+    await db.$transaction(updateTrans);
+    console.log("🟢 Done reordered 🟢");
+  } catch (error) {
+    console.log(error, "🔴 ERROR UPDATE TASK ORDER");
+  }
+};
+export const updateLanesOrder = async (lanes: Lane[]) => {
+  try {
+    const updateTrans = lanes.map((lane) =>
+      db.lane.update({
+        where: {
+          id: lane.id,
+        },
+        data: {
+          order: lane.order,
+        },
+      })
+    );
+
+    await db.$transaction(updateTrans);
+    console.log("🟢 Done reordered 🟢");
+  } catch (error) {
+    console.log(error, "ERROR UPDATE LANES ORDER");
+  }
+};
+export const _getTasksWithAllRelations = async (laneId: string) => {
+  const response = await db.task.findMany({
+    where: { laneId: laneId },
+    include: {
+      Assigned: true,
+      Lane: true,
+      Tags: true,
+    },
+  });
+  return response;
 };

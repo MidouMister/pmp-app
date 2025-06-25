@@ -1,5 +1,6 @@
 "use client";
 
+import { TaskDetails } from "@/lib/types";
 import { Company, User } from "@prisma/client";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -10,7 +11,7 @@ interface ModalProviderProps {
 export type ModalData = {
   user?: User;
   company?: Company;
-  // task?: TaskDetails[0];
+  task?: TaskDetails[0];
 };
 
 type ModalContextType = {

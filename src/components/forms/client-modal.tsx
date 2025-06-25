@@ -52,7 +52,7 @@ export default function ClientModal({
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau client</DialogTitle>
           <DialogDescription>
-            Créez un nouveau client dans votre liste de clients de l'Unité.
+            Créez un nouveau client dans votre liste de clients de l&apos;Unité.
           </DialogDescription>
         </DialogHeader>
         <ClientForm

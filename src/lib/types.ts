@@ -1,5 +1,6 @@
 import {
   Client,
+  Lane,
   Notification,
   Phase,
   Prisma,
@@ -12,7 +13,11 @@ import {
   User,
 } from "@prisma/client";
 import { db } from "./db";
-import { getAuthUserDetails } from "./queries";
+import {
+  _getTasksWithAllRelations,
+  getAuthUserDetails,
+  getTasksWithTags,
+} from "./queries";
 
 export type SidebarOption = {
   id: string;
@@ -108,3 +113,17 @@ export interface ProductionWithDetails {
     };
   };
 }
+export type TaskWithTags = Prisma.PromiseReturnType<typeof getTasksWithTags>;
+
+// export type TaskAndTags = Task & {
+//   Tags: Tag[]
+//   Assigned: User | null
+
+// }
+export type LaneDetail = Lane & {
+  Tasks: TaskWithTags;
+};
+
+export type TaskDetails = Prisma.PromiseReturnType<
+  typeof _getTasksWithAllRelations
+>;
