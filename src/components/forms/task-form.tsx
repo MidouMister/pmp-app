@@ -9,7 +9,6 @@ import type { TaskWithTags } from "@/lib/types";
 import { useModal } from "@/providers/modal-provider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Tag, User } from "@prisma/client";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -57,11 +56,18 @@ type Props = {
   unitId: string;
   getNewTask?: (task: TaskWithTags[0]) => void;
   defaultData?: TaskWithTags[0];
+  onTaskUpdate?: (task: TaskWithTags[0]) => void; // Nouveau prop
 };
 
-const TaskForm = ({ getNewTask, laneId, unitId, defaultData }: Props) => {
+const TaskForm = ({
+  getNewTask,
+  laneId,
+  unitId,
+  defaultData,
+  onTaskUpdate,
+}: Props) => {
   const { data: modalData, setClose } = useModal();
-  const router = useRouter();
+  // const router = useRouter();
   const [tags, setTags] = useState<Tag[]>([]);
   const [allTeamMembers, setAllTeamMembers] = useState<User[]>([]);
   const [assignedTo, setAssignedTo] = useState(
@@ -187,7 +193,16 @@ const TaskForm = ({ getNewTask, laneId, unitId, defaultData }: Props) => {
         getNewTask(response);
       }
 
-      router.refresh();
+      if (response && onTaskUpdate) {
+        onTaskUpdate(response);
+      }
+
+      // router.refresh();
+
+      // Ajout d'un callback pour notifier le parent
+      if (onTaskUpdate) {
+        onTaskUpdate(response);
+      }
       setClose();
     } catch (error) {
       console.error("Erreur lors de l'enregistrement de la tâche:", error);

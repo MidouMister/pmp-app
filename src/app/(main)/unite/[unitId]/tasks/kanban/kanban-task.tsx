@@ -12,28 +12,30 @@ import {
   Circle,
   CalendarIcon,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+
+import TaskForm from "@/components/forms/task-form";
+import { deleteTask } from "@/lib/queries";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import CustomModal from "@/components/global/custom-model";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Button } from "../ui/button";
-import TaskForm from "@/components/forms/task-form";
-import { deleteTask } from "@/lib/queries";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import CustomModal from "../global/custom-model";
-import TagComponent from "../global/tag";
+} from "@/components/ui/dropdown-menu";
+import TagComponent from "@/components/global/tag";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type KanbanTaskProps = {
   task: TaskWithTags[0];
   unitId: string;
+  onTaskUpdate: (updatedTask: TaskWithTags[0]) => void;
 };
 
-const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
-  const { setOpen } = useModal();
+const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
+  const { setOpen, setClose } = useModal();
   const router = useRouter();
 
   const {
@@ -69,6 +71,7 @@ const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
           defaultData={task}
           laneId={task.laneId || ""}
           unitId={unitId}
+          onTaskUpdate={onTaskUpdate}
         />
       </CustomModal>
     );
@@ -93,7 +96,7 @@ const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
             <Button
               variant="outline"
               onClick={() => {
-                setOpen(null);
+                setClose();
               }}
             >
               Annuler
@@ -136,24 +139,28 @@ const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-card border border-border/40 rounded-xl p-4 cursor-grab hover:cursor-grabbing hover:border-accent transition-all duration-200 hover:shadow-sm ${
-        isDragging ? "shadow-lg rotate-2" : ""
-      } ${task.complete ? "opacity-75" : ""}`}
+      // Amélioration des styles de la carte de tâche
+      className={`group bg-card border border-border/40 rounded-xl p-4 cursor-grab shadow-sm hover:shadow-md hover:border-accent transition-all duration-200 
+      ${isDragging ? "shadow-lg rotate-2" : ""} 
+      ${task.complete ? "opacity-75 grayscale" : ""} `}
       {...attributes}
       {...listeners}
+      onClick={() => {
+        openEditTaskModal();
+      }}
     >
       {/* Task Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="mt-0.5 flex-shrink-0">
             {task.complete ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             ) : (
-              <Circle className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+              <Circle className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
             )}
           </div>
           <h4
-            className={`font-medium text-sm leading-relaxed ${
+            className={`font-semibold text-base leading-snug ${
               task.complete
                 ? "text-muted-foreground line-through"
                 : "text-foreground"
@@ -168,20 +175,20 @@ const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted flex-shrink-0"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted flex-shrink-0"
             >
-              <MoreHorizontal size={14} />
+              <MoreHorizontal size={16} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={openEditTaskModal}>
-              Edit Task
+              Modifier
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={openDeleteTaskModal}
               className="text-destructive focus:text-destructive"
             >
-              Delete Task
+              Supprimer
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -190,26 +197,27 @@ const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
       {/* Task Description */}
       {task.description && (
         <div className="mb-3">
-          <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">
+          <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
             {task.description}
           </p>
         </div>
       )}
 
       {/* Tags */}
-
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {task.Tags.map((tag) => (
-          <TagComponent key={tag.id} title={tag.name} colorName={tag.color} />
-        ))}
-      </div>
+      {task.Tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {task.Tags.map((tag) => (
+            <TagComponent key={tag.id} title={tag.name} colorName={tag.color} />
+          ))}
+        </div>
+      )}
 
       {/* Task Footer */}
       <div className="flex items-center justify-between">
         {/* Assignee */}
         <div className="flex items-center">
           {task.Assigned && (
-            <Avatar className="h-6 w-6 ring-2 ring-background">
+            <Avatar className="h-7 w-7 ring-2 ring-background">
               <AvatarImage src={task.Assigned.avatarUrl || undefined} />
               <AvatarFallback className="text-xs bg-primary text-primary-foreground font-medium">
                 {task.Assigned.name?.charAt(0).toUpperCase() || "U"}
@@ -221,20 +229,20 @@ const KanbanTask = ({ task, unitId }: KanbanTaskProps) => {
         {/* Dates */}
         <div className="flex items-center gap-2">
           {startDate && (
-            <div className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-400 border border-blue-400 px-2 py-1 rounded-md font-medium">
-              <Clock size={10} />
+            <div className="flex items-center gap-1.5 text-xs bg-blue-500/10 text-blue-400 border border-blue-400  px-2.5 py-1.5 rounded-md font-medium">
+              <Clock size={12} />
               <span>{startDate}</span>
             </div>
           )}
           {dueDate && (
             <div
-              className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md font-medium ${
+              className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md font-medium ${
                 isOverdue
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                  ? "bg-red-500/10 text-red-400 border border-red-500/30"
                   : "bg-emerald-500/10 text-emerald-400 border border-emerald-400"
               }`}
             >
-              <CalendarIcon size={10} />
+              <CalendarIcon size={12} />
               <span>{dueDate}</span>
             </div>
           )}

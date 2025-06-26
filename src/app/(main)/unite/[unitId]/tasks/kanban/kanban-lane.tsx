@@ -5,7 +5,7 @@ import type { TaskWithTags } from "@/lib/types";
 import { useModal } from "@/providers/modal-provider";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Button } from "../ui/button";
+import { Button } from "../../../../../../components/ui/button";
 import { PlusIcon, MoreHorizontal, GripVertical } from "lucide-react";
 import KanbanTask from "./kanban-task";
 import { SortableContext } from "@dnd-kit/sortable";
@@ -14,13 +14,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../../../../../../components/ui/dropdown-menu";
 import LaneForm from "@/components/forms/lane-form";
 import TaskForm from "@/components/forms/task-form";
 import { deleteLane } from "@/lib/queries";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import CustomModal from "../global/custom-model";
+import CustomModal from "../../../../../../components/global/custom-model";
 
 // Définition des couleurs pour les colonnes
 const laneColors = [
@@ -99,9 +99,10 @@ type KanbanLaneProps = {
   lane: Lane;
   tasks: TaskWithTags;
   unitId: string;
+  onTaskUpdate: (updatedTask: TaskWithTags[0]) => void;
 };
 
-const KanbanLane = ({ lane, tasks, unitId }: KanbanLaneProps) => {
+const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
   const { setOpen } = useModal();
   const router = useRouter();
 
@@ -133,7 +134,11 @@ const KanbanLane = ({ lane, tasks, unitId }: KanbanLaneProps) => {
         subheading="Ajouter une nouvelle tâche à cette colonne"
         size="md"
       >
-        <TaskForm laneId={lane.id} unitId={unitId} />
+        <TaskForm
+          laneId={lane.id}
+          unitId={unitId}
+          onTaskUpdate={onTaskUpdate}
+        />
       </CustomModal>
     );
   };
@@ -272,7 +277,12 @@ const KanbanLane = ({ lane, tasks, unitId }: KanbanLaneProps) => {
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         <SortableContext items={tasks.map((task) => task.id)}>
           {tasks.map((task) => (
-            <KanbanTask key={task.id} task={task} unitId={unitId} />
+            <KanbanTask
+              key={task.id}
+              task={task}
+              unitId={unitId}
+              onTaskUpdate={onTaskUpdate}
+            />
           ))}
         </SortableContext>
 

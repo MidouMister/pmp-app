@@ -20,13 +20,13 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import KanbanLane from "./kanban-lane";
-import { Button } from "../ui/button";
+import { Button } from "../../../../../../components/ui/button";
 import { PlusIcon, LayoutGrid } from "lucide-react";
-import LaneForm from "../forms/lane-form";
+import LaneForm from "../../../../../../components/forms/lane-form";
 import { DragOverlay } from "@dnd-kit/core";
 import { createPortal } from "react-dom";
 import KanbanTask from "./kanban-task";
-import CustomModal from "../global/custom-model";
+import CustomModal from "../../../../../../components/global/custom-model";
 
 type KanbanBoardProps = {
   unitId: string;
@@ -36,17 +36,7 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
   const [lanes, setLanes] = useState<LaneDetail[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeLane, setActiveLane] = useState<Lane | null>(null);
-  const { setOpen } = useModal();
-
-  // Configure sensors for drag and drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 3,
-      },
-    })
-  );
-
+  const { setOpen, setClose } = useModal();
   // Fetch lanes and tasks
   useEffect(() => {
     const fetchLanes = async () => {
@@ -75,6 +65,69 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
       fetchLanes();
     }
   }, [unitId]);
+
+  const handleTaskUpdate = (updatedTask: TaskWithTags[0]) => {
+    setLanes((prevLanes) =>
+      prevLanes.map((lane) => {
+        // If the task's laneId has changed, remove it from the old lane
+        if (updatedTask.laneId !== lane.id) {
+          const taskExistsInCurrentLane = lane.Tasks?.some(
+            (task) => task.id === updatedTask.id
+          );
+          if (taskExistsInCurrentLane) {
+            return {
+              ...lane,
+              Tasks: lane.Tasks.filter((task) => task.id !== updatedTask.id),
+            };
+          }
+        }
+
+        // Update the task in its new (or same) lane
+        if (lane.id === updatedTask.laneId) {
+          const taskExists = lane.Tasks?.some(
+            (task) => task.id === updatedTask.id
+          );
+          if (taskExists) {
+            return {
+              ...lane,
+              Tasks: lane.Tasks.map((task) =>
+                task.id === updatedTask.id ? updatedTask : task
+              ),
+            };
+          } else {
+            // Add new task to the lane
+            return {
+              ...lane,
+              Tasks: [...(lane.Tasks || []), updatedTask],
+            };
+          }
+        }
+        return lane;
+      })
+    );
+    setClose(); // Close the modal after update
+  };
+
+  const openAddLaneModal = () => {
+    setOpen(
+      <CustomModal
+        title="Créer une Colonne"
+        subheading="Créer une nouvelle colonne pour vos tâches"
+        size="sm"
+      >
+        <LaneForm unitId={unitId} />
+      </CustomModal>
+    );
+  };
+
+  // Configure sensors for drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+    })
+  );
 
   const onDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -256,18 +309,6 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
     }
   };
 
-  const openAddLaneModal = () => {
-    setOpen(
-      <CustomModal
-        title="Créer une Colonne"
-        subheading="Créer une nouvelle colonne pour vos tâches"
-        size="sm"
-      >
-        <LaneForm unitId={unitId} />
-      </CustomModal>
-    );
-  };
-
   return (
     <div className="h-full w-full  p-1">
       <div className="flex justify-between items-center mb-4">
@@ -303,6 +344,7 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
                 lane={lane}
                 tasks={lane.Tasks || []}
                 unitId={unitId}
+                onTaskUpdate={handleTaskUpdate}
               />
             ))}
           </SortableContext>
@@ -330,12 +372,18 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
                   <KanbanTask
                     task={activeTask as unknown as TaskWithTags[0]}
                     unitId={unitId}
+                    onTaskUpdate={handleTaskUpdate}
                   />
                 </div>
               )}
               {activeLane && (
                 <div className="rotate-1 scale-105">
-                  <KanbanLane lane={activeLane} tasks={[]} unitId={unitId} />
+                  <KanbanLane
+                    lane={activeLane}
+                    tasks={[]}
+                    unitId={unitId}
+                    onTaskUpdate={handleTaskUpdate}
+                  />
                 </div>
               )}
             </DragOverlay>,

@@ -1,6 +1,7 @@
 import { getAuthUserDetails } from "@/lib/queries";
 import { redirect } from "next/navigation";
-import KanbanBoard from "@/components/kanban/kanban-board";
+import KanbanBoard from "./kanban/kanban-board";
+
 type Params = Promise<{ unitId: string }>;
 const TasksPage = async ({ params }: { params: Params }) => {
   const { unitId } = await params;
