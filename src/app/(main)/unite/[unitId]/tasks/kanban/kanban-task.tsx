@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import TagComponent from "@/components/global/tag";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CustomSheet from "@/components/global/custom-sheet";
 
 type KanbanTaskProps = {
   task: TaskWithTags[0];
@@ -62,10 +63,9 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
 
   const openEditTaskModal = () => {
     setOpen(
-      <CustomModal
+      <CustomSheet
         title="Modifier la Tâche"
         subheading="Modifier les détails de la tâche"
-        size="lg"
       >
         <TaskForm
           defaultData={task}
@@ -73,7 +73,7 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
           unitId={unitId}
           onTaskUpdate={onTaskUpdate}
         />
-      </CustomModal>
+      </CustomSheet>
     );
   };
 
@@ -139,113 +139,122 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
     <div
       ref={setNodeRef}
       style={style}
-      // Amélioration des styles de la carte de tâche
-      className={`group bg-card border border-border/40 rounded-xl p-4 cursor-grab shadow-sm hover:shadow-md hover:border-accent transition-all duration-200 
-      ${isDragging ? "shadow-lg rotate-2" : ""} 
-      ${task.complete ? "opacity-75 grayscale" : ""} `}
+      className={`group relative bg-card border border-border/40 rounded-xl p-4 space-y-4 cursor-grab shadow-sm hover:shadow-lg hover:border-primary/60 transition-all duration-300 
+      ${isDragging ? "shadow-xl rotate-3" : ""} 
+      ${task.complete ? "opacity-60 grayscale" : ""}`}
       {...attributes}
       {...listeners}
-      onClick={() => {
-        openEditTaskModal();
-      }}
+      onClick={openEditTaskModal}
     >
-      {/* Task Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="mt-0.5 flex-shrink-0">
-            {task.complete ? (
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer" />
-            )}
+      {/* Content Container */}
+      <div className="space-y-3">
+        {/* Task Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="mt-0.5 flex-shrink-0">
+              {task.complete ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+              )}
+            </div>
+            <h4
+              className={`font-semibold text-base leading-snug ${
+                task.complete
+                  ? "text-muted-foreground line-through"
+                  : "text-foreground"
+              }`}
+            >
+              {task.title}
+            </h4>
           </div>
-          <h4
-            className={`font-semibold text-base leading-snug ${
-              task.complete
-                ? "text-muted-foreground line-through"
-                : "text-foreground"
-            }`}
-          >
-            {task.title}
-          </h4>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted flex-shrink-0"
+                onClick={(e) => e.stopPropagation()} // Prevent modal from opening
+              >
+                <MoreHorizontal size={16} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEditTaskModal();
+                }}
+              >
+                Modifier
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDeleteTaskModal();
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                Supprimer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted flex-shrink-0"
-            >
-              <MoreHorizontal size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={openEditTaskModal}>
-              Modifier
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={openDeleteTaskModal}
-              className="text-destructive focus:text-destructive"
-            >
-              Supprimer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Task Description */}
-      {task.description && (
-        <div className="mb-3">
+        {/* Task Description */}
+        {task.description && (
           <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
             {task.description}
           </p>
-        </div>
-      )}
+        )}
 
-      {/* Tags */}
-      {task.Tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {task.Tags.map((tag) => (
-            <TagComponent key={tag.id} title={tag.name} colorName={tag.color} />
-          ))}
-        </div>
-      )}
+        {/* Tags */}
+        {task.Tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {task.Tags.map((tag) => (
+              <TagComponent
+                key={tag.id}
+                title={tag.name}
+                colorName={tag.color}
+              />
+            ))}
+          </div>
+        )}
 
-      {/* Task Footer */}
-      <div className="flex items-center justify-between">
-        {/* Assignee */}
-        <div className="flex items-center">
-          {task.Assigned && (
-            <Avatar className="h-7 w-7 ring-2 ring-background">
-              <AvatarImage src={task.Assigned.avatarUrl || undefined} />
-              <AvatarFallback className="text-xs bg-primary text-primary-foreground font-medium">
-                {task.Assigned.name?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-          )}
-        </div>
+        {/* Task Footer */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/20">
+          {/* Assignee */}
+          <div className="flex items-center">
+            {task.Assigned && (
+              <Avatar className="h-7 w-7 ring-2 ring-background">
+                <AvatarImage src={task.Assigned.avatarUrl || undefined} />
+                <AvatarFallback className="text-xs bg-muted font-medium">
+                  {task.Assigned.name?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            )}
+          </div>
 
-        {/* Dates */}
-        <div className="flex items-center gap-2">
-          {startDate && (
-            <div className="flex items-center gap-1.5 text-xs bg-blue-500/10 text-blue-400 border border-blue-400  px-2.5 py-1.5 rounded-md font-medium">
-              <Clock size={12} />
-              <span>{startDate}</span>
-            </div>
-          )}
-          {dueDate && (
-            <div
-              className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md font-medium ${
-                isOverdue
-                  ? "bg-red-500/10 text-red-400 border border-red-500/30"
-                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-400"
-              }`}
-            >
-              <CalendarIcon size={12} />
-              <span>{dueDate}</span>
-            </div>
-          )}
+          {/* Dates */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {startDate && (
+              <div className="flex items-center gap-1.5">
+                <Clock size={12} />
+                <span>{startDate}</span>
+              </div>
+            )}
+            {dueDate && (
+              <div
+                className={`flex items-center gap-1.5 font-medium ${
+                  isOverdue ? "text-red-500" : ""
+                }`}
+              >
+                <CalendarIcon size={12} />
+                <span>{dueDate}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -27,6 +27,7 @@ import { DragOverlay } from "@dnd-kit/core";
 import { createPortal } from "react-dom";
 import KanbanTask from "./kanban-task";
 import CustomModal from "../../../../../../components/global/custom-model";
+import Loading from "@/components/global/loading";
 
 type KanbanBoardProps = {
   unitId: string;
@@ -36,11 +37,13 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
   const [lanes, setLanes] = useState<LaneDetail[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeLane, setActiveLane] = useState<Lane | null>(null);
+  const [loading, setLoading] = useState(true);
   const { setOpen, setClose } = useModal();
   // Fetch lanes and tasks
   useEffect(() => {
     const fetchLanes = async () => {
       try {
+        setLoading(true);
         const fetchedLanes = await getLanesWithTaskAndTags(unitId);
         if (fetchedLanes) {
           const sortedLanes = [...fetchedLanes].sort(
@@ -58,6 +61,8 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
         }
       } catch (error) {
         console.error("Error fetching lanes:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -173,7 +178,10 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
         const newActiveLaneTasks = activeLane.Tasks.filter(
           (task) => task.id !== active.id
         );
-        const newOverLaneTasks = [...overLane.Tasks, { ...taskToMove, laneId: overLane.id }];
+        const newOverLaneTasks = [
+          ...overLane.Tasks,
+          { ...taskToMove, laneId: overLane.id },
+        ];
 
         // Re-order tasks in the new lane
         newOverLaneTasks.forEach((task, index) => {
@@ -217,7 +225,10 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
             (task) => task.id !== active.id
           );
           const newOverLaneTasks = [...overLane.Tasks];
-          newOverLaneTasks.splice(overTaskIndex, 0, { ...taskToMove, laneId: overLane.id });
+          newOverLaneTasks.splice(overTaskIndex, 0, {
+            ...taskToMove,
+            laneId: overLane.id,
+          });
 
           // Re-order tasks in the new lane
           newOverLaneTasks.forEach((task, index) => {
@@ -250,7 +261,9 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
       const activeLaneId = active.id as string;
       const overLaneId = over.id as string;
 
-      const activeLaneIndex = lanes.findIndex((lane) => lane.id === activeLaneId);
+      const activeLaneIndex = lanes.findIndex(
+        (lane) => lane.id === activeLaneId
+      );
       const overLaneIndex = lanes.findIndex((lane) => lane.id === overLaneId);
 
       const newLanes = arrayMove(lanes, activeLaneIndex, overLaneIndex);
@@ -341,7 +354,9 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
         ).map((task, index) => ({ ...task, order: index }));
 
         const newLanes = [...lanes];
-        const laneIndex = newLanes.findIndex((lane) => lane.id === activeLane.id);
+        const laneIndex = newLanes.findIndex(
+          (lane) => lane.id === activeLane.id
+        );
         newLanes[laneIndex] = { ...activeLane, Tasks: reorderedTasks };
 
         setLanes(newLanes);
@@ -349,6 +364,14 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full  p-1">
@@ -377,7 +400,7 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto pb-6 h-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600">
+        <div className="flex gap-6 overflow-x-auto pb-6 h-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 border border-dashed rounded-md p-2">
           <SortableContext items={lanes.map((lane) => lane.id)}>
             {lanes.map((lane) => (
               <KanbanLane
