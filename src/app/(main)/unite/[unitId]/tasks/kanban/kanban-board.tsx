@@ -145,166 +145,207 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
 
   const onDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    if (!over) return;
-    if (active.id === over.id) return;
+    const isActiveATask = active.data.current?.type === "Task";
+    const isOverATask = over.data.current?.type === "Task";
+    const isOverALane = over.data.current?.type === "Lane";
 
-    if (
-      active.data.current?.type === "Task" &&
-      over.data.current?.type === "Lane"
-    ) {
-      const activeTask = active.data.current.task as Task;
-      const overLaneId = over.id as string;
-
-      if (activeTask.laneId === overLaneId) return;
-
+    // Handle dropping a task over a lane
+    if (isActiveATask && isOverALane) {
       setLanes((prevLanes) => {
-        const sourceLane = prevLanes.find(
-          (lane) => lane.id === activeTask.laneId
+        const activeIndex = prevLanes.findIndex((lane) =>
+          lane.Tasks.some((task) => task.id === active.id)
         );
-        const destinationLane = prevLanes.find(
-          (lane) => lane.id === overLaneId
+        const overIndex = prevLanes.findIndex((lane) => lane.id === over.id);
+
+        const activeLane = prevLanes[activeIndex];
+        const overLane = prevLanes[overIndex];
+
+        if (!activeLane || !overLane || activeLane.id === overLane.id) {
+          return prevLanes;
+        }
+
+        const taskToMove = activeLane.Tasks.find(
+          (task) => task.id === active.id
+        )!;
+
+        const newActiveLaneTasks = activeLane.Tasks.filter(
+          (task) => task.id !== active.id
         );
+        const newOverLaneTasks = [...overLane.Tasks, { ...taskToMove, laneId: overLane.id }];
 
-        if (!sourceLane || !destinationLane) return prevLanes;
-
-        const updatedTask = {
-          ...activeTask,
-          laneId: overLaneId,
-          order: destinationLane.Tasks ? destinationLane.Tasks.length : 0,
-        };
-
-        return prevLanes.map((lane) => {
-          if (lane.id === sourceLane.id) {
-            return {
-              ...lane,
-              Tasks: lane.Tasks
-                ? lane.Tasks.filter((task) => task.id !== activeTask.id)
-                : [],
-            };
-          }
-          if (lane.id === destinationLane.id) {
-            return {
-              ...lane,
-              Tasks: lane.Tasks
-                ? [...lane.Tasks, updatedTask as unknown as TaskWithTags[0]]
-                : [updatedTask as unknown as TaskWithTags[0]],
-            };
-          }
-          return lane;
+        // Re-order tasks in the new lane
+        newOverLaneTasks.forEach((task, index) => {
+          task.order = index;
         });
+
+        const newLanes = [...prevLanes];
+        newLanes[activeIndex] = { ...activeLane, Tasks: newActiveLaneTasks };
+        newLanes[overIndex] = { ...overLane, Tasks: newOverLaneTasks };
+
+        return newLanes;
       });
+    }
+
+    // Handle dropping a task over another task in a different lane
+    if (isActiveATask && isOverATask) {
+      const activeLane = lanes.find((lane) =>
+        lane.Tasks.some((task) => task.id === active.id)
+      );
+      const overLane = lanes.find((lane) =>
+        lane.Tasks.some((task) => task.id === over.id)
+      );
+
+      if (activeLane && overLane && activeLane.id !== overLane.id) {
+        setLanes((prevLanes) => {
+          const activeIndex = prevLanes.findIndex(
+            (lane) => lane.id === activeLane.id
+          );
+          const overIndex = prevLanes.findIndex(
+            (lane) => lane.id === overLane.id
+          );
+
+          const taskToMove = activeLane.Tasks.find(
+            (task) => task.id === active.id
+          )!;
+          const overTaskIndex = overLane.Tasks.findIndex(
+            (task) => task.id === over.id
+          );
+
+          const newActiveLaneTasks = activeLane.Tasks.filter(
+            (task) => task.id !== active.id
+          );
+          const newOverLaneTasks = [...overLane.Tasks];
+          newOverLaneTasks.splice(overTaskIndex, 0, { ...taskToMove, laneId: overLane.id });
+
+          // Re-order tasks in the new lane
+          newOverLaneTasks.forEach((task, index) => {
+            task.order = index;
+          });
+
+          const newLanes = [...prevLanes];
+          newLanes[activeIndex] = { ...activeLane, Tasks: newActiveLaneTasks };
+          newLanes[overIndex] = { ...overLane, Tasks: newOverLaneTasks };
+
+          return newLanes;
+        });
+      }
     }
   };
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-
     setActiveTask(null);
     setActiveLane(null);
 
     if (!over) return;
 
+    // Handle Lane dragging
     if (
       active.data.current?.type === "Lane" &&
-      over.data.current?.type === "Lane"
+      over.data.current?.type === "Lane" &&
+      active.id !== over.id
     ) {
       const activeLaneId = active.id as string;
       const overLaneId = over.id as string;
 
-      if (activeLaneId === overLaneId) return;
+      const activeLaneIndex = lanes.findIndex((lane) => lane.id === activeLaneId);
+      const overLaneIndex = lanes.findIndex((lane) => lane.id === overLaneId);
 
-      setLanes((prevLanes) => {
-        const activeLaneIndex = prevLanes.findIndex(
-          (lane) => lane.id === activeLaneId
-        );
-        const overLaneIndex = prevLanes.findIndex(
-          (lane) => lane.id === overLaneId
-        );
+      const newLanes = arrayMove(lanes, activeLaneIndex, overLaneIndex);
+      const lanesWithUpdatedOrder = newLanes.map((lane, index) => ({
+        ...lane,
+        order: index,
+      }));
 
-        const newOrder = arrayMove(prevLanes, activeLaneIndex, overLaneIndex);
-
-        return newOrder.map((lane, index) => ({
-          ...lane,
-          order: index,
-        }));
-      });
-
-      try {
-        const lanesWithUpdatedOrder = lanes.map((lane, index) => ({
-          ...lane,
-          order: index,
-        }));
-        await updateLanesOrder(lanesWithUpdatedOrder);
-      } catch (error) {
-        console.error("Error updating lane order:", error);
-      }
+      setLanes(lanesWithUpdatedOrder);
+      await updateLanesOrder(lanesWithUpdatedOrder);
+      return;
     }
 
-    if (
-      active.data.current?.type === "Task" &&
-      over.data.current?.type === "Task"
-    ) {
+    // Handle Task dragging
+    if (active.data.current?.type === "Task") {
       const activeTaskId = active.id as string;
-      const overTaskId = over.id as string;
+      const overId = over.id as string;
 
-      if (activeTaskId === overTaskId) return;
+      const activeLane = lanes.find((lane) =>
+        lane.Tasks.some((task) => task.id === activeTaskId)
+      );
+      let overLane = lanes.find((lane) =>
+        lane.Tasks.some((task) => task.id === overId)
+      );
 
-      const activeTask = active.data.current.task as Task;
-      const overTask = over.data.current.task as Task;
+      if (!overLane) {
+        overLane = lanes.find((lane) => lane.id === overId);
+      }
 
-      if (activeTask.laneId === overTask.laneId) {
-        setLanes((prevLanes) => {
-          const laneIndex = prevLanes.findIndex(
-            (lane) => lane.id === activeTask.laneId
-          );
-          if (laneIndex === -1) return prevLanes;
+      if (!activeLane || !overLane) return;
 
-          const lane = prevLanes[laneIndex];
-          const tasks = lane.Tasks ? [...lane.Tasks] : [];
+      // Moving task to a different lane
+      if (activeLane.id !== overLane.id) {
+        const activeTask = activeLane.Tasks.find(
+          (task) => task.id === activeTaskId
+        )!;
 
-          const activeTaskIndex = tasks.findIndex(
-            (task) => task.id === activeTaskId
-          );
-          const overTaskIndex = tasks.findIndex(
-            (task) => task.id === overTaskId
-          );
+        // Remove from source lane
+        const newSourceTasks = activeLane.Tasks.filter(
+          (task) => task.id !== activeTaskId
+        ).map((task, index) => ({ ...task, order: index }));
 
-          const reorderedTasks = arrayMove(
-            tasks,
-            activeTaskIndex,
-            overTaskIndex
-          );
-
-          const tasksWithUpdatedOrder = reorderedTasks.map((task, index) => ({
-            ...task,
-            order: index,
-          }));
-
-          const newLanes = [...prevLanes];
-          newLanes[laneIndex] = {
-            ...lane,
-            Tasks: tasksWithUpdatedOrder,
-          };
-
-          return newLanes;
-        });
-
-        try {
-          const laneIndex = lanes.findIndex(
-            (lane) => lane.id === activeTask.laneId
-          );
-          if (laneIndex !== -1) {
-            const tasks = lanes[laneIndex].Tasks || [];
-            const tasksWithUpdatedOrder = tasks.map((task, index) => ({
-              ...task,
-              order: index,
-            }));
-            await updateTaskOrder(tasksWithUpdatedOrder);
-          }
-        } catch (error) {
-          console.error("Error updating task order:", error);
+        // Add to destination lane
+        const overTaskIndex = overLane.Tasks.findIndex(
+          (task) => task.id === overId
+        );
+        const newDestTasks = [...overLane.Tasks];
+        if (over.data.current?.type === "Task") {
+          newDestTasks.splice(overTaskIndex, 0, activeTask);
+        } else {
+          newDestTasks.push(activeTask);
         }
+
+        const reorderedDestTasks = newDestTasks.map((task, index) => ({
+          ...task,
+          laneId: overLane!.id,
+          order: index,
+        }));
+
+        const newLanes = [...lanes];
+        const sourceLaneIndex = newLanes.findIndex(
+          (lane) => lane.id === activeLane.id
+        );
+        const destLaneIndex = newLanes.findIndex(
+          (lane) => lane.id === overLane!.id
+        );
+
+        newLanes[sourceLaneIndex] = { ...activeLane, Tasks: newSourceTasks };
+        newLanes[destLaneIndex] = { ...overLane, Tasks: reorderedDestTasks };
+
+        setLanes(newLanes);
+
+        const tasksToUpdate = [...newSourceTasks, ...reorderedDestTasks];
+        await updateTaskOrder(tasksToUpdate);
+      } else {
+        // Moving task within the same lane
+        const taskIndex = activeLane.Tasks.findIndex(
+          (task) => task.id === activeTaskId
+        );
+        const overTaskIndex = activeLane.Tasks.findIndex(
+          (task) => task.id === overId
+        );
+
+        const reorderedTasks = arrayMove(
+          activeLane.Tasks,
+          taskIndex,
+          overTaskIndex
+        ).map((task, index) => ({ ...task, order: index }));
+
+        const newLanes = [...lanes];
+        const laneIndex = newLanes.findIndex((lane) => lane.id === activeLane.id);
+        newLanes[laneIndex] = { ...activeLane, Tasks: reorderedTasks };
+
+        setLanes(newLanes);
+        await updateTaskOrder(reorderedTasks);
       }
     }
   };

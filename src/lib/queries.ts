@@ -1642,7 +1642,7 @@ export const updateTaskOrder = async (tasks: Task[]) => {
     );
 
     await db.$transaction(updateTrans);
-    console.log("🟢 Done reordered 🟢");
+    console.log("🟢 Task Done reordered 🟢");
   } catch (error) {
     console.log(error, "🔴 ERROR UPDATE TASK ORDER");
   }
