@@ -1,5 +1,5 @@
 import { getAuthUserDetails } from "@/lib/queries";
-import MenuOptions from "./menu-options";
+import SidebarWrapper from "./sidebar-wrapper";
 import { SidebarOption } from "@/lib/types";
 import { Company } from "@prisma/client";
 import {
@@ -145,26 +145,15 @@ const Sidebar = async ({ id, type }: Props) => {
   const units = user.Company?.units || [];
 
   return (
-    <>
-      <MenuOptions
-        defaultOpen={true}
-        units={units}
-        roleSidebarOptions={sideBarOpt}
-        sidebarLogo={sideBarLogo}
-        details={details as Company}
-        user={user}
-        id={id}
-      />
-      {/* mobile nav bar */}
-      <MenuOptions
-        units={units}
-        roleSidebarOptions={sideBarOpt}
-        sidebarLogo={sideBarLogo}
-        details={details as Company}
-        user={user}
-        id={id}
-      />
-    </>
+    <SidebarWrapper
+      units={units}
+      roleSidebarOptions={sideBarOpt}
+      sidebarLogo={sideBarLogo}
+      details={details as Company}
+      user={user}
+      id={id}
+      defaultOpen={true}
+    />
   );
 };
 
