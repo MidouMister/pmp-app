@@ -14,7 +14,7 @@ const TasksPage = async ({ params }: { params: Params }) => {
   if (!hasAccess) return redirect("/dashboard");
 
   return (
-    <div className="h-full w-full  ">
+    <div className="h-full w-full ">
       <KanbanBoard unitId={unitId} />
     </div>
   );

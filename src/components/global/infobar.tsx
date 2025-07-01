@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 import { NotificationWithUser } from "@/lib/types";
 import { ModeToggle } from "./mode-toggle";
+import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
 
 type Props = {
   notifications: NotificationWithUser | [];
@@ -28,7 +29,13 @@ type Props = {
   unitId?: string;
 };
 
-const InfoBar = ({ notifications, unitId, className, role }: Props) => {
+const InfoBar = ({
+  notifications,
+  unitId,
+  className,
+  role,
+}: Props) => {
+  const { isCollapsed } = useSidebarCollapseContext();
   const [allNotifications, setAllNotifications] = useState(notifications);
   const [showAll, setShowAll] = useState(true);
 
@@ -49,12 +56,14 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
     <>
       <div
         className={twMerge(
-          "fixed z-[20] md:left-[300px] left-0 right-0 top-0 p-4 bg-background/80 backdrop-blur-md flex gap-4 items-center border-b-[1px]",
+          `fixed z-[20] ${
+            isCollapsed ? "md:left-[80px]" : "md:left-[300px]"
+          } left-0 right-0 top-0 p-4 bg-background/80 backdrop-blur-md flex gap-4 items-center border-b-[1px] transition-all duration-300`,
           className
         )}
       >
         <div className="flex items-center gap-4 ml-auto">
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
           <Sheet>
             <SheetTrigger asChild>
               <button className="relative rounded-full w-10 h-10 bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center text-white">

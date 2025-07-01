@@ -1,5 +1,6 @@
 import BlurPage from "@/components/global/blur-page";
 import InfoBar from "@/components/global/infobar";
+import ResponsiveLayoutWrapper from "@/components/layout/responsive-layout-wrapper";
 import Sidebar from "@/components/sidebar";
 import Unauthorized from "@/components/unauthorized";
 import {
@@ -50,26 +51,25 @@ const UnitLayout = async ({ children, params }: Props) => {
 
   return (
     <div className="h-screen overflow-hidden">
-      <Sidebar
-        id={unitId}
-        type={
-          user.privateMetadata.role === "OWNER" ||
-          user.privateMetadata.role === "ADMIN"
-            ? "unit"
-            : "user"
-        }
-      />
-
-      <div className="md:pl-[300px]">
+      <ResponsiveLayoutWrapper>
+        <Sidebar
+          id={unitId}
+          type={
+            user.privateMetadata.role === "OWNER" ||
+            user.privateMetadata.role === "ADMIN"
+              ? "unit"
+              : "user"
+          }
+        />
         <InfoBar
           notifications={notifications}
           role={user.privateMetadata.role as Role}
           unitId={unitId}
         />
         <div className="relative">
-          <BlurPage>{children} </BlurPage>
+          <BlurPage className="mt-18">{children} </BlurPage>
         </div>
-      </div>
+      </ResponsiveLayoutWrapper>
     </div>
   );
 };

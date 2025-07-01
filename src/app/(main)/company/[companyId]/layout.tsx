@@ -4,6 +4,7 @@ import Sidebar from "@/components/sidebar";
 import { redirect } from "next/navigation";
 import Unauthorized from "@/components/unauthorized";
 import { getNotificationAndUser } from "@/lib/queries";
+import ResponsiveLayoutWrapper from "@/components/layout/responsive-layout-wrapper";
 
 import { Role } from "@prisma/client";
 import { NotificationWithUser } from "@/lib/types";
@@ -35,15 +36,16 @@ export default async function Layout({
   return (
     <div className="h-screen overflow-hidden">
       <Sidebar type="company" id={companyId} />
-      <div className="md:pl-[300px]">
+
+      <ResponsiveLayoutWrapper>
         <InfoBar
           notifications={allNoti}
           role={user.privateMetadata.role as Role}
         />
-        <div className="relative">
-          <BlurPage>{children}</BlurPage>
+        <div className="relative ">
+          <BlurPage className="mt-18">{children}</BlurPage>
         </div>
-      </div>
+      </ResponsiveLayoutWrapper>
     </div>
   );
 }

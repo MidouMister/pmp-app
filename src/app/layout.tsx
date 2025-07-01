@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import ModalProvider from "@/providers/modal-provider";
+import { SidebarCollapseProvider } from "@/providers/sidebar-collapse-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,8 +39,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ModalProvider>
-            <Toaster richColors />
-            {children}
+            <SidebarCollapseProvider>
+              <Toaster richColors />
+              {children}
+            </SidebarCollapseProvider>
           </ModalProvider>
         </ThemeProvider>
       </body>
