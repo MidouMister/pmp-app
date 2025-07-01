@@ -113,7 +113,7 @@ const MenuOptions = ({
         {defaultOpen && (
           <button
             onClick={toggleCollapse}
-            className="absolute -right-3 top-20 transform -translate-y-1/2 
+            className="absolute -right-3 top-18 transform -translate-y-1/2 
                      bg-background border border-border rounded-full p-1.5
                      shadow-md hover:shadow-lg transition-all duration-200 
                      hover:bg-accent z-10 hidden md:flex items-center justify-center"
