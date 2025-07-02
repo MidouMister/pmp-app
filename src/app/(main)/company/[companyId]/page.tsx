@@ -1,7 +1,8 @@
 export default async function Page({
   params,
 }: {
-  params: { companyId: string };
+  params: Promise<{ companyId: string }>;
 }) {
-  return <div>page Company {params.companyId}</div>;
+  const { companyId } = await params;
+  return <div>page Company {companyId}</div>;
 }
