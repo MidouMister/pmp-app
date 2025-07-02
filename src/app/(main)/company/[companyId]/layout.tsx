@@ -16,9 +16,9 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ companyId: string }>;
+  params: { companyId: string };
 }) {
-  const { companyId } = await params;
+  const { companyId } = params; // ✅ pas de await ici
 
   const user = await currentUser();
   if (!user) {
@@ -28,7 +28,10 @@ export default async function Layout({
   if (!companyId) {
     return redirect("/company");
   }
-  if (user.privateMetadata.role !== "OWNER") return <Unauthorized />;
+
+  if (user.privateMetadata.role !== "OWNER") {
+    return <Unauthorized />;
+  }
 
   const notifications = await getNotificationAndUser(companyId);
   const allNoti: NotificationWithUser = notifications || [];
@@ -42,7 +45,7 @@ export default async function Layout({
           notifications={allNoti}
           role={user.privateMetadata.role as Role}
         />
-        <div className="relative ">
+        <div className="relative">
           <BlurPage className="mt-18">{children}</BlurPage>
         </div>
       </ResponsiveLayoutWrapper>
