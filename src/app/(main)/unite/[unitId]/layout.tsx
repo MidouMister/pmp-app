@@ -15,7 +15,7 @@ import React from "react";
 
 type Props = {
   children: React.ReactNode;
-  params: { unitId: string };
+  params: Promise<{ unitId: string }>;
 };
 
 const UnitLayout = async ({ children, params }: Props) => {
