@@ -3,14 +3,13 @@ import { ModeToggle } from "@/components/global/mode-toggle";
 import { UserButton } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
 import Link from "next/link";
-import React from "react";
 import { Logo } from "../logo";
 
 type Props = {
   user?: null | User;
 };
 
-const Navigation = ({ user }: Props) => {
+const Navigation = ({}: Props) => {
   return (
     <div className=" mx-10 my-1 rounded-b-2xl fixed top-0 right-0 left-0 p-4 flex items-center justify-between z-10 border-b  border-b-accent bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <aside className="flex items-center gap-2">
