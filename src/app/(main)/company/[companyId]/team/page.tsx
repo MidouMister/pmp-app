@@ -7,8 +7,7 @@ import SendInvitation from "@/components/forms/send-invitation";
 import DataTable from "./data-table";
 import { columns } from "./columns";
 
-type Params = Promise<{ companyId: string }>;
-const TeamPage = async ({ params }: { params: Params }) => {
+const TeamPage = async ({ params }: { params: { companyId: string } }) => {
   const { companyId } = await params;
   const authUser = await currentUser();
   const teamMembers = await db.user.findMany({

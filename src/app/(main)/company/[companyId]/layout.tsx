@@ -16,7 +16,7 @@ export default async function Layout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ companyId: string }>;
+  params: { companyId: string };
 }) {
   const { companyId } = await params;
 

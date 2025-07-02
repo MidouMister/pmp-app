@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getPhaseById } from "@/lib/queries";
 
-type params = Promise<{ phaseId: string }>;
-
 // GET - Récupérer une phase par ID
-export async function GET(req: Request, { params }: { params: params }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { phaseId: string } }
+) {
   try {
     const { phaseId } = await params;
     const phase = await getPhaseById(phaseId);

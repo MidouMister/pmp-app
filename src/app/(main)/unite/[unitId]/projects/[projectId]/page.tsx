@@ -6,9 +6,11 @@ import { Suspense } from "react";
 import ProjectDashboard from "./_components/project-dashboard";
 import { ProjectWithDetails } from "@/lib/types";
 
-type Params = Promise<{ unitId: string; projectId: string }>;
-
-const ProjectPage = async ({ params }: { params: Params }) => {
+const ProjectPage = async ({
+  params,
+}: {
+  params: { unitId: string; projectId: string };
+}) => {
   const { unitId, projectId } = await params;
 
   // Vérifier si l'utilisateur est autorisé (OWNER ou ADMIN)

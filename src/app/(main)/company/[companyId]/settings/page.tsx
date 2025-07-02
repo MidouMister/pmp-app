@@ -17,8 +17,11 @@ import { Separator } from "@/components/ui/separator";
 import UserDetails from "@/components/forms/user-details";
 import SubscriptionPlans from "@/components/forms/suscription-plan";
 
-type Params = Promise<{ companyId: string }>;
-export default async function SettingsPage({ params }: { params: Params }) {
+export default async function SettingsPage({
+  params,
+}: {
+  params: { companyId: string };
+}) {
   const { companyId } = await params;
   const user = await getAuthUserDetails();
 

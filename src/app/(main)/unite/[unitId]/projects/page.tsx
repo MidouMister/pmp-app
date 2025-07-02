@@ -4,9 +4,7 @@ import { redirect } from "next/navigation";
 import Unauthorized from "@/components/unauthorized";
 import UnitProjects from "./unit-projects";
 
-type Params = Promise<{ unitId: string }>;
-
-const ProjectsPage = async ({ params }: { params: Params }) => {
+const ProjectsPage = async ({ params }: { params: { unitId: string } }) => {
   const { unitId } = await params;
 
   // Vérifier si l'utilisateur est autorisé (OWNER ou ADMIN)

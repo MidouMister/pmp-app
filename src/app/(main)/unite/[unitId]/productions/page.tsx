@@ -5,10 +5,8 @@ import { DataTable } from "./data-table";
 import { Card, CardContent } from "@/components/ui/card";
 import UnitProductionForm from "@/components/forms/unit-production-form";
 
-type Params = Promise<{ unitId: string }>;
-
-async function UniteProduction({ params }: { params: Params }) {
-  const { unitId } = await params;
+async function UniteProduction({ params }: { params: { unitId: string } }) {
+  const { unitId } = params;
   // Récupérer les projets de l'unité
   const projects = await getProjectsByUnitId(unitId);
 

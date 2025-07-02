@@ -5,9 +5,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import Loading from "@/components/global/loading";
 import UnitsClient from "./units-client";
 
-type Params = Promise<{ companyId: string }>;
-
-export default async function UnitsPage({ params }: { params: Params }) {
+export default async function UnitsPage({
+  params,
+}: {
+  params: { companyId: string };
+}) {
   const { companyId } = await params;
   const user = await currentUser();
   if (!user) return null;

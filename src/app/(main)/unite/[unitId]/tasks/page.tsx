@@ -9,9 +9,7 @@ import { LayoutGrid, List } from "lucide-react";
 import Loading from "@/components/global/loading";
 import { UserAuthDetails } from "@/lib/types";
 
-type Params = { unitId: string };
-
-const TasksPage = ({ params }: { params: Params }) => {
+const TasksPage = ({ params }: { params: { unitId: string } }) => {
   const { unitId } = params;
   const [view, setView] = useState<"kanban" | "table">("kanban");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
