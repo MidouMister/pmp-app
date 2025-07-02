@@ -27,7 +27,7 @@ import {
 import { useModal } from "@/providers/modal-provider";
 import { cn, formatAmount } from "@/lib/utils";
 import { formatMonthYear } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { Phase, Project } from "@prisma/client";
 import {
   Select,
@@ -85,10 +85,27 @@ export default function UnitProductionForm({
     defaultValues,
   });
 
-  // Filtrer les phases en fonction du projet sélectionné
-  const availablePhases = selectedProject
-    ? projects.find((p) => p.id === selectedProject)?.phases || []
-    : [];
+  // Watch form values
+  const projectIdValue = form.watch("projectId");
+  const phaseIdValue = form.watch("phaseId");
+  const tauxValue = form.watch("taux");
+
+  // Memoize availablePhases to prevent unnecessary re-renders
+  const availablePhases = useMemo(() => {
+    return selectedProject
+      ? projects.find((p) => p.id === selectedProject)?.phases || []
+      : [];
+  }, [selectedProject, projects]);
+
+  // Memoize the calculation function to prevent unnecessary re-renders
+  const calculateMontantProduit = useCallback(
+    (taux: number) => {
+      const montant = (taux * phaseMontantHT) / 100;
+      setMontantProduit(montant);
+      return montant;
+    },
+    [phaseMontantHT]
+  );
 
   // Mettre à jour le projet sélectionné lorsque le champ projectId change
   useEffect(() => {
@@ -96,7 +113,7 @@ export default function UnitProductionForm({
     if (projectId) {
       setSelectedProject(projectId);
     }
-  }, [form.watch("projectId")]);
+  }, [projectIdValue, form]);
 
   // Mettre à jour la phase sélectionnée lorsque le champ phaseId change
   useEffect(() => {
@@ -117,20 +134,13 @@ export default function UnitProductionForm({
         }
       }
     }
-  }, [form.watch("phaseId"), availablePhases]);
-
-  // Calculer le montant produit lorsque le taux change
-  const calculateMontantProduit = (taux: number) => {
-    const montant = (taux * phaseMontantHT) / 100;
-    setMontantProduit(montant);
-    return montant;
-  };
+  }, [phaseIdValue, availablePhases, form]);
 
   // Mettre à jour le montant produit lorsque le taux change
   useEffect(() => {
     const taux = form.getValues("taux");
     calculateMontantProduit(taux);
-  }, [form.watch("taux"), phaseMontantHT]);
+  }, [tauxValue, phaseMontantHT, calculateMontantProduit, form]);
 
   // Fonction pour créer un produit pour une phase si nécessaire
   const createProductForPhase = async (phaseId: string) => {
@@ -172,14 +182,14 @@ export default function UnitProductionForm({
 
       // Déterminer le productId à utiliser
       let productId;
-      
+
       // Si la phase a un produit associé, utiliser son ID
       if (selectedPhaseObj?.Product) {
         productId = selectedPhaseObj.Product.id;
       } else {
         // Sinon, créer un nouveau produit
         productId = await createProductForPhase(data.phaseId);
-        
+
         // Si la création du produit a échoué, arrêter le processus
         if (!productId) {
           throw new Error("Impossible de créer un produit pour cette phase");

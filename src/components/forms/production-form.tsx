@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { cn, formatAmount } from "@/lib/utils";
 import { formatMonthYear } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // Schéma de validation pour le formulaire de production
 const productionFormSchema = z.object({
@@ -60,7 +60,6 @@ interface ProductionFormProps {
 
 export default function ProductionForm({
   productId,
-
   phaseId,
   production,
   phaseData,
@@ -88,18 +87,24 @@ export default function ProductionForm({
     defaultValues,
   });
 
-  // Calculer le montant produit lorsque le taux change
-  const calculateMontantProduit = (taux: number) => {
-    const montant = (taux * phaseMontantHT) / 100;
-    setMontantProduit(montant);
-    return montant;
-  };
+  // Memoize the calculation function to prevent unnecessary re-renders
+  const calculateMontantProduit = useCallback(
+    (taux: number) => {
+      const montant = (taux * phaseMontantHT) / 100;
+      setMontantProduit(montant);
+      return montant;
+    },
+    [phaseMontantHT]
+  );
+
+  // Watch the taux field value
+  const tauxValue = form.watch("taux");
 
   // Mettre à jour le montant produit lorsque le taux change
   useEffect(() => {
     const taux = form.getValues("taux");
     calculateMontantProduit(taux);
-  }, [form.watch("taux"), phaseMontantHT]);
+  }, [tauxValue, phaseMontantHT, calculateMontantProduit, form]);
 
   // Récupérer les données de la phase si elles ne sont pas fournies
   useEffect(() => {
