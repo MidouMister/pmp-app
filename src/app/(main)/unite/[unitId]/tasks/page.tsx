@@ -9,14 +9,29 @@ import { LayoutGrid, List } from "lucide-react";
 import Loading from "@/components/global/loading";
 import { UserAuthDetails } from "@/lib/types";
 
-const TasksPage = ({ params }: { params: { unitId: string } }) => {
-  const { unitId } = params;
+type PageProps = {
+  params: Promise<{ unitId: string }>;
+};
+
+const TasksPage = ({ params }: PageProps) => {
+  const [unitId, setUnitId] = useState<string>("");
   const [view, setView] = useState<"kanban" | "table">("kanban");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<UserAuthDetails>(null);
   const [loading, setLoading] = useState(true);
 
+  // Extract unitId from params in useEffect
   useEffect(() => {
+    const extractParams = async () => {
+      const resolvedParams = await params;
+      setUnitId(resolvedParams.unitId);
+    };
+    extractParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!unitId) return; // Wait for unitId to be extracted
+
     const checkAuth = async () => {
       try {
         const userData = await getAuthUserDetails();
@@ -49,6 +64,8 @@ const TasksPage = ({ params }: { params: { unitId: string } }) => {
 
   // Load saved view preference from localStorage
   useEffect(() => {
+    if (!unitId) return;
+
     const savedView = localStorage.getItem(`tasks-view-${unitId}`);
     if (savedView === "kanban" || savedView === "table") {
       setView(savedView);
@@ -57,10 +74,12 @@ const TasksPage = ({ params }: { params: { unitId: string } }) => {
 
   // Save view preference to localStorage when it changes
   useEffect(() => {
+    if (!unitId) return;
+
     localStorage.setItem(`tasks-view-${unitId}`, view);
   }, [view, unitId]);
 
-  if (loading) {
+  if (loading || !unitId) {
     return (
       <div className="flex items-center justify-center h-full w-full">
         <Loading />
