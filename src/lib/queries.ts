@@ -577,9 +577,6 @@ export const getClientById = async (clientId: string) => {
       where: {
         id: clientId,
       },
-      include: {
-        projects: true,
-      },
     });
     return client;
   } catch (error) {

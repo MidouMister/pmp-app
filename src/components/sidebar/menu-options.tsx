@@ -1,7 +1,7 @@
 "use client";
 import { SidebarOption, UserAuthDetails } from "@/lib/types";
 import { Company, Unit } from "@prisma/client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Dispatch, SetStateAction } from "react";
 import {
   Sheet,
   SheetClose,
@@ -53,15 +53,20 @@ type Props = {
   details: Company;
   user: UserAuthDetails;
   id: string;
+  // Add these new optional properties
+  isCollapsed?: boolean;
+  setIsCollapsed?: Dispatch<SetStateAction<boolean>>;
+  isMobile?: boolean;
 };
 
-const MenuOptions = ({
+export const MenuOptions = ({
   defaultOpen,
   units,
   roleSidebarOptions,
   sidebarLogo,
   details,
   user,
+  isCollapsed: propIsCollapsed,
 }: Props) => {
   const pathname = usePathname();
 
@@ -78,7 +83,11 @@ const MenuOptions = ({
     [defaultOpen]
   );
   const [isMounted, setIsMounted] = useState(false);
-  const { isCollapsed, toggleCollapse } = useSidebarCollapseContext();
+
+  // Use context values as fallback if props are not provided
+  const { isCollapsed: contextIsCollapsed, toggleCollapse } =
+    useSidebarCollapseContext();
+  const isCollapsed = propIsCollapsed ?? contextIsCollapsed;
 
   useEffect(() => {
     setIsMounted(true);
@@ -605,5 +614,3 @@ const MenuOptions = ({
     </Sheet>
   );
 };
-
-export default MenuOptions;

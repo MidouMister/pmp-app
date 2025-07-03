@@ -1,5 +1,5 @@
 import { getAuthUserDetails } from "@/lib/queries";
-import MenuOptions from "./menu-options";
+
 import { SidebarOption } from "@/lib/types";
 import { Company } from "@prisma/client";
 import {
@@ -15,6 +15,7 @@ import {
   ShieldUser,
   SwatchBook,
 } from "lucide-react";
+import { MenuOptions } from "./menu-options";
 
 type Props = {
   id: string;

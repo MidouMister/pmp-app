@@ -199,7 +199,8 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
                   <ClientForm unitId={rowData.unitId} client={rowData} />
                 </CustomModal>,
                 async () => {
-                  return { client: await getClientById(rowData?.id) };
+                  const client = await getClientById(rowData?.id);
+                  return { client: client || undefined };
                 }
               );
             }}

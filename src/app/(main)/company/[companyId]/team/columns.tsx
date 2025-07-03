@@ -180,7 +180,8 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
                   <UserDetails data={rowData} />
                 </CustomModal>,
                 async () => {
-                  return { user: await getUser(rowData?.id) };
+                  const user = await getUser(rowData?.id);
+                  return { user: user || undefined };
                 }
               );
             }}

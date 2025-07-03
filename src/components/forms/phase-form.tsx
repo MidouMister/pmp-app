@@ -98,7 +98,6 @@ const PhaseForm = ({
         status: values.status as Status,
         obs: values.obs || null,
         projectId: projectId,
-        productId: null,
       };
 
       await upsertPhase(phaseData);

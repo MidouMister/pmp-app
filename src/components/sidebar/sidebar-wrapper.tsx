@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import MenuOptions from "./menu-options";
 import { SidebarOption, UserAuthDetails } from "@/lib/types";
 import { Company, Unit } from "@prisma/client";
 import { useIsMobile as useMobile } from "@/hooks/use-mobile";
+import { MenuOptions } from "./menu-options";
 
 type Props = {
   units: Unit[];
@@ -14,6 +14,9 @@ type Props = {
   user: UserAuthDetails;
   id: string;
   defaultOpen?: boolean;
+  isCollapsed?: boolean;
+  setIsCollapsed?: (collapsed: boolean) => void;
+  isMobile?: boolean;
 };
 
 const SidebarWrapper = (props: Props) => {
@@ -23,7 +26,7 @@ const SidebarWrapper = (props: Props) => {
   return (
     <MenuOptions
       {...props}
-      isCollapsed={isCollapsed}
+      isCollapsed={props.isCollapsed || isCollapsed}
       setIsCollapsed={setIsCollapsed}
       isMobile={isMobile}
     />

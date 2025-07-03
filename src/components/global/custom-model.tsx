@@ -25,7 +25,6 @@ const CustomModal = ({
   subheading,
   title,
   size = "lg",
-
   className = "",
 }: Props) => {
   const { isOpen, setClose } = useModal();
