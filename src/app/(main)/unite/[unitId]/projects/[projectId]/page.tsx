@@ -9,7 +9,7 @@ import { ProjectWithDetails } from "@/lib/types";
 const ProjectPage = async ({
   params,
 }: {
-  params: { unitId: string; projectId: string };
+  params: Promise<{ unitId: string; projectId: string }>;
 }) => {
   const { unitId, projectId } = await params;
 

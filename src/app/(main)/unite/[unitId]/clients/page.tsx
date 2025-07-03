@@ -4,7 +4,11 @@ import DataTable from "./data-table";
 import ClientForm from "@/components/forms/client-form";
 import { getUnitClients } from "@/lib/queries";
 
-const ClientsPage = async ({ params }: { params: { unitId: string } }) => {
+const ClientsPage = async ({
+  params,
+}: {
+  params: Promise<{ unitId: string }>;
+}) => {
   const { unitId } = await params;
   const clients = await getUnitClients(unitId);
 

@@ -20,7 +20,7 @@ import SubscriptionPlans from "@/components/forms/suscription-plan";
 export default async function SettingsPage({
   params,
 }: {
-  params: { companyId: string };
+  params: Promise<{ companyId: string }>;
 }) {
   const { companyId } = await params;
   const user = await getAuthUserDetails();

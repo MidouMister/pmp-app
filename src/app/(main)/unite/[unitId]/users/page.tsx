@@ -7,7 +7,11 @@ import { verifyAndAcceptInvitation } from "@/lib/queries";
 import DataTable from "./data-table";
 import { columns } from "./columns";
 
-const UnitUsersPage = async ({ params }: { params: { unitId: string } }) => {
+const UnitUsersPage = async ({
+  params,
+}: {
+  params: Promise<{ unitId: string }>;
+}) => {
   const companyId = await verifyAndAcceptInvitation();
   const { unitId } = await params;
   if (!companyId) return;

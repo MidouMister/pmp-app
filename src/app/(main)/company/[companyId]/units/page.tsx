@@ -8,7 +8,7 @@ import UnitsClient from "./units-client";
 export default async function UnitsPage({
   params,
 }: {
-  params: { companyId: string };
+  params: Promise<{ companyId: string }>;
 }) {
   const { companyId } = await params;
   const user = await currentUser();
