@@ -4,7 +4,7 @@ import { getPhaseById } from "@/lib/queries";
 // GET - Récupérer une phase par ID
 export async function GET(
   req: Request,
-  { params }: { params: { phaseId: string } }
+  { params }: { params: Promise<{ phaseId: string }> }
 ) {
   try {
     const { phaseId } = await params;
