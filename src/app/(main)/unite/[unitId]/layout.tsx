@@ -67,7 +67,7 @@ const UnitLayout = async ({ children, params }: Props) => {
           unitId={unitId}
         />
         <div className="relative">
-          <BlurPage className="mt-18">{children} </BlurPage>
+          <BlurPage className="mt-14">{children} </BlurPage>
         </div>
       </ResponsiveLayoutWrapper>
     </div>

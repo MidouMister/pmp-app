@@ -29,12 +29,7 @@ type Props = {
   unitId?: string;
 };
 
-const InfoBar = ({
-  notifications,
-  unitId,
-  className,
-  role,
-}: Props) => {
+const InfoBar = ({ notifications, unitId, className, role }: Props) => {
   const { isCollapsed } = useSidebarCollapseContext();
   const [allNotifications, setAllNotifications] = useState(notifications);
   const [showAll, setShowAll] = useState(true);
@@ -57,8 +52,8 @@ const InfoBar = ({
       <div
         className={twMerge(
           `fixed z-[20] ${
-            isCollapsed ? "md:left-[80px]" : "md:left-[300px]"
-          } left-0 right-0 top-0 p-4 bg-background/80 backdrop-blur-md flex gap-4 items-center border-b-[1px] transition-all duration-300`,
+            isCollapsed ? "md:left-[56px]" : "md:left-[224px]"
+          } left-0 right-0 top-0 p-2 bg-background/80 backdrop-blur-md flex gap-4 items-center border-b-[1px] transition-all duration-300`,
           className
         )}
       >

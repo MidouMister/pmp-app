@@ -53,7 +53,6 @@ type Props = {
   details: Company;
   user: UserAuthDetails;
   id: string;
-  // Add these new optional properties
   isCollapsed?: boolean;
   setIsCollapsed?: Dispatch<SetStateAction<boolean>>;
   isMobile?: boolean;
@@ -70,7 +69,6 @@ export const MenuOptions = ({
 }: Props) => {
   const pathname = usePathname();
 
-  // Function to determine if a link is active
   const isActive = (linkPath: string) => {
     if (linkPath === pathname) return true;
     if (pathname.startsWith(linkPath) && linkPath !== "/") return true;
@@ -84,7 +82,6 @@ export const MenuOptions = ({
   );
   const [isMounted, setIsMounted] = useState(false);
 
-  // Use context values as fallback if props are not provided
   const { isCollapsed: contextIsCollapsed, toggleCollapse } =
     useSidebarCollapseContext();
   const isCollapsed = propIsCollapsed ?? contextIsCollapsed;
@@ -97,69 +94,61 @@ export const MenuOptions = ({
 
   return (
     <Sheet modal={false} {...openState}>
-      <SheetTrigger
-        asChild
-        className="absolute left-4 top-4 z-[100] md:hidden flex"
-      >
-        <Button variant="outline" size={"icon"}>
-          <Menu />
+      <SheetTrigger asChild className="fixed left-4 top-4 z-[100] md:hidden">
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+          <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>
       <SheetContent
         showX={!defaultOpen}
-        side={"left"}
+        side="left"
         className={clsx(
-          "bg-background/95 backdrop-blur-xl fixed top-0 border-r border-border/20 p-0 transition-all duration-300 ease-in-out flex flex-col",
+          "bg-background border-r border-border/40 p-0 transition-all duration-200 ease-in-out flex flex-col",
           {
             "hidden md:flex z-0": defaultOpen,
             "flex md:hidden z-[100] w-full": !defaultOpen,
-            "w-[300px]": defaultOpen && !isCollapsed,
-            "w-[80px]": defaultOpen && isCollapsed,
+            "w-56": defaultOpen && !isCollapsed,
+            "w-14": defaultOpen && isCollapsed,
           }
         )}
       >
-        {/* Toggle Button - Desktop only */}
+        {/* Toggle Button */}
         {defaultOpen && (
           <button
             onClick={toggleCollapse}
-            className="absolute -right-3 top-18 transform -translate-y-1/2 
-                     bg-background border border-border rounded-full p-1.5
-                     shadow-md hover:shadow-lg transition-all duration-200 
-                     hover:bg-accent z-10 hidden md:flex items-center justify-center"
+            className="absolute right-1 top-27 bg-background border border-border rounded-full p-1 
+                     shadow-sm hover:shadow-md transition-all duration-200 hover:bg-accent z-10 
+                     hidden md:flex items-center justify-center"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-3 w-3" />
             ) : (
-              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              <ChevronLeft className="h-3 w-3" />
             )}
           </button>
         )}
 
-        <SheetTitle
-          className={isCollapsed && defaultOpen ? "sr-only" : "sr-only"}
-        >
-          Navigation Menu
-        </SheetTitle>
+        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
 
-        {/* Header Section */}
+        {/* Header */}
         <div
-          className={clsx("p-6 border-b border-border/10", {
-            "px-3": isCollapsed && defaultOpen,
+          className={clsx("p-3 border-b border-border/20", {
+            "px-1.5": isCollapsed && defaultOpen,
           })}
         >
           {/* Logo */}
-          <div className="mb-6">
+          <div className="mb-4">
             <AspectRatio
-              ratio={isCollapsed && defaultOpen ? 1 : 16 / 5}
-              className="transition-all duration-300 rounded-lg overflow-hidden"
+              ratio={isCollapsed && defaultOpen ? 1 : 16 / 6}
+              className="transition-all duration-300 rounded-md overflow-hidden"
             >
-              <div className="relative w-full h-full bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/10">
+              <div className="relative w-full h-full bg-muted/30 border border-border/20 rounded-lg p-2">
                 <Image
                   src={sidebarLogo}
                   alt="Logo"
                   fill
-                  className="object-contain p-2"
+                  className=" object-cover p-1 rounded-lg"
                 />
               </div>
             </AspectRatio>
@@ -175,11 +164,10 @@ export const MenuOptions = ({
                   <PopoverTrigger asChild>
                     <Button
                       className={clsx(
-                        "transition-all duration-300 bg-transparent hover:bg-accent/50 border-0 p-0 h-auto justify-start font-normal",
+                        "transition-all duration-200 bg-transparent hover:bg-accent/50 border-0 p-0 h-auto font-normal",
                         {
                           "w-full": !isCollapsed || !defaultOpen,
-                          "w-12 h-12 justify-center":
-                            isCollapsed && defaultOpen,
+                          "w-9 h-9 justify-center": isCollapsed && defaultOpen,
                         }
                       )}
                       variant="ghost"
@@ -187,28 +175,25 @@ export const MenuOptions = ({
                     >
                       <div
                         className={clsx(
-                          "flex items-center transition-all duration-300",
+                          "flex items-center transition-all duration-200",
                           {
-                            "gap-3 p-3 rounded-lg":
+                            "gap-1.5 p-1.5 rounded-md":
                               !isCollapsed || !defaultOpen,
                             "p-0": isCollapsed && defaultOpen,
                           }
                         )}
                       >
-                        <div className="relative h-8 w-8 shrink-0 rounded-md bg-primary/10 flex items-center justify-center">
-                          <Compass className="h-4 w-4 text-primary" />
+                        <div className="h-6 w-6 shrink-0 rounded-sm bg-primary/10 flex items-center justify-center p-1">
+                          <Compass className="h-3 w-3 text-primary" />
                         </div>
                         {(!isCollapsed || !defaultOpen) && (
                           <>
                             <div className="flex flex-col flex-1 min-w-0 text-left">
-                              <span className="text-sm font-medium text-foreground truncate">
+                              <span className="text-xs font-medium text-foreground truncate">
                                 {details.name}
                               </span>
-                              <span className="text-xs text-muted-foreground truncate">
-                                {details.companyAddress}
-                              </span>
                             </div>
-                            <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <ChevronsUpDown className="h-3 w-3 text-muted-foreground shrink-0" />
                           </>
                         )}
                       </div>
@@ -221,8 +206,8 @@ export const MenuOptions = ({
                     className="bg-background border border-border/50"
                   >
                     <div>
-                      <p className="font-medium text-sm">{details.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium text-xs">{details.name}</p>
+                      <p className="text-xs text-muted-foreground opacity-70">
                         {details.companyAddress}
                       </p>
                     </div>
@@ -232,12 +217,12 @@ export const MenuOptions = ({
             </TooltipProvider>
 
             <PopoverContent
-              className="w-80 p-0 border border-border/50"
+              className="w-72 p-0 border border-border/50"
               align="start"
             >
-              <Command className="rounded-lg">
-                <CommandList className="max-h-[320px] overflow-auto custom-scrollbar">
-                  <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+              <Command className="rounded-md">
+                <CommandList className="max-h-80 overflow-auto">
+                  <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
                     Aucun résultat trouvé
                   </CommandEmpty>
 
@@ -248,7 +233,7 @@ export const MenuOptions = ({
                           <Link
                             href={`/company/${user.Company.id}`}
                             className={clsx(
-                              "flex items-center gap-3 w-full p-3 rounded-md transition-all duration-200",
+                              "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
                               {
                                 "bg-accent": isActive(
                                   `/company/${user.Company.id}`
@@ -259,7 +244,7 @@ export const MenuOptions = ({
                               }
                             )}
                           >
-                            <div className="relative h-10 w-10 shrink-0 rounded-md overflow-hidden bg-muted">
+                            <div className="relative h-8 w-8 shrink-0 rounded-sm overflow-hidden bg-muted">
                               <Image
                                 src={user.Company.logo || "/placeholder.svg"}
                                 alt={`${user.Company.name} Logo`}
@@ -268,10 +253,10 @@ export const MenuOptions = ({
                               />
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-medium text-sm truncate">
+                              <span className="font-medium text-xs truncate">
                                 {user.Company.name}
                               </span>
-                              <span className="text-xs text-muted-foreground truncate">
+                              <span className="text-xs text-muted-foreground truncate opacity-70">
                                 {user.Company.companyAddress}
                               </span>
                             </div>
@@ -281,7 +266,7 @@ export const MenuOptions = ({
                             <Link
                               href={`/company/${user.Company.id}`}
                               className={clsx(
-                                "flex items-center gap-3 w-full p-3 rounded-md transition-all duration-200",
+                                "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
                                 {
                                   "bg-accent": isActive(
                                     `/company/${user.Company.id}`
@@ -292,7 +277,7 @@ export const MenuOptions = ({
                                 }
                               )}
                             >
-                              <div className="relative h-10 w-10 shrink-0 rounded-md overflow-hidden bg-muted">
+                              <div className="relative h-8 w-8 shrink-0 rounded-sm overflow-hidden bg-muted">
                                 <Image
                                   src={user.Company.logo || "/placeholder.svg"}
                                   alt={`${user.Company.name} Logo`}
@@ -301,10 +286,10 @@ export const MenuOptions = ({
                                 />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-medium text-sm truncate">
+                                <span className="font-medium text-xs truncate">
                                   {user.Company.name}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate">
+                                <span className="text-xs text-muted-foreground truncate opacity-70">
                                   {user.Company.companyAddress}
                                 </span>
                               </div>
@@ -323,7 +308,7 @@ export const MenuOptions = ({
                             <Link
                               href={`/unite/${unit.id}`}
                               className={clsx(
-                                "flex items-center gap-3 w-full p-3 rounded-md transition-all duration-200",
+                                "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
                                 {
                                   "bg-accent": isActive(`/unite/${unit.id}`),
                                   "hover:bg-accent/50": !isActive(
@@ -332,14 +317,14 @@ export const MenuOptions = ({
                                 }
                               )}
                             >
-                              <div className="h-10 w-10 flex items-center justify-center shrink-0 rounded-md bg-muted">
-                                <Building2 className="h-5 w-5 text-muted-foreground" />
+                              <div className="h-8 w-8 flex items-center justify-center shrink-0 rounded-sm bg-muted">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-medium text-sm truncate">
+                                <span className="font-medium text-xs truncate">
                                   {unit.name}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate">
+                                <span className="text-xs text-muted-foreground truncate opacity-70">
                                   {unit.address}
                                 </span>
                               </div>
@@ -349,7 +334,7 @@ export const MenuOptions = ({
                               <Link
                                 href={`/unite/${unit.id}`}
                                 className={clsx(
-                                  "flex items-center gap-3 w-full p-3 rounded-md transition-all duration-200",
+                                  "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
                                   {
                                     "bg-accent": isActive(`/unite/${unit.id}`),
                                     "hover:bg-accent/50": !isActive(
@@ -358,14 +343,14 @@ export const MenuOptions = ({
                                   }
                                 )}
                               >
-                                <div className="h-10 w-10 flex items-center justify-center shrink-0 rounded-md bg-muted">
-                                  <Building2 className="h-5 w-5 text-muted-foreground" />
+                                <div className="h-8 w-8 flex items-center justify-center shrink-0 rounded-sm bg-muted">
+                                  <Building2 className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                  <span className="font-medium text-sm truncate">
+                                  <span className="font-medium text-xs truncate">
                                     {unit.name}
                                   </span>
-                                  <span className="text-xs text-muted-foreground truncate">
+                                  <span className="text-xs text-muted-foreground truncate opacity-70">
                                     {unit.address}
                                   </span>
                                 </div>
@@ -377,7 +362,7 @@ export const MenuOptions = ({
                     ) : (
                       <CommandItem
                         disabled
-                        className="py-6 text-center text-sm text-muted-foreground"
+                        className="py-4 text-center text-xs text-muted-foreground"
                       >
                         Aucune unité disponible
                       </CommandItem>
@@ -386,10 +371,10 @@ export const MenuOptions = ({
                 </CommandList>
 
                 {user?.role === "OWNER" && (
-                  <div className="p-3 border-t border-border/20">
+                  <div className="p-2 border-t border-border/20">
                     <SheetClose asChild>
                       <Button
-                        className="w-full h-10 gap-2 text-sm"
+                        className="w-full h-8 gap-2 text-xs"
                         variant="outline"
                         onClick={() =>
                           setOpen(
@@ -405,7 +390,7 @@ export const MenuOptions = ({
                           )
                         }
                       >
-                        <PlusCircleIcon className="h-4 w-4" />
+                        <PlusCircleIcon className="h-3 w-3" />
                         Ajouter Unité
                       </Button>
                     </SheetClose>
@@ -416,20 +401,12 @@ export const MenuOptions = ({
           </Popover>
         </div>
 
-        {/* Navigation Section */}
+        {/* Navigation */}
         <div className="flex-1 flex flex-col">
-          {(!isCollapsed || !defaultOpen) && (
-            <div className="px-6 py-4">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Navigation
-              </h3>
-            </div>
-          )}
-
           <nav
-            className={clsx("flex-1", {
-              "px-6": !isCollapsed || !defaultOpen,
-              "px-3": isCollapsed && defaultOpen,
+            className={clsx("flex-1 py-2", {
+              "px-4": !isCollapsed || !defaultOpen,
+              "px-2": isCollapsed && defaultOpen,
             })}
           >
             {!isCollapsed || !defaultOpen ? (
@@ -439,7 +416,7 @@ export const MenuOptions = ({
                     key={option.id}
                     href={option.link}
                     className={clsx(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                      "flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-150 group text-xs",
                       {
                         "bg-accent text-accent-foreground": isActive(
                           option.link
@@ -458,15 +435,15 @@ export const MenuOptions = ({
                     >
                       {option.icon}
                     </div>
-                    <span className="text-sm font-medium">{option.name}</span>
+                    <span className="font-medium">{option.name}</span>
                     {isActive(option.link) && (
-                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-foreground" />
+                      <div className="ml-auto w-1 h-1 rounded-full bg-accent-foreground" />
                     )}
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center space-y-2 pt-4">
+              <div className="flex flex-col items-center space-y-1 pt-2">
                 {roleSidebarOptions.map((option) => (
                   <TooltipProvider key={option.id} delayDuration={100}>
                     <Tooltip>
@@ -474,9 +451,9 @@ export const MenuOptions = ({
                         <Link href={option.link}>
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="sm"
                             className={clsx(
-                              "w-12 h-12 relative transition-all duration-200",
+                              "w-10 h-10 relative transition-all duration-200 p-0",
                               {
                                 "bg-accent text-accent-foreground": isActive(
                                   option.link
@@ -487,7 +464,7 @@ export const MenuOptions = ({
                           >
                             {option.icon}
                             {isActive(option.link) && (
-                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-accent-foreground rounded-full" />
+                              <div className="absolute right-1 top-1/2 transform -translate-y-1/2 w-1 h-1 bg-accent-foreground rounded-full" />
                             )}
                           </Button>
                         </Link>
@@ -496,7 +473,7 @@ export const MenuOptions = ({
                         side="right"
                         className="bg-background border border-border/50"
                       >
-                        <p className="text-sm">{option.name}</p>
+                        <p className="text-xs">{option.name}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -507,14 +484,14 @@ export const MenuOptions = ({
 
           {/* Add Unit Button for Collapsed State */}
           {isCollapsed && defaultOpen && user?.role === "OWNER" && (
-            <div className="px-3 pb-4">
+            <div className="px-2 pb-2">
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
-                      size="icon"
-                      className="w-12 h-12"
+                      size="sm"
+                      className="w-10 h-10 p-0"
                       onClick={() =>
                         setOpen(
                           <CustomModal
@@ -529,14 +506,14 @@ export const MenuOptions = ({
                         )
                       }
                     >
-                      <PlusCircleIcon className="h-5 w-5" />
+                      <PlusCircleIcon className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
                     className="bg-background border border-border/50"
                   >
-                    <p className="text-sm">Ajouter Unité</p>
+                    <p className="text-xs">Ajouter Unité</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -544,30 +521,30 @@ export const MenuOptions = ({
           )}
         </div>
 
-        {/* User Profile Section */}
+        {/* User Profile */}
         <div
-          className={clsx("border-t border-border/10 bg-muted/20", {
-            "p-6": !isCollapsed || !defaultOpen,
-            "p-3": isCollapsed && defaultOpen,
+          className={clsx("border-t border-border/20 bg-muted/10", {
+            "p-4": !isCollapsed || !defaultOpen,
+            "p-2": isCollapsed && defaultOpen,
           })}
         >
           {!isCollapsed || !defaultOpen ? (
-            <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10 shrink-0">
-                <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center">
-                  <User className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-2">
+              <div className="relative h-8 w-8 shrink-0">
+                <div className="w-full h-full rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <User className="h-4 w-4 text-primary" />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground truncate">
+                <div className="flex items-center gap-1">
+                  <p className="text-xs font-medium text-foreground truncate">
                     {user?.name || "Utilisateur"}
                   </p>
                   {user?.role === "OWNER" && (
                     <Crown className="h-3 w-3 text-yellow-500 shrink-0" />
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate opacity-70">
                   {user?.role === "OWNER"
                     ? "Propriétaire"
                     : user?.role || "Utilisateur"}
@@ -579,12 +556,12 @@ export const MenuOptions = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex justify-center">
-                    <div className="relative w-12 h-12">
-                      <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
+                    <div className="relative w-10 h-10">
+                      <div className="w-full h-full rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                        <User className="h-4 w-4 text-primary" />
                       </div>
                       {user?.role === "OWNER" && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-yellow-500 flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-yellow-500 flex items-center justify-center">
                           <Crown className="h-2 w-2 text-white" />
                         </div>
                       )}
@@ -596,10 +573,10 @@ export const MenuOptions = ({
                   className="bg-background border border-border/50"
                 >
                   <div>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs font-medium">
                       {user?.name || "Utilisateur"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground opacity-70">
                       {user?.role === "OWNER"
                         ? "Propriétaire"
                         : user?.role || "Utilisateur"}
