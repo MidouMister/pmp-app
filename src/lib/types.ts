@@ -1,7 +1,6 @@
 import {
   Client,
   Lane,
-  Notification,
   Phase,
   Prisma,
   Product,
@@ -18,6 +17,7 @@ import {
   getAuthUserDetails,
   getTasksWithTags,
 } from "./queries";
+import { NotificationPriority, NotificationType } from "@prisma/client";
 
 export type SidebarOption = {
   id: string;
@@ -25,8 +25,9 @@ export type SidebarOption = {
   icon: React.ReactNode;
   link: string;
 };
+
 export type NotificationWithUser =
-  | ({
+  | {
       User: {
         id: string;
         name: string;
@@ -37,7 +38,17 @@ export type NotificationWithUser =
         role: Role;
         companyId: string | null;
       };
-    } & Notification)[]
+      id: string;
+      notification: string;
+      companyId: string;
+      unitId: string | null;
+      userId: string;
+      createdAt: Date;
+      updatedAt: Date;
+      read: boolean;
+      type: NotificationType;
+      priority: NotificationPriority;
+    }[]
   | undefined;
 export const getUsersWithCompanyUnit = async (companyId: string) => {
   return await db.user.findFirst({

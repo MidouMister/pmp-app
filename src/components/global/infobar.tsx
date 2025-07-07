@@ -11,7 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
-import { Bell } from "lucide-react";
+import { Bell, Check, Info, ShieldAlert, Star } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Role } from "@prisma/client";
 import { Card } from "../ui/card";
@@ -19,6 +19,8 @@ import { Switch } from "../ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 import { NotificationWithUser } from "@/lib/types";
+import { markNotificationAsRead } from "@/lib/queries";
+import { useRouter } from "next/navigation";
 import { ModeToggle } from "./mode-toggle";
 import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
 
@@ -30,9 +32,22 @@ type Props = {
 };
 
 const InfoBar = ({ notifications, unitId, className, role }: Props) => {
+  const router = useRouter();
   const { isCollapsed } = useSidebarCollapseContext();
   const [allNotifications, setAllNotifications] = useState(notifications);
   const [showAll, setShowAll] = useState(true);
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await markNotificationAsRead(notificationId);
+      setAllNotifications((prev) =>
+        prev ? prev.filter((n) => n.id !== notificationId) : []
+      );
+      router.refresh(); // Refresh data
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
+  };
 
   const handleClick = () => {
     if (!showAll) {
@@ -98,30 +113,69 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
                   allNotifications?.map((notification) => (
                     <Card
                       key={notification.id}
-                      className="p-4 hover:bg-muted/50 transition-colors"
+                      className={`p-4 transition-colors ${
+                        notification.read ? "bg-transparent" : "bg-muted/50"
+                      } border-l-4 ${
+                        notification.priority === "HIGH"
+                          ? "border-red-500"
+                          : notification.priority === "MEDIUM"
+                          ? "border-yellow-500"
+                          : "border-gray-300"
+                      }`}
                     >
                       <div className="flex items-start gap-4">
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage
-                            src={notification.User.avatarUrl || ""}
-                            alt="Profile Picture"
-                          />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {notification.User.name.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="flex-shrink-0">
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage
+                              src={notification.User.avatarUrl || ""}
+                              alt="Profile Picture"
+                            />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {notification.User.name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">
-                            <span className="font-bold">
-                              {notification.notification.split("|")[0]}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {notification.notification.split("|")[1]}
-                            </span>
-                            <span className="font-bold">
-                              {notification.notification.split("|")[2]}
-                            </span>
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              <span className="font-bold">
+                                {notification.notification.split("|")[0]}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {notification.notification.split("|")[1]}
+                              </span>
+                              <span className="font-bold">
+                                {notification.notification.split("|")[2]}
+                              </span>
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span
+                                title={notification.type}
+                                className="text-muted-foreground"
+                              >
+                                {notification.type === "INVITATION" && (
+                                  <Info size={16} />
+                                )}
+                                {notification.type === "PROJECT_UPDATE" && (
+                                  <Star size={16} />
+                                )}
+                                {notification.type === "TASK_ASSIGNMENT" && (
+                                  <ShieldAlert size={16} />
+                                )}
+                              </span>
+                              {!notification.read && (
+                                <button
+                                  onClick={() =>
+                                    handleMarkAsRead(notification.id)
+                                  }
+                                  className="p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors"
+                                  title="Mark as read"
+                                >
+                                  <Check size={16} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
                           <p className="text-xs text-muted-foreground mt-1">
                             {formatDate(notification.createdAt)}
                           </p>

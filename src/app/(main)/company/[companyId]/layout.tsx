@@ -46,7 +46,7 @@ export default async function Layout({
           role={user.privateMetadata.role as Role}
         />
         <div className="relative">
-          <BlurPage className="mt-18">{children}</BlurPage>
+          <BlurPage className="mt-14">{children}</BlurPage>
         </div>
       </ResponsiveLayoutWrapper>
     </div>

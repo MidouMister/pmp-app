@@ -21,14 +21,20 @@ import { v4 } from "uuid";
 
 const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
+import { NotificationType, NotificationPriority } from '@prisma/client';
+
 export const saveActivityLogsNotification = async ({
   companyId,
   description,
   unitId,
+  type,
+  priority,
 }: {
   companyId?: string;
   description: string;
   unitId?: string;
+  type?: NotificationType;
+  priority?: NotificationPriority;
 }) => {
   const authUser = await currentUser();
   let userData;
@@ -70,6 +76,9 @@ export const saveActivityLogsNotification = async ({
     await db.notification.create({
       data: {
         notification: `${userData.name} | ${description}`,
+        type: type || 'GENERAL',
+        priority: priority || 'LOW',
+        read: false,
         User: {
           connect: {
             id: userData.id,
@@ -89,6 +98,9 @@ export const saveActivityLogsNotification = async ({
     await db.notification.create({
       data: {
         notification: `${userData.name} | ${description}`,
+        type: type || 'GENERAL',
+        priority: priority || 'LOW',
+        read: false,
         User: {
           connect: {
             id: userData.id,
@@ -99,11 +111,24 @@ export const saveActivityLogsNotification = async ({
             id: foundCompanyId,
           },
         },
-        Unit: {
-          connect: { id: unitId },
-        },
       },
     });
+  }
+};
+
+export const markNotificationAsRead = async (notificationId: string) => {
+  try {
+    const response = await db.notification.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        read: true,
+      },
+    });
+    return response;
+  } catch (error) {
+    console.log(error);
   }
 };
 export const AddUser = async (
@@ -142,6 +167,8 @@ export const verifyAndAcceptInvitation = async () => {
       companyId: invitationExists.companyId,
       description: `Joined`,
       unitId: invitationExists.unitId,
+      type: 'INVITATION',
+      priority: 'HIGH',
     });
     if (userDetails) {
       // Await the clerkClient() function call first
@@ -297,7 +324,7 @@ export const getNotificationAndUser = async (
     const response = await db.notification.findMany({
       where: {
         companyId: companyId,
-        unitId: unitId,
+        ...(unitId && { unitId: unitId }),
       },
       include: {
         User: true,
