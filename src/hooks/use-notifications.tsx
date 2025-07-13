@@ -34,9 +34,13 @@ export const useNotification = ({
     try {
       await markNotificationAsRead(notificationId);
       setNotifications((prev) =>
-        prev ? prev.filter((n) => n.id !== notificationId) : []
+        prev
+          ? prev.map((n) =>
+              n.id === notificationId ? { ...n, read: true } : n
+            )
+          : []
       );
-      router.refresh(); // Refresh data
+      // router.refresh(); // Refresh data - no longer needed here as state is updated directly
     } catch (error) {
       console.error("Failed to mark notification as read", error);
     }
@@ -163,10 +167,7 @@ export const useNotification = ({
     };
   }, [unitId, handleRealtimeUpdate]);
 
-  // Update local state when initialNotifications change
-  useEffect(() => {
-    setNotifications(initialNotifications);
-  }, [initialNotifications]);
+
 
   return {
     notifications,
