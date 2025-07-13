@@ -182,7 +182,8 @@ const TaskForm = ({
         description: `${
           taskData?.id ? "Mise à jour" : "Création"
         } de la tâche: ${response?.title}`,
-        unitId,
+        unitId: unitId,
+        type: "TASK",
       });
 
       toast.success(

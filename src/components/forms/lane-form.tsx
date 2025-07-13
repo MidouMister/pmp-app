@@ -68,6 +68,7 @@ const LaneForm: React.FC<CreateLaneFormProps> = ({ defaultData, unitId }) => {
         companyId: undefined,
         description: `Colonne mise à jour | ${response?.name}`,
         unitId: unitId,
+        type: "LANE",
       });
 
       toast.success("Détails de la colonne enregistrés");

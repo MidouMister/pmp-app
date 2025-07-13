@@ -113,6 +113,7 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
         companyId: companyId,
         description: `Invited ${res.email}`,
         unitId: unitId || values.unitId,
+        type: "INVITATION",
       });
       toast.success("Invitation envoyée avec succès !");
       form.reset();

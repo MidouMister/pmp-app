@@ -84,7 +84,7 @@ const UnitDetails: React.FC<UnitDetailsProps> = ({
       if (!response) throw new Error("No response from server");
       await saveActivityLogsNotification({
         companyId: companyDetails.id,
-        description: `${userName} | updated unit | ${response.name}`,
+        description: `${userName} | a Moddifier l'unité | ${response.name}`,
         unitId: response.id,
         type: "GENERAL",
       });

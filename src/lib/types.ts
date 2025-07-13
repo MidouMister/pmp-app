@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Client,
   Lane,
@@ -10,6 +11,7 @@ import {
   Team,
   TeamMember,
   User,
+  NotificationType,
 } from "@prisma/client";
 import { db } from "./db";
 import {
@@ -17,7 +19,6 @@ import {
   getAuthUserDetails,
   getTasksWithTags,
 } from "./queries";
-import { NotificationType } from "@prisma/client";
 
 export type SidebarOption = {
   id: string;
@@ -26,29 +27,58 @@ export type SidebarOption = {
   link: string;
 };
 
-export type NotificationWithUser =
-  | {
-      User: {
-        id: string;
-        name: string;
-        avatarUrl: string | null;
-        email: string;
-        createdAt: Date;
-        updatedAt: Date;
-        role: Role;
-        companyId: string | null;
-      };
-      id: string;
-      notification: string;
-      companyId: string;
-      unitId: string | null;
-      userId: string;
-      createdAt: Date;
-      updatedAt: Date;
-      read: boolean;
-      type: NotificationType;
-    }[]
-  | undefined;
+// Notification types
+export type NotificationUser = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+  role: Role;
+  companyId: string | null;
+};
+
+export type NotificationItem = {
+  User: NotificationUser;
+  id: string;
+  notification: string;
+  companyId: string;
+  unitId: string | null;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  read: boolean;
+  type: NotificationType;
+};
+
+export type NotificationWithUser = NotificationItem[] | undefined;
+
+// Realtime payload types
+export interface RealtimeNotificationPayload {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  new: NotificationItem;
+  old: NotificationItem;
+}
+
+// Supabase realtime payload structure
+export interface SupabaseRealtimePayload {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  new: Record<string, any>;
+  old: Record<string, any>;
+  schema: string;
+  table: string;
+  commit_timestamp: string;
+  errors?: any[];
+}
+
+// Supabase realtime subscription status
+export type RealtimeSubscriptionStatus =
+  | "SUBSCRIBED"
+  | "TIMED_OUT"
+  | "CLOSED"
+  | "CHANNEL_ERROR";
+
 export const getUsersWithCompanyUnit = async (companyId: string) => {
   return await db.user.findFirst({
     where: {
@@ -65,12 +95,15 @@ export const getUsersWithCompanyUnit = async (companyId: string) => {
     },
   });
 };
+
 export type UsersWithCompanyUnit = Prisma.PromiseReturnType<
   typeof getUsersWithCompanyUnit
 >;
+
 export type UserAuthDetails = Prisma.PromiseReturnType<
   typeof getAuthUserDetails
 >;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getUsersWithUnit = async (unitId: string) => {
   return await db.user.findFirst({
@@ -81,6 +114,7 @@ const getUsersWithUnit = async (unitId: string) => {
     },
   });
 };
+
 export type UsersWithUnit = Prisma.PromiseReturnType<typeof getUsersWithUnit>;
 
 export type ProjectWithDetails = Project & {
@@ -123,6 +157,7 @@ export interface ProductionWithDetails {
     };
   };
 }
+
 export type TaskWithTags = Prisma.PromiseReturnType<typeof getTasksWithTags>;
 
 // export type TaskAndTags = Task & {

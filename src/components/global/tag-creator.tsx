@@ -98,6 +98,7 @@ const TagCreator = ({ getSelectedTags, unitId, defaultTags }: Props) => {
         companyId: undefined,
         description: `Tag mis à jour | ${response?.name}`,
         unitId: unitId,
+        type: "TAG",
       });
     } catch (error) {
       toast.error(error + "Impossible de créer le tag");
@@ -120,6 +121,7 @@ const TagCreator = ({ getSelectedTags, unitId, defaultTags }: Props) => {
         companyId: undefined,
         description: `Tag supprimé | ${response?.name}`,
         unitId: unitId,
+        type: "TAG",
       });
 
       router.refresh();

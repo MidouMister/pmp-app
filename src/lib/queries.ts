@@ -113,7 +113,28 @@ export const saveActivityLogsNotification = async ({
     });
   }
 };
-
+export const getNotificationAndUser = async (
+  companyId: string,
+  unitId?: string
+) => {
+  try {
+    const response = await db.notification.findMany({
+      where: {
+        companyId: companyId,
+        ...(unitId && { unitId: unitId }),
+      },
+      include: {
+        User: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+};
 export const markNotificationAsRead = async (notificationId: string) => {
   try {
     const response = await db.notification.update({
@@ -163,7 +184,7 @@ export const verifyAndAcceptInvitation = async () => {
     });
     await saveActivityLogsNotification({
       companyId: invitationExists.companyId,
-      description: `Joined`,
+      description: "Rejoint ",
       unitId: invitationExists.unitId,
       type: "INVITATION",
     });
@@ -309,28 +330,6 @@ export const upsertCompany = async (company: Company) => {
     }
 
     return companyDetails;
-  } catch (error) {
-    console.log(error);
-  }
-};
-export const getNotificationAndUser = async (
-  companyId: string,
-  unitId?: string
-) => {
-  try {
-    const response = await db.notification.findMany({
-      where: {
-        companyId: companyId,
-        ...(unitId && { unitId: unitId }),
-      },
-      include: {
-        User: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-    return response;
   } catch (error) {
     console.log(error);
   }
@@ -665,6 +664,7 @@ export const upsertClient = async (client: Client) => {
       description: `${client.id ? "a modifié" : "a ajouté"} le client ${
         client.name
       }`,
+      type: "CLIENT",
     });
 
     return response;
@@ -698,8 +698,9 @@ export const deleteClient = async (clientId: string, unitId: string) => {
     });
 
     await saveActivityLogsNotification({
-      unitId,
+      unitId: unitId,
       description: `a supprimé le client ${client.name}`,
+      type: "CLIENT",
     });
 
     return client;
@@ -839,6 +840,7 @@ export const upsertProject = async (project: Project) => {
       description: `${project.id ? "a modifié" : "a ajouté"} le projet ${
         project.name
       }`,
+      type: "PROJECT",
     });
 
     return response;
@@ -858,8 +860,9 @@ export const deleteProject = async (projectId: string, unitId: string) => {
     });
 
     await saveActivityLogsNotification({
-      unitId,
+      unitId: unitId,
       description: `a supprimé le projet ${project.name}`,
+      type: "PROJECT",
     });
 
     return project;
@@ -943,6 +946,7 @@ export const upsertPhase = async (phase: Phase) => {
         description: `${phase.id ? "a modifié" : "a ajouté"} la phase ${
           phase.name
         } du projet`,
+        type: "PHASE",
       });
     }
 
@@ -979,6 +983,7 @@ export const deletePhase = async (phaseId: string) => {
     await saveActivityLogsNotification({
       unitId: phase.Project.unitId,
       description: `a supprimé la phase ${phase.name} du projet`,
+      type: "PHASE",
     });
 
     return response;
@@ -1023,6 +1028,7 @@ export const createTeamForProject = async (projectId: string) => {
       await saveActivityLogsNotification({
         unitId: project.unitId,
         description: `a créé une équipe pour le projet ${project.name}`,
+        type: "TEAM",
       });
     }
 
@@ -1087,6 +1093,7 @@ export const addTeamMember = async (
     await saveActivityLogsNotification({
       unitId: teamMember.team.project.unitId,
       description: `a ajouté ${teamMember.user.name} à l'équipe du projet ${teamMember.team.project.name}`,
+      type: "TEAM",
     });
 
     return teamMember;
@@ -1134,6 +1141,7 @@ export const updateTeamMember = async (teamMemberId: string, role: string) => {
     await saveActivityLogsNotification({
       unitId: existingMember.team.project.unitId,
       description: `a modifié le rôle de ${existingMember.user.name} dans l'équipe du projet ${existingMember.team.project.name}`,
+      type: "TEAM",
     });
 
     return teamMember;
@@ -1178,6 +1186,7 @@ export const removeTeamMember = async (teamMemberId: string) => {
     await saveActivityLogsNotification({
       unitId: teamMember.team.project.unitId,
       description: `a retiré ${teamMember.user.name} de l'équipe du projet ${teamMember.team.project.name}`,
+      type: "TEAM",
     });
 
     return teamMember;
