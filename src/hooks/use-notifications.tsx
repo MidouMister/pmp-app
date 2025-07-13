@@ -50,7 +50,10 @@ export const useNotification = ({
       if (payload.eventType === "INSERT") {
         const newNotification = {
           ...payload.new,
-          User: payload.new.User || {
+          User: payload.new.User ? {
+            ...payload.new.User,
+            name: payload.new.User.name || "Unknown", // Ensure User.name is always a string
+          } : {
             id: "",
             name: "Unknown",
             avatarUrl: "",
@@ -60,6 +63,7 @@ export const useNotification = ({
             role: "USER" as const,
             companyId: null,
           },
+          type: payload.new.type || "general", // Provide a default type if missing
         };
 
         // Add the new notification to the current list

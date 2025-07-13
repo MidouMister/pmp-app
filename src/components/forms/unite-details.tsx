@@ -94,7 +94,7 @@ const UnitDetails: React.FC<UnitDetailsProps> = ({
       router.refresh();
     } catch (err) {
       console.error(err);
-      toast.error("Impossible d&apos;enregistrer l&apos;unité");
+      toast.error("Impossible d'enregistrer l'unité");
     }
   }
 
