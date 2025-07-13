@@ -21,20 +21,18 @@ import { v4 } from "uuid";
 
 const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
-import { NotificationType, NotificationPriority } from '@prisma/client';
+import { NotificationType } from "@prisma/client";
 
 export const saveActivityLogsNotification = async ({
   companyId,
   description,
   unitId,
   type,
-  priority,
 }: {
   companyId?: string;
   description: string;
   unitId?: string;
   type?: NotificationType;
-  priority?: NotificationPriority;
 }) => {
   const authUser = await currentUser();
   let userData;
@@ -76,8 +74,8 @@ export const saveActivityLogsNotification = async ({
     await db.notification.create({
       data: {
         notification: `${userData.name} | ${description}`,
-        type: type || 'GENERAL',
-        priority: priority || 'LOW',
+        type: type || "GENERAL",
+
         read: false,
         User: {
           connect: {
@@ -98,8 +96,8 @@ export const saveActivityLogsNotification = async ({
     await db.notification.create({
       data: {
         notification: `${userData.name} | ${description}`,
-        type: type || 'GENERAL',
-        priority: priority || 'LOW',
+        type: type || "GENERAL",
+
         read: false,
         User: {
           connect: {
@@ -167,8 +165,7 @@ export const verifyAndAcceptInvitation = async () => {
       companyId: invitationExists.companyId,
       description: `Joined`,
       unitId: invitationExists.unitId,
-      type: 'INVITATION',
-      priority: 'HIGH',
+      type: "INVITATION",
     });
     if (userDetails) {
       // Await the clerkClient() function call first

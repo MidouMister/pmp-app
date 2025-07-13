@@ -1,8 +1,9 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
+import { supabase } from "@/lib/supabase";
 import {
   Sheet,
   SheetContent,
@@ -36,6 +37,7 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
   const { isCollapsed } = useSidebarCollapseContext();
   const [allNotifications, setAllNotifications] = useState(notifications);
   const [showAll, setShowAll] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -62,6 +64,113 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
     setShowAll((prev) => !prev);
   };
 
+  // Handle real-time notification updates
+  const handleRealtimeUpdate = useCallback(
+    (payload: any) => {
+      console.log("Real-time notification update:", payload);
+
+      if (payload.eventType === "INSERT") {
+        const newNotification = {
+          ...payload.new,
+          User: payload.new.User || {
+            id: "",
+            name: "Unknown",
+            avatarUrl: "",
+            email: "",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            role: "USER",
+            companyId: null,
+          }, // Ensure User object exists
+        };
+
+        // Add the new notification to the current list
+        setAllNotifications((prev) => {
+          if (!prev) return [newNotification];
+
+          // Check if notification already exists to avoid duplicates
+          const exists = prev.some((notif) => notif.id === newNotification.id);
+          if (exists) return prev;
+
+          // Add new notification at the beginning (most recent first)
+          return [newNotification, ...prev];
+        });
+
+        // Refresh the page data to get the complete notification with user details
+        router.refresh();
+      } else if (payload.eventType === "UPDATE") {
+        const updatedNotification = payload.new;
+
+        // Update existing notification (e.g., when marked as read)
+        setAllNotifications((prev) => {
+          if (!prev) return [];
+
+          return prev.map((notif) =>
+            notif.id === updatedNotification.id
+              ? { ...notif, ...updatedNotification }
+              : notif
+          );
+        });
+      } else if (payload.eventType === "DELETE") {
+        const deletedNotification = payload.old;
+
+        // Remove deleted notification
+        setAllNotifications((prev) => {
+          if (!prev) return [];
+
+          return prev.filter((notif) => notif.id !== deletedNotification.id);
+        });
+      }
+    },
+    [router]
+  );
+
+  // Set up Supabase Realtime subscription
+  useEffect(() => {
+    let channel: any;
+
+    const setupRealtimeSubscription = async () => {
+      try {
+        // Create a channel for notification changes
+        channel = supabase
+          .channel("notification-changes")
+          .on(
+            "postgres_changes",
+            {
+              event: "*", // Listen to all events (INSERT, UPDATE, DELETE)
+              schema: "public",
+              table: "Notification",
+              // Filter notifications based on unitId if provided
+              ...(unitId && { filter: `unitId=eq.${unitId}` }),
+            },
+            handleRealtimeUpdate
+          )
+          .subscribe((status) => {
+            console.log("Realtime subscription status:", status);
+            setIsConnected(status === "SUBSCRIBED");
+          });
+      } catch (error) {
+        console.error("Error setting up realtime subscription:", error);
+        setIsConnected(false);
+      }
+    };
+
+    setupRealtimeSubscription();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (channel) {
+        console.log("Cleaning up realtime subscription");
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [unitId, handleRealtimeUpdate]);
+
+  // Update local state when props change
+  useEffect(() => {
+    setAllNotifications(notifications);
+  }, [notifications]);
+
   return (
     <>
       <div
@@ -83,6 +192,21 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
                     {notifications?.length ?? 0}
                   </span>
                 )}
+                {/* Real-time connection indicator */}
+                <div
+                  className={`absolute top-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                    isConnected ? "bg-green-500" : "bg-gray-400"
+                  } ${
+                    (notifications?.length ?? 0) > 0
+                      ? "translate-x-1 translate-y-1"
+                      : ""
+                  }`}
+                  title={
+                    isConnected
+                      ? "Real-time connected"
+                      : "Real-time disconnected"
+                  }
+                />
               </button>
             </SheetTrigger>
             <SheetContent className="w-[400px] sm:w-[540px] mt-4 mr-4 pr-4 overflow-y-auto">
@@ -115,13 +239,7 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
                       key={notification.id}
                       className={`p-4 transition-colors ${
                         notification.read ? "bg-transparent" : "bg-muted/50"
-                      } border-l-4 ${
-                        notification.priority === "HIGH"
-                          ? "border-red-500"
-                          : notification.priority === "MEDIUM"
-                          ? "border-yellow-500"
-                          : "border-gray-300"
-                      }`}
+                      } border-l-4 `}
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex-shrink-0">
@@ -139,13 +257,13 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-foreground truncate">
                               <span className="font-bold">
-                                {notification.notification.split("|")[0]}
+                                {notification.notification?.split("|")[0] || ""}
                               </span>
                               <span className="text-muted-foreground">
-                                {notification.notification.split("|")[1]}
+                                {notification.notification?.split("|")[1] || ""}
                               </span>
                               <span className="font-bold">
-                                {notification.notification.split("|")[2]}
+                                {notification.notification?.split("|")[2] || ""}
                               </span>
                             </p>
                             <div className="flex items-center gap-2">

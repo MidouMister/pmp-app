@@ -86,6 +86,7 @@ const UnitDetails: React.FC<UnitDetailsProps> = ({
         companyId: companyDetails.id,
         description: `${userName} | updated unit | ${response.name}`,
         unitId: response.id,
+        type: "GENERAL",
       });
 
       toast.success("Unité enregistrée avec succès");

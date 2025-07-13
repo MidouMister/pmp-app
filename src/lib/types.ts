@@ -17,7 +17,7 @@ import {
   getAuthUserDetails,
   getTasksWithTags,
 } from "./queries";
-import { NotificationPriority, NotificationType } from "@prisma/client";
+import { NotificationType } from "@prisma/client";
 
 export type SidebarOption = {
   id: string;
@@ -47,7 +47,6 @@ export type NotificationWithUser =
       updatedAt: Date;
       read: boolean;
       type: NotificationType;
-      priority: NotificationPriority;
     }[]
   | undefined;
 export const getUsersWithCompanyUnit = async (companyId: string) => {

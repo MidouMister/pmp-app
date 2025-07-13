@@ -43,12 +43,6 @@ enum NotificationType {
   GENERAL
 }
 
-enum NotificationPriority {
-  LOW
-  MEDIUM
-  HIGH
-}
-
 model User {
   id           String   @id @default(uuid())
   name         String
@@ -170,14 +164,13 @@ model Unit {
 }
 
 model Notification {
-  id           String               @id @default(uuid())
+  id           String           @id @default(uuid())
   notification String
   companyId    String
   unitId       String?
   userId       String
-  read         Boolean              @default(false)
-  type         NotificationType     @default(GENERAL)
-  priority     NotificationPriority @default(MEDIUM)
+  read         Boolean          @default(false)
+  type         NotificationType @default(GENERAL)
 
   User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   Company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
