@@ -23,6 +23,67 @@ const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
 import { NotificationType } from "@prisma/client";
 
+// Enhanced queries for better realtime support
+
+export const markNotificationAsRead = async (notificationId: string) => {
+  try {
+    // First, get the current notification to ensure we have all data
+    const currentNotification = await db.notification.findUnique({
+      where: { id: notificationId },
+      include: { User: true },
+    });
+
+    if (!currentNotification) {
+      throw new Error("Notification not found");
+    }
+
+    // Update the notification
+    const response = await db.notification.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        read: true,
+        updatedAt: new Date(), // Ensure updatedAt is set
+      },
+      include: {
+        User: true, // Include User data in the response
+      },
+    });
+
+    return response;
+  } catch (error) {
+    console.log("Error marking notification as read:", error);
+    throw error;
+  }
+};
+
+export const deleteNotification = async (notificationId: string) => {
+  try {
+    // First, get the notification to ensure it exists
+    const existingNotification = await db.notification.findUnique({
+      where: { id: notificationId },
+      include: { User: true },
+    });
+
+    if (!existingNotification) {
+      throw new Error("Notification not found");
+    }
+
+    // Delete the notification
+    const response = await db.notification.delete({
+      where: {
+        id: notificationId,
+      },
+    });
+
+    return response;
+  } catch (error) {
+    console.log("Failed to delete notification", error);
+    throw error;
+  }
+};
+// Enhanced notification creation with better error handling
 export const saveActivityLogsNotification = async ({
   companyId,
   description,
@@ -36,6 +97,7 @@ export const saveActivityLogsNotification = async ({
 }) => {
   const authUser = await currentUser();
   let userData;
+
   if (!authUser) {
     const response = await db.user.findFirst({
       where: {
@@ -60,7 +122,7 @@ export const saveActivityLogsNotification = async ({
     return;
   }
 
-  let foundCompanyId = companyId;
+  let foundCompanyId: string | undefined = companyId;
   if (!foundCompanyId) {
     if (!unitId) {
       throw new Error("You need to provide atleast a companyId or unit Id");
@@ -70,58 +132,66 @@ export const saveActivityLogsNotification = async ({
     });
     if (response) foundCompanyId = response.companyId;
   }
-  if (unitId) {
-    await db.notification.create({
-      data: {
-        notification: `${userData.name} | ${description}`,
-        type: type || "GENERAL",
 
-        read: false,
-        User: {
-          connect: {
-            id: userData.id,
-          },
-        },
-        Company: {
-          connect: {
-            id: foundCompanyId,
-          },
-        },
+  if (!foundCompanyId) {
+    throw new Error("Company ID could not be determined.");
+  }
+
+  try {
+    const notificationData = {
+      notification: `${userData.name} | ${description}`,
+      type: type || "GENERAL",
+      read: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      userId: userData.id,
+      companyId: foundCompanyId,
+      ...(unitId && {
         Unit: {
           connect: { id: unitId },
         },
-      },
-    });
-  } else {
-    await db.notification.create({
-      data: {
-        notification: `${userData.name} | ${description}`,
-        type: type || "GENERAL",
+      }),
+    };
 
-        read: false,
-        User: {
-          connect: {
-            id: userData.id,
-          },
-        },
-        Company: {
-          connect: {
-            id: foundCompanyId,
-          },
-        },
+    // Create notification with complete data
+    const newNotification = await db.notification.create({
+      data: {
+        notification: notificationData.notification,
+        type: notificationData.type,
+        read: notificationData.read,
+        createdAt: notificationData.createdAt,
+        updatedAt: notificationData.updatedAt,
+        userId: notificationData.userId,
+        companyId: notificationData.companyId,
+        ...(unitId && { unitId }),
+      },
+      include: {
+        User: true, // Include User data in the response
       },
     });
+
+    return newNotification;
+  } catch (error) {
+    console.error("Error creating notification:", error);
+    throw error;
   }
 };
 export const getNotificationAndUser = async (
   companyId: string,
   unitId?: string
 ) => {
+  const authUser = await currentUser();
+  if (!authUser) {
+    console.log("User not authenticated.");
+    return [];
+  }
+
   try {
     const response = await db.notification.findMany({
       where: {
         companyId: companyId,
         ...(unitId && { unitId: unitId }),
+        userId: authUser.id, // Filter by authenticated user's ID
       },
       include: {
         User: true,
@@ -135,21 +205,34 @@ export const getNotificationAndUser = async (
     console.log(error);
   }
 };
-export const markNotificationAsRead = async (notificationId: string) => {
+// Function to fetch a single notification with user data
+export const getNotificationWithUser = async (notificationId: string) => {
   try {
-    const response = await db.notification.update({
-      where: {
-        id: notificationId,
-      },
-      data: {
-        read: true,
+    const notification = await db.notification.findUnique({
+      where: { id: notificationId },
+      include: {
+        User: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            email: true,
+            createdAt: true,
+            updatedAt: true,
+            role: true,
+            companyId: true,
+          },
+        },
       },
     });
-    return response;
+
+    return notification;
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching notification with user:", error);
+    return null;
   }
 };
+
 export const AddUser = async (
   companyId: string,
 

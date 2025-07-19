@@ -37,7 +37,7 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import type { NotificationItem, NotificationWithUser } from "@/lib/types";
 import { ModeToggle } from "./mode-toggle";
 import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
-import { useNotification } from "@/hooks/use-notifications";
+import { useNotificationContext } from "@/providers/notification-provider";
 
 type Props = {
   notifications: NotificationWithUser | [];
@@ -58,11 +58,9 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
     notifications: allNotifications,
     isConnected,
     handleMarkAsRead,
+    handleDeleteNotification,
     setNotifications,
-  } = useNotification({
-    initialNotifications: notifications,
-    unitId,
-  });
+  } = useNotificationContext();
 
   const handleUnitFilter = () => {
     if (!showAll) {
@@ -87,11 +85,7 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
     });
   };
 
-  const handleDeleteNotification = (notificationId: string) => {
-    setNotifications(
-      (prev) => prev?.filter((n) => n.id !== notificationId) ?? []
-    );
-  };
+  // Using the handleDeleteNotification from context
 
   const handleTypeFilter = (type: string, checked: boolean) => {
     if (checked) {

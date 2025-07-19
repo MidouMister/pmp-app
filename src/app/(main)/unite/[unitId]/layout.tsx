@@ -12,6 +12,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import React from "react";
+import { NotificationProvider } from "@/providers/notification-provider";
 
 type Props = {
   children: React.ReactNode;
@@ -61,14 +62,20 @@ const UnitLayout = async ({ children, params }: Props) => {
               : "user"
           }
         />
-        <InfoBar
-          notifications={notifications}
+        <NotificationProvider
+          initialNotifications={notifications}
           role={user.privateMetadata.role as Role}
           unitId={unitId}
-        />
-        <div className="relative">
-          <BlurPage className="mt-14">{children} </BlurPage>
-        </div>
+        >
+          <InfoBar
+            notifications={notifications}
+            role={user.privateMetadata.role as Role}
+            unitId={unitId}
+          />
+          <div className="relative">
+            <BlurPage className="mt-14">{children} </BlurPage>
+          </div>
+        </NotificationProvider>
       </ResponsiveLayoutWrapper>
     </div>
   );

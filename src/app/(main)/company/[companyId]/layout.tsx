@@ -10,6 +10,7 @@ import { Role } from "@prisma/client";
 import { NotificationWithUser } from "@/lib/types";
 import InfoBar from "@/components/global/infobar";
 import BlurPage from "@/components/global/blur-page";
+import { NotificationProvider } from "@/providers/notification-provider";
 
 export default async function Layout({
   children,
@@ -41,13 +42,18 @@ export default async function Layout({
       <Sidebar type="company" id={companyId} />
 
       <ResponsiveLayoutWrapper>
-        <InfoBar
-          notifications={allNoti}
+        <NotificationProvider 
+          initialNotifications={allNoti} 
           role={user.privateMetadata.role as Role}
-        />
-        <div className="relative">
-          <BlurPage className="mt-14">{children}</BlurPage>
-        </div>
+        >
+          <InfoBar
+            notifications={allNoti}
+            role={user.privateMetadata.role as Role}
+          />
+          <div className="relative">
+            <BlurPage className="mt-14">{children}</BlurPage>
+          </div>
+        </NotificationProvider>
       </ResponsiveLayoutWrapper>
     </div>
   );

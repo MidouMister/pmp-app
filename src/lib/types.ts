@@ -52,7 +52,7 @@ export type NotificationItem = {
   type: NotificationType;
 };
 
-export type NotificationWithUser = NotificationItem[] | undefined;
+export type NotificationWithUser = NotificationItem[];
 
 // Realtime payload types
 export interface RealtimeNotificationPayload {
