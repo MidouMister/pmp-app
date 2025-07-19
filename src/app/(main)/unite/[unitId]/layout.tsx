@@ -39,7 +39,7 @@ const UnitLayout = async ({ children, params }: Props) => {
       user.privateMetadata.role === "OWNER" ||
       user.privateMetadata.role === "ADMIN"
     ) {
-      notifications = allNotifications;
+      notifications = allNotifications || [];
     } else {
       const notificationsUnit = allNotifications?.filter(
         (notification) => notification.unitId === unitId

@@ -17,44 +17,17 @@ type UseNotificationProps = {
 
 export const useNotification = ({
   initialNotifications,
-  unitId,
 }: UseNotificationProps) => {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [notifications, setNotifications] = useState<NotificationWithUser>(
     initialNotifications || []
   );
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [supabase, setSupabase] = useState<ReturnType<
-    typeof createSupabaseClient
-  > | null>(null);
-
-  // Initialize Supabase client with auth token
-  useEffect(() => {
-    const initSupabase = async () => {
-      if (!isLoaded || !isSignedIn) return;
-
-      try {
-        const token = await getToken({ template: "supabase" });
-        if (!token) {
-          console.error("No Supabase token available");
-          return;
-        }
-
-        const supabaseClient = createSupabaseClient(token);
-        setSupabase(supabaseClient);
-      } catch (error) {
-        console.error("Error initializing Supabase:", error);
-      }
-    };
-
-    initSupabase();
-  }, [getToken, isLoaded, isSignedIn]);
 
   // Handle marking a notification as read
   const handleMarkAsRead = async (notificationId: string) => {
     try {
       const updatedNotification = await markNotificationAsRead(notificationId);
-
       if (updatedNotification) {
         setNotifications(
           (prev) =>
@@ -74,7 +47,6 @@ export const useNotification = ({
   const handleDeleteNotification = async (notificationId: string) => {
     try {
       await deleteNotification(notificationId);
-
       setNotifications(
         (prev) =>
           prev?.filter((notification) => notification.id !== notificationId) ||
@@ -85,32 +57,23 @@ export const useNotification = ({
     }
   };
 
+  // Update notifications when initialNotifications changes
   useEffect(() => {
     setNotifications(initialNotifications || []);
   }, [initialNotifications]);
 
   // Set up realtime subscription
   useEffect(() => {
-    if (!supabase || !isSignedIn) return;
+    if (!isLoaded || !isSignedIn) return;
 
     const setupRealtimeSubscription = async () => {
       try {
-        // Get fresh token for realtime connection
-        const freshToken = await getToken({ template: "supabase" });
-        if (!freshToken) {
-          console.error("No fresh token available for realtime");
-          return;
-        }
+        const token = await getToken({ template: "supabase" });
+        if (!token) return;
 
-        // Create a fresh client for realtime
-        const freshSupabaseClient = createSupabaseClient(freshToken);
+        const supabaseClient = createSupabaseClient(token);
 
-        // CRITICAL: Ensure auth is set for realtime
-        freshSupabaseClient.realtime.setAuth(freshToken);
-
-        console.log("Setting up realtime subscription with fresh token");
-
-        const channel = freshSupabaseClient
+        const channel = supabaseClient
           .channel("notification-changes")
           .on(
             "postgres_changes",
@@ -120,16 +83,10 @@ export const useNotification = ({
               table: "Notification",
             },
             async (payload: SupabaseRealtimePayload) => {
-              console.log("Received realtime payload:", payload);
-
-              // Handle different types of changes
               if (payload.eventType === "INSERT") {
-                // Fetch the complete notification with user data
-                const newNotificationId = payload.new.id as string;
                 const newNotificationWithUser = await getNotificationWithUser(
-                  newNotificationId
+                  payload.new.id as string
                 );
-
                 if (newNotificationWithUser) {
                   setNotifications((prev) => [
                     newNotificationWithUser,
@@ -137,46 +94,34 @@ export const useNotification = ({
                   ]);
                 }
               } else if (payload.eventType === "UPDATE") {
-                // Fetch the complete notification with user data
-                const updatedNotificationId = payload.new.id as string;
                 const updatedNotificationWithUser =
-                  await getNotificationWithUser(updatedNotificationId);
-
+                  await getNotificationWithUser(payload.new.id as string);
                 if (updatedNotificationWithUser) {
                   setNotifications(
                     (prev) =>
                       prev?.map((notification) =>
-                        notification.id === updatedNotificationId
+                        notification.id === payload.new.id
                           ? updatedNotificationWithUser
                           : notification
                       ) || []
                   );
                 }
               } else if (payload.eventType === "DELETE") {
-                // Remove deleted notification
-                const deletedNotificationId = payload.old.id as string;
                 setNotifications(
                   (prev) =>
                     prev?.filter(
-                      (notification) =>
-                        notification.id !== deletedNotificationId
+                      (notification) => notification.id !== payload.old.id
                     ) || []
                 );
               }
             }
           )
           .subscribe((status) => {
-            console.log("Realtime subscription status:", status);
             setIsConnected(status === "SUBSCRIBED");
-
-            if (status === "CHANNEL_ERROR") {
-              console.error("Realtime channel error - possibly RLS issue");
-            }
           });
 
         return () => {
-          console.log("Cleaning up Supabase subscription...");
-          freshSupabaseClient.removeChannel(channel);
+          supabaseClient.removeChannel(channel);
         };
       } catch (error) {
         console.error("Error setting up realtime subscription:", error);
@@ -184,11 +129,10 @@ export const useNotification = ({
     };
 
     const cleanup = setupRealtimeSubscription();
-
     return () => {
       cleanup?.then((cleanupFn) => cleanupFn?.());
     };
-  }, [unitId, supabase, isSignedIn, getToken]);
+  }, [isLoaded, isSignedIn, getToken]);
 
   return {
     notifications,
