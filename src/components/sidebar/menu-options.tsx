@@ -1,7 +1,13 @@
 "use client";
-import { SidebarOption, UserAuthDetails } from "@/lib/types";
-import { Company, Unit } from "@prisma/client";
-import { useEffect, useMemo, useState, Dispatch, SetStateAction } from "react";
+import type { SidebarOption, UserAuthDetails } from "@/lib/types";
+import type { Company, Unit } from "@prisma/client";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import {
   Sheet,
   SheetClose,
@@ -20,6 +26,7 @@ import {
   ChevronRight,
   User,
   Crown,
+  Dot,
 } from "lucide-react";
 import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
 import {
@@ -81,81 +88,112 @@ export const MenuOptions = ({
     [defaultOpen]
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const { isCollapsed: contextIsCollapsed, toggleCollapse } =
     useSidebarCollapseContext();
   const isCollapsed = propIsCollapsed ?? contextIsCollapsed;
 
+  // Mobile detection hook
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
     setIsMounted(true);
+
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  if (!isMounted) return;
+  // Check if user has access to multiple units or company
+  const hasMultipleOptions = useMemo(() => {
+    let optionCount = 0;
+    if (user?.role === "OWNER" && user.Company) {
+      optionCount++;
+    }
+    optionCount += units.length;
+    return optionCount > 1;
+  }, [user, units]);
+
+  // Handle popover close when navigating
+  const handleNavigation = () => {
+    setIsPopoverOpen(false);
+  };
+
+  if (!isMounted) return null;
 
   return (
     <Sheet modal={false} {...openState}>
       <SheetTrigger asChild className="fixed left-4 top-4 z-[100] md:hidden">
-        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-          <Menu className="h-4 w-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-10 w-10 p-0 bg-sidebar/80 backdrop-blur-sm border-sidebar-border/50 hover:bg-sidebar-accent/50 shadow-sm"
+        >
+          <Menu className="h-4 w-4 text-sidebar-foreground" />
         </Button>
       </SheetTrigger>
+
       <SheetContent
         showX={!defaultOpen}
         side="left"
         className={clsx(
-          "bg-background border-r border-border/40 p-0 transition-all duration-200 ease-in-out flex flex-col",
+          "bg-sidebar/95 backdrop-blur-xl border-r border-sidebar-border/30 p-0 transition-all duration-300 ease-out flex flex-col shadow-xl",
           {
             "hidden md:flex z-0": defaultOpen,
             "flex md:hidden z-[100] w-full": !defaultOpen,
-            "w-56": defaultOpen && !isCollapsed,
-            "w-14": defaultOpen && isCollapsed,
+            "w-68": defaultOpen && !isCollapsed,
+            "w-16": defaultOpen && isCollapsed,
           }
         )}
       >
-        {/* Toggle Button */}
+        {/* Modern Toggle Button */}
         {defaultOpen && (
           <button
             onClick={toggleCollapse}
-            className="absolute right-1 top-27 bg-background border border-border rounded-full p-1 
-                     shadow-sm hover:shadow-md transition-all duration-200 hover:bg-accent z-10 
-                     hidden md:flex items-center justify-center"
+            className="absolute -right-3 top-8 bg-sidebar border border-sidebar-border/50 rounded-full p-1.5 
+                     shadow-md hover:shadow-lg transition-all duration-300 hover:bg-sidebar-accent z-20 
+                     hidden md:flex items-center justify-center group backdrop-blur-sm"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3.5 w-3.5 text-sidebar-foreground/70 group-hover:text-sidebar-foreground transition-colors" />
             ) : (
-              <ChevronLeft className="h-3 w-3" />
+              <ChevronLeft className="h-3.5 w-3.5 text-sidebar-foreground/70 group-hover:text-sidebar-foreground transition-colors" />
             )}
           </button>
         )}
 
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
 
-        {/* Header */}
+        {/* Modern Header */}
         <div
-          className={clsx("p-3 border-b border-border/20", {
-            "px-1.5": isCollapsed && defaultOpen,
+          className={clsx("p-4 border-b border-sidebar-border/20", {
+            "px-2": isCollapsed && defaultOpen,
           })}
         >
-          {/* Logo */}
-          <div className="mb-4">
+          {/* Refined Logo */}
+          <div className="mb-6">
             <AspectRatio
               ratio={isCollapsed && defaultOpen ? 1 : 16 / 6}
-              className="transition-all duration-300 rounded-md overflow-hidden"
+              className="transition-all duration-300 rounded-xl overflow-hidden"
             >
-              <div className="relative w-full h-full bg-muted/30 border border-border/20 rounded-lg p-2">
+              <div className="relative w-full h-full bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30 rounded-xl p-3 backdrop-blur-sm">
                 <Image
-                  src={sidebarLogo}
+                  src={sidebarLogo || "/placeholder.svg"}
                   alt="Logo"
                   fill
-                  className=" object-cover p-1 rounded-lg"
+                  className="object-contain p-1 rounded-lg filter drop-shadow-sm"
                 />
               </div>
             </AspectRatio>
           </div>
 
-          {/* Company Selector */}
-          <Popover>
+          {/* Modern Company Selector */}
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <TooltipProvider
               delayDuration={isCollapsed && defaultOpen ? 100 : 1000}
             >
@@ -164,36 +202,46 @@ export const MenuOptions = ({
                   <PopoverTrigger asChild>
                     <Button
                       className={clsx(
-                        "transition-all duration-200 bg-transparent hover:bg-accent/50 border-0 p-0 h-auto font-normal",
+                        "transition-all duration-300 bg-gradient-to-r from-sidebar-accent/20 to-sidebar-accent/10 hover:from-sidebar-accent/30 hover:to-sidebar-accent/20 border border-sidebar-border/30 backdrop-blur-sm font-medium shadow-sm hover:shadow-md",
                         {
-                          "w-full": !isCollapsed || !defaultOpen,
-                          "w-9 h-9 justify-center": isCollapsed && defaultOpen,
+                          "w-full h-12 justify-start px-3":
+                            !isCollapsed || !defaultOpen,
+                          "w-12 h-12 justify-center p-0":
+                            isCollapsed && defaultOpen,
                         }
                       )}
                       variant="ghost"
-                      disabled={user?.role !== "OWNER"}
+                      disabled={
+                        !hasMultipleOptions &&
+                        units.length === 0 &&
+                        !user?.Company
+                      }
                     >
                       <div
                         className={clsx(
-                          "flex items-center transition-all duration-200",
+                          "flex items-center transition-all duration-300",
                           {
-                            "gap-1.5 p-1.5 rounded-md":
-                              !isCollapsed || !defaultOpen,
-                            "p-0": isCollapsed && defaultOpen,
+                            "gap-3": !isCollapsed || !defaultOpen,
+                            "": isCollapsed && defaultOpen,
                           }
                         )}
                       >
-                        <div className="h-6 w-6 shrink-0 rounded-sm bg-primary/10 flex items-center justify-center p-1">
-                          <Compass className="h-3 w-3 text-primary" />
+                        <div className="h-7 w-7 shrink-0 rounded-lg bg-gradient-to-br from-sidebar-primary/20 to-sidebar-primary/10 flex items-center justify-center border border-sidebar-primary/20">
+                          <Compass className="h-4 w-4 text-sidebar-primary" />
                         </div>
                         {(!isCollapsed || !defaultOpen) && (
                           <>
                             <div className="flex flex-col flex-1 min-w-0 text-left">
-                              <span className="text-xs font-medium text-foreground truncate">
+                              <span className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
                                 {details.name}
                               </span>
+                              <span className="text-xs text-sidebar-foreground/60 truncate">
+                                {details.companyAddress}
+                              </span>
                             </div>
-                            <ChevronsUpDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                            {hasMultipleOptions && (
+                              <ChevronsUpDown className="h-4 w-4 text-sidebar-foreground/50 shrink-0" />
+                            )}
                           </>
                         )}
                       </div>
@@ -203,11 +251,13 @@ export const MenuOptions = ({
                 {isCollapsed && defaultOpen && (
                   <TooltipContent
                     side="right"
-                    className="bg-background border border-border/50"
+                    className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                   >
                     <div>
-                      <p className="font-medium text-xs">{details.name}</p>
-                      <p className="text-xs text-muted-foreground opacity-70">
+                      <p className="font-semibold text-sm text-sidebar-foreground">
+                        {details.name}
+                      </p>
+                      <p className="text-xs text-sidebar-foreground/60">
                         {details.companyAddress}
                       </p>
                     </div>
@@ -217,46 +267,51 @@ export const MenuOptions = ({
             </TooltipProvider>
 
             <PopoverContent
-              className="w-72 p-0 border border-border/50"
+              className="w-80 p-0 border border-sidebar-border/50 bg-sidebar/95 backdrop-blur-xl shadow-xl"
               align="start"
+              side={isMobile ? "bottom" : "right"}
+              sideOffset={8}
+              style={{ zIndex: isMobile ? 9999 : undefined }}
+              avoidCollisions={true}
+              collisionPadding={8}
             >
-              <Command className="rounded-md">
+              <Command className="rounded-xl">
                 <CommandList className="max-h-80 overflow-auto">
-                  <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
+                  <CommandEmpty className="py-6 text-center text-sm text-sidebar-foreground/60">
                     Aucun résultat trouvé
                   </CommandEmpty>
 
                   {user?.role === "OWNER" && user.Company && (
-                    <CommandGroup heading="Entreprise">
-                      <CommandItem className="p-0">
+                    <CommandGroup heading="Entreprise" className="px-2 py-2">
+                      <CommandItem className="p-0 rounded-lg">
                         {defaultOpen ? (
                           <Link
                             href={`/company/${user.Company.id}`}
                             className={clsx(
-                              "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
+                              "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200",
                               {
-                                "bg-accent": isActive(
-                                  `/company/${user.Company.id}`
-                                ),
-                                "hover:bg-accent/50": !isActive(
+                                "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm":
+                                  isActive(`/company/${user.Company.id}`),
+                                "hover:bg-sidebar-accent/50": !isActive(
                                   `/company/${user.Company.id}`
                                 ),
                               }
                             )}
+                            onClick={handleNavigation}
                           >
-                            <div className="relative h-8 w-8 shrink-0 rounded-sm overflow-hidden bg-muted">
+                            <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
                               <Image
                                 src={user.Company.logo || "/placeholder.svg"}
                                 alt={`${user.Company.name} Logo`}
                                 fill
-                                className="object-contain"
+                                className="object-contain p-1"
                               />
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-medium text-xs truncate">
+                              <span className="font-semibold text-sm truncate">
                                 {user.Company.name}
                               </span>
-                              <span className="text-xs text-muted-foreground truncate opacity-70">
+                              <span className="text-xs text-sidebar-foreground/60 truncate">
                                 {user.Company.companyAddress}
                               </span>
                             </div>
@@ -266,30 +321,30 @@ export const MenuOptions = ({
                             <Link
                               href={`/company/${user.Company.id}`}
                               className={clsx(
-                                "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
+                                "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200",
                                 {
-                                  "bg-accent": isActive(
-                                    `/company/${user.Company.id}`
-                                  ),
-                                  "hover:bg-accent/50": !isActive(
+                                  "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm":
+                                    isActive(`/company/${user.Company.id}`),
+                                  "hover:bg-sidebar-accent/50": !isActive(
                                     `/company/${user.Company.id}`
                                   ),
                                 }
                               )}
+                              onClick={handleNavigation}
                             >
-                              <div className="relative h-8 w-8 shrink-0 rounded-sm overflow-hidden bg-muted">
+                              <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
                                 <Image
                                   src={user.Company.logo || "/placeholder.svg"}
                                   alt={`${user.Company.name} Logo`}
                                   fill
-                                  className="object-contain"
+                                  className="object-contain p-1"
                                 />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-medium text-xs truncate">
+                                <span className="font-semibold text-sm truncate">
                                   {user.Company.name}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate opacity-70">
+                                <span className="text-xs text-sidebar-foreground/60 truncate">
                                   {user.Company.companyAddress}
                                 </span>
                               </div>
@@ -300,31 +355,33 @@ export const MenuOptions = ({
                     </CommandGroup>
                   )}
 
-                  <CommandGroup heading="Unités">
+                  <CommandGroup heading="Unités" className="px-2 py-2">
                     {units.length > 0 ? (
                       units.map((unit) => (
-                        <CommandItem key={unit.id} className="p-0">
+                        <CommandItem key={unit.id} className="p-0 rounded-lg">
                           {defaultOpen ? (
                             <Link
                               href={`/unite/${unit.id}`}
                               className={clsx(
-                                "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
+                                "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200",
                                 {
-                                  "bg-accent": isActive(`/unite/${unit.id}`),
-                                  "hover:bg-accent/50": !isActive(
+                                  "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm":
+                                    isActive(`/unite/${unit.id}`),
+                                  "hover:bg-sidebar-accent/50": !isActive(
                                     `/unite/${unit.id}`
                                   ),
                                 }
                               )}
+                              onClick={handleNavigation}
                             >
-                              <div className="h-8 w-8 flex items-center justify-center shrink-0 rounded-sm bg-muted">
-                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                              <div className="h-10 w-10 flex items-center justify-center shrink-0 rounded-lg bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
+                                <Building2 className="h-5 w-5 text-sidebar-foreground/70" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-medium text-xs truncate">
+                                <span className="font-semibold text-sm truncate">
                                   {unit.name}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate opacity-70">
+                                <span className="text-xs text-sidebar-foreground/60 truncate">
                                   {unit.address}
                                 </span>
                               </div>
@@ -334,23 +391,25 @@ export const MenuOptions = ({
                               <Link
                                 href={`/unite/${unit.id}`}
                                 className={clsx(
-                                  "flex items-center gap-2 w-full p-2 rounded-sm transition-all duration-200",
+                                  "flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200",
                                   {
-                                    "bg-accent": isActive(`/unite/${unit.id}`),
-                                    "hover:bg-accent/50": !isActive(
+                                    "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm":
+                                      isActive(`/unite/${unit.id}`),
+                                    "hover:bg-sidebar-accent/50": !isActive(
                                       `/unite/${unit.id}`
                                     ),
                                   }
                                 )}
+                                onClick={handleNavigation}
                               >
-                                <div className="h-8 w-8 flex items-center justify-center shrink-0 rounded-sm bg-muted">
-                                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <div className="h-10 w-10 flex items-center justify-center shrink-0 rounded-lg bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
+                                  <Building2 className="h-5 w-5 text-sidebar-foreground/70" />
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                  <span className="font-medium text-xs truncate">
+                                  <span className="font-semibold text-sm truncate">
                                     {unit.name}
                                   </span>
-                                  <span className="text-xs text-muted-foreground truncate opacity-70">
+                                  <span className="text-xs text-sidebar-foreground/60 truncate">
                                     {unit.address}
                                   </span>
                                 </div>
@@ -362,7 +421,7 @@ export const MenuOptions = ({
                     ) : (
                       <CommandItem
                         disabled
-                        className="py-4 text-center text-xs text-muted-foreground"
+                        className="py-6 text-center text-sm text-sidebar-foreground/60"
                       >
                         Aucune unité disponible
                       </CommandItem>
@@ -371,29 +430,28 @@ export const MenuOptions = ({
                 </CommandList>
 
                 {user?.role === "OWNER" && (
-                  <div className="p-2 border-t border-border/20">
-                    <SheetClose asChild>
-                      <Button
-                        className="w-full h-8 gap-2 text-xs"
-                        variant="outline"
-                        onClick={() =>
-                          setOpen(
-                            <CustomModal
-                              title="Ajouter Unité"
-                              subheading="Ajouter une nouvelle Unité à votre entreprise."
-                            >
-                              <UnitDetails
-                                companyDetails={user?.Company as Company}
-                                userName={user?.name}
-                              />
-                            </CustomModal>
-                          )
-                        }
-                      >
-                        <PlusCircleIcon className="h-3 w-3" />
-                        Ajouter Unité
-                      </Button>
-                    </SheetClose>
+                  <div className="p-3 border-t border-sidebar-border/20">
+                    <Button
+                      className="w-full h-10 gap-2 text-sm bg-gradient-to-r from-sidebar-primary/10 to-sidebar-primary/5 hover:from-sidebar-primary/20 hover:to-sidebar-primary/10 border border-sidebar-primary/20 text-sidebar-primary font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                      variant="outline"
+                      onClick={() => {
+                        setIsPopoverOpen(false);
+                        setOpen(
+                          <CustomModal
+                            title="Ajouter Unité"
+                            subheading="Ajouter une nouvelle Unité à votre entreprise."
+                          >
+                            <UnitDetails
+                              companyDetails={user?.Company as Company}
+                              userName={user?.name}
+                            />
+                          </CustomModal>
+                        );
+                      }}
+                    >
+                      <PlusCircleIcon className="h-4 w-4" />
+                      Ajouter Unité
+                    </Button>
                   </div>
                 )}
               </Command>
@@ -401,7 +459,7 @@ export const MenuOptions = ({
           </Popover>
         </div>
 
-        {/* Navigation */}
+        {/* Modern Navigation */}
         <div className="flex-1 flex flex-col">
           <nav
             className={clsx("flex-1 py-2", {
@@ -416,34 +474,40 @@ export const MenuOptions = ({
                     key={option.id}
                     href={option.link}
                     className={clsx(
-                      "flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-150 group text-xs",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-sm font-medium relative overflow-hidden",
                       {
-                        "bg-accent text-accent-foreground": isActive(
-                          option.link
-                        ),
-                        "hover:bg-accent/50 text-muted-foreground hover:text-foreground":
+                        "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/80 text-sidebar-accent-foreground shadow-sm border border-sidebar-accent-foreground/10":
+                          isActive(option.link),
+                        "hover:bg-sidebar-accent/30 text-sidebar-foreground/80 hover:text-sidebar-foreground":
                           !isActive(option.link),
                       }
                     )}
                   >
                     <div
-                      className={clsx("transition-colors duration-200", {
-                        "text-accent-foreground": isActive(option.link),
-                        "text-muted-foreground group-hover:text-foreground":
-                          !isActive(option.link),
-                      })}
+                      className={clsx(
+                        "transition-colors duration-200 relative z-10",
+                        {
+                          "text-sidebar-accent-foreground": isActive(
+                            option.link
+                          ),
+                          "text-sidebar-foreground/70 group-hover:text-sidebar-foreground":
+                            !isActive(option.link),
+                        }
+                      )}
                     >
                       {option.icon}
                     </div>
-                    <span className="font-medium">{option.name}</span>
+                    <span className="relative z-10">{option.name}</span>
                     {isActive(option.link) && (
-                      <div className="ml-auto w-1 h-1 rounded-full bg-accent-foreground" />
+                      <div className="ml-auto relative z-10">
+                        <Dot className="h-4 w-4 text-sidebar-accent-foreground animate-pulse" />
+                      </div>
                     )}
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center space-y-1 pt-2">
+              <div className="flex flex-col items-center space-y-2 pt-2">
                 {roleSidebarOptions.map((option) => (
                   <TooltipProvider key={option.id} delayDuration={100}>
                     <Tooltip>
@@ -453,27 +517,28 @@ export const MenuOptions = ({
                             variant="ghost"
                             size="sm"
                             className={clsx(
-                              "w-10 h-10 relative transition-all duration-200 p-0",
+                              "w-12 h-12 relative transition-all duration-200 p-0 rounded-xl",
                               {
-                                "bg-accent text-accent-foreground": isActive(
+                                "bg-gradient-to-br from-sidebar-accent to-sidebar-accent/80 text-sidebar-accent-foreground shadow-sm border border-sidebar-accent-foreground/10":
+                                  isActive(option.link),
+                                "hover:bg-sidebar-accent/30": !isActive(
                                   option.link
                                 ),
-                                "hover:bg-accent/50": !isActive(option.link),
                               }
                             )}
                           >
                             {option.icon}
                             {isActive(option.link) && (
-                              <div className="absolute right-1 top-1/2 transform -translate-y-1/2 w-1 h-1 bg-accent-foreground rounded-full" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-sidebar-primary rounded-full border-2 border-sidebar animate-pulse" />
                             )}
                           </Button>
                         </Link>
                       </TooltipTrigger>
                       <TooltipContent
                         side="right"
-                        className="bg-background border border-border/50"
+                        className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                       >
-                        <p className="text-xs">{option.name}</p>
+                        <p className="text-sm font-medium">{option.name}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -482,16 +547,16 @@ export const MenuOptions = ({
             )}
           </nav>
 
-          {/* Add Unit Button for Collapsed State */}
+          {/* Modern Add Unit Button for Collapsed State */}
           {isCollapsed && defaultOpen && user?.role === "OWNER" && (
-            <div className="px-2 pb-2">
+            <div className="px-2 pb-4">
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-10 h-10 p-0"
+                      className="w-12 h-12 p-0 rounded-xl bg-gradient-to-br from-sidebar-primary/10 to-sidebar-primary/5 hover:from-sidebar-primary/20 hover:to-sidebar-primary/10 border border-sidebar-primary/20 text-sidebar-primary shadow-sm hover:shadow-md transition-all duration-200"
                       onClick={() =>
                         setOpen(
                           <CustomModal
@@ -506,14 +571,14 @@ export const MenuOptions = ({
                         )
                       }
                     >
-                      <PlusCircleIcon className="h-4 w-4" />
+                      <PlusCircleIcon className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
-                    className="bg-background border border-border/50"
+                    className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                   >
-                    <p className="text-xs">Ajouter Unité</p>
+                    <p className="text-sm font-medium">Ajouter Unité</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -521,30 +586,35 @@ export const MenuOptions = ({
           )}
         </div>
 
-        {/* User Profile */}
+        {/* Modern User Profile */}
         <div
-          className={clsx("border-t border-border/20 bg-muted/10", {
-            "p-4": !isCollapsed || !defaultOpen,
-            "p-2": isCollapsed && defaultOpen,
-          })}
+          className={clsx(
+            "border-t border-sidebar-border/20 bg-gradient-to-r from-sidebar-accent/10 to-sidebar-accent/5 backdrop-blur-sm",
+            {
+              "p-4": !isCollapsed || !defaultOpen,
+              "p-2": isCollapsed && defaultOpen,
+            }
+          )}
         >
           {!isCollapsed || !defaultOpen ? (
-            <div className="flex items-center gap-2">
-              <div className="relative h-8 w-8 shrink-0">
-                <div className="w-full h-full rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-10 shrink-0">
+                <div className="w-full h-full rounded-xl bg-gradient-to-br from-sidebar-primary/20 to-sidebar-primary/10 border border-sidebar-primary/20 flex items-center justify-center shadow-sm">
+                  <User className="h-5 w-5 text-sidebar-primary" />
                 </div>
+                {user?.role === "OWNER" && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center border-2 border-sidebar shadow-sm">
+                    <Crown className="h-2.5 w-2.5 text-white" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <p className="text-xs font-medium text-foreground truncate">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-sidebar-foreground truncate">
                     {user?.name || "Utilisateur"}
                   </p>
-                  {user?.role === "OWNER" && (
-                    <Crown className="h-3 w-3 text-yellow-500 shrink-0" />
-                  )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate opacity-70">
+                <p className="text-xs text-sidebar-foreground/60 truncate">
                   {user?.role === "OWNER"
                     ? "Propriétaire"
                     : user?.role || "Utilisateur"}
@@ -556,13 +626,13 @@ export const MenuOptions = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex justify-center">
-                    <div className="relative w-10 h-10">
-                      <div className="w-full h-full rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary" />
+                    <div className="relative w-12 h-12">
+                      <div className="w-full h-full rounded-xl bg-gradient-to-br from-sidebar-primary/20 to-sidebar-primary/10 border border-sidebar-primary/20 flex items-center justify-center shadow-sm">
+                        <User className="h-5 w-5 text-sidebar-primary" />
                       </div>
                       {user?.role === "OWNER" && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-yellow-500 flex items-center justify-center">
-                          <Crown className="h-2 w-2 text-white" />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center border-2 border-sidebar shadow-sm">
+                          <Crown className="h-2.5 w-2.5 text-white" />
                         </div>
                       )}
                     </div>
@@ -570,13 +640,13 @@ export const MenuOptions = ({
                 </TooltipTrigger>
                 <TooltipContent
                   side="right"
-                  className="bg-background border border-border/50"
+                  className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                 >
                   <div>
-                    <p className="text-xs font-medium">
+                    <p className="text-sm font-semibold text-sidebar-foreground">
                       {user?.name || "Utilisateur"}
                     </p>
-                    <p className="text-xs text-muted-foreground opacity-70">
+                    <p className="text-xs text-sidebar-foreground/60">
                       {user?.role === "OWNER"
                         ? "Propriétaire"
                         : user?.role || "Utilisateur"}
