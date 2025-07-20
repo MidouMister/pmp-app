@@ -75,13 +75,9 @@ export const MenuOptions = ({
   isCollapsed: propIsCollapsed,
 }: Props) => {
   const pathname = usePathname();
-
   const isActive = (linkPath: string) => {
-    if (linkPath === pathname) return true;
-    if (pathname.startsWith(linkPath) && linkPath !== "/") return true;
-    return false;
+    return linkPath === pathname;
   };
-
   const { setOpen } = useModal();
   const openState = useMemo(
     () => (defaultOpen ? { open: true } : {}),
@@ -145,7 +141,7 @@ export const MenuOptions = ({
           {
             "hidden md:flex z-0": defaultOpen,
             "flex md:hidden z-[100] w-full": !defaultOpen,
-            "w-68": defaultOpen && !isCollapsed,
+            "w-70": defaultOpen && !isCollapsed,
             "w-16": defaultOpen && isCollapsed,
           }
         )}

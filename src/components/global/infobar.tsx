@@ -299,7 +299,7 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
       <div
         className={twMerge(
           `fixed z-[20] ${
-            isCollapsed ? "md:left-[65px]" : "md:left-[273px]"
+            isCollapsed ? "md:left-[65px]" : "md:left-[280px]"
           } left-0 right-0 top-0 p-4 bg-background/95 backdrop-blur-lg flex gap-4 items-center border-b border-border/50 transition-all duration-300`,
           className
         )}
