@@ -13,6 +13,7 @@ import {
   Role,
   Tag,
   Task,
+  TaskDependencyType,
   Unit,
   User,
 } from "@prisma/client";
@@ -1789,4 +1790,157 @@ export const _getTasksWithAllRelations = async (laneId: string) => {
     },
   });
   return response;
+};
+
+/**
+ * Fetches all phases for a specific project with their dependencies
+ * @param projectId - The ID of the project
+ * @returns Project with phases and their dependencies
+ */
+export const getPhasesWithDependencies = async (projectId: string) => {
+  try {
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      include: {
+        phases: {
+          include: {
+            predecessors: true,
+            successors: true,
+          },
+          orderBy: {
+            displayOrder: "asc",
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    return project;
+  } catch (error) {
+    console.error("Error fetching phases with dependencies:", error);
+    throw error;
+  }
+};
+
+/**
+ * Creates or updates a task dependency between phases
+ * @param dependency - The dependency data
+ * @returns The created or updated dependency
+ */
+export const upsertTaskDependency = async (dependency: {
+  id: string;
+  predecessorId: string;
+  successorId: string;
+  type: TaskDependencyType;
+  lag: number;
+}) => {
+  try {
+    // Validate that predecessor and successor exist and are different
+    if (dependency.predecessorId === dependency.successorId) {
+      throw new Error("A phase cannot depend on itself");
+    }
+
+    const [predecessor, successor] = await Promise.all([
+      db.phase.findUnique({ where: { id: dependency.predecessorId } }),
+      db.phase.findUnique({ where: { id: dependency.successorId } }),
+    ]);
+
+    if (!predecessor || !successor) {
+      throw new Error("Both predecessor and successor phases must exist");
+    }
+
+    // Check if a dependency already exists between these tasks
+    const existingDependency = await db.taskDependency.findFirst({
+      where: {
+        predecessorId: dependency.predecessorId,
+        successorId: dependency.successorId,
+      },
+    });
+
+    let response;
+
+    if (existingDependency) {
+      // Update the existing dependency
+      response = await db.taskDependency.update({
+        where: { id: existingDependency.id },
+        data: {
+          type: dependency.type,
+          lag: dependency.lag,
+          isActive: true,
+        },
+      });
+    } else {
+      // Create a new dependency
+      response = await db.taskDependency.create({
+        data: {
+          id: dependency.id,
+          predecessorId: dependency.predecessorId,
+          successorId: dependency.successorId,
+          type: dependency.type,
+          lag: dependency.lag,
+          isActive: true,
+        },
+      });
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error upserting task dependency:", error);
+    throw error;
+  }
+};
+
+/**
+ * Deletes a task dependency
+ * @param dependencyId - The ID of the dependency to delete
+ * @returns The deleted dependency
+ */
+export const deleteTaskDependency = async (dependencyId: string) => {
+  try {
+    const response = await db.taskDependency.update({
+      where: { id: dependencyId },
+      data: { isActive: false },
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error deleting task dependency:", error);
+    throw error;
+  }
+};
+
+/**
+ * Updates multiple phases in batch
+ * @param phases - Array of phases to update
+ * @returns The updated phases
+ */
+export const updatePhasesInBatch = async (phases: Phase[]) => {
+  try {
+    const updateTransactions = phases.map((phase) =>
+      db.phase.update({
+        where: { id: phase.id },
+        data: {
+          name: phase.name,
+          start: phase.start,
+          end: phase.end,
+          progress: phase.progress,
+          displayOrder: phase.displayOrder,
+          isCollapsed: phase.isCollapsed,
+        },
+      })
+    );
+
+    const results = await db.$transaction(updateTransactions);
+    return results;
+  } catch (error) {
+    console.error("Error updating phases in batch:", error);
+    throw error;
+  }
 };

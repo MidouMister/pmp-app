@@ -46,6 +46,13 @@ enum NotificationType {
   GENERAL
 }
 
+enum TaskDependencyType {
+  finishToStart
+  startToStart
+  finishToFinish
+  startToFinish
+}
+
 model User {
   id           String   @id @default(uuid())
   name         String
@@ -235,21 +242,60 @@ model TeamMember {
   @@index([teamId])
 }
 
+// Enhanced Phase model with Gantt-specific fields
 model Phase {
-  id        String    @id @default(uuid())
-  name      String
-  code      String
-  montantHT Float
-  start     DateTime?
-  end       DateTime?
-  status    Status    @default(New)
-  obs       String?
-  Project   Project   @relation(fields: [projectId], references: [id])
+  id          String    @id @default(uuid())
+  name        String
+  code        String
+  montantHT   Float
+  start       DateTime?
+  end         DateTime?
+  status      Status    @default(New)
+  obs         String?
+  progress    Int       @default(0) // Progress percentage (0-100)
+  isMilestone Boolean   @default(false) // Whether this is a milestone
+
+  // Gantt-specific fields
+  duration     Int? // Duration in days (calculated field)
+  displayOrder Int     @default(0) // Display order in Gantt chart
+  color        String? @default("#3b82f6") // Color for Gantt visualization
+  isCollapsed  Boolean @default(false) // For grouping/collapsing functionality
+
+  // Relationships
+  Project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
-  // Relation to Product (one-to-one)
   Product   Product?
 
+  // Enhanced dependency relations
+  predecessors TaskDependency[] @relation("PredecessorPhase")
+  successors   TaskDependency[] @relation("SuccessorPhase")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([projectId])
+  @@index([displayOrder])
+  @@index([start, end]) // Composite index for date range queries
+}
+
+// Enhanced TaskDependency model
+model TaskDependency {
+  id            String             @id @default(uuid())
+  predecessorId String
+  successorId   String
+  type          TaskDependencyType @default(finishToStart)
+  lag           Int                @default(0) // Lag time in days
+  isActive      Boolean            @default(true) // For soft deletion
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  predecessor Phase @relation("PredecessorPhase", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successor   Phase @relation("SuccessorPhase", fields: [successorId], references: [id], onDelete: Cascade)
+
+  @@unique([predecessorId, successorId])
+  @@index([predecessorId])
+  @@index([successorId])
+  @@index([isActive])
 }
 
 model Product {
