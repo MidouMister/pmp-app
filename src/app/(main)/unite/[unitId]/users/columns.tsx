@@ -142,7 +142,9 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="flex gap-2"
             onClick={() => {
               setOpen(
+                "edit-user-modal",
                 <CustomModal
+                  modalId="edit-user-modal"
                   subheading="Vous ne pouvez modifier que le rôle de l'utilisateur et le poste"
                   title="Modifier les détails de l'utilisateur"
                 >

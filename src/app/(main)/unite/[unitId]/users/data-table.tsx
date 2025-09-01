@@ -65,7 +65,9 @@ export default function DataTable<TData, TValue>({
           onClick={() => {
             if (modalChildren) {
               setOpen(
+                "add-user-modal",
                 <CustomModal
+                  modalId="add-user-modal"
                   title="Ajouter un membre"
                   subheading="Envoyer une invitation"
                 >

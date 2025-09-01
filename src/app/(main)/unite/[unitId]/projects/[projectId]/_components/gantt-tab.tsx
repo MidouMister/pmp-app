@@ -55,6 +55,7 @@ import { toast } from "sonner";
 import PhaseForm from "@/components/forms/phase-form";
 import { useModal } from "@/providers/modal-provider";
 import { deleteGanttMarker, deletePhase, onMovePhase } from "@/lib/queries";
+import { Card } from "@/components/ui/card";
 
 // Gantt-specific types for phases
 export interface GanttPhaseFeature extends GanttFeature {
@@ -93,6 +94,7 @@ const GanttTab: React.FC<GanttTabProps> = ({ project }) => {
   const [viewRange, setViewRange] = useState<ViewRange>("monthly");
   const [zoom, setZoom] = useState(100);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<Status | "all">("all");
@@ -364,141 +366,144 @@ const GanttTab: React.FC<GanttTabProps> = ({ project }) => {
   return (
     <div className="space-y-4">
       {/* Gantt Controls */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h3 className="text-lg font-semibold">Diagramme de Gantt</h3>
-            <Badge variant="outline">
-              {ganttFeatures.length} phase{ganttFeatures.length > 1 ? "s" : ""}
-            </Badge>
-            {ganttMarkers.length > 0 && (
-              <Badge variant="secondary">
-                {ganttMarkers.length} marqueur
-                {ganttMarkers.length > 1 ? "s" : ""}
+      <Card className="p-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="text-lg font-semibold">Diagramme de Gantt</h3>
+              <Badge variant="outline">
+                {ganttFeatures.length} phase
+                {ganttFeatures.length > 1 ? "s" : ""}
               </Badge>
-            )}
+              {ganttMarkers.length > 0 && (
+                <Badge variant="secondary">
+                  {ganttMarkers.length} marqueur
+                  {ganttMarkers.length > 1 ? "s" : ""}
+                </Badge>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* View Range Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {viewRange === "daily" && "Quotidien"}
+                    {viewRange === "monthly" && "Mensuel"}
+                    {viewRange === "quarterly" && "Trimestriel"}
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setViewRange("daily")}>
+                    Affichage quotidien
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setViewRange("monthly")}>
+                    Affichage mensuel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setViewRange("quarterly")}>
+                    Affichage trimestriel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setZoom(Math.max(50, zoom - 25))}
+                  disabled={zoom <= 50}
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground w-12 text-center">
+                  {zoom}%
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setZoom(Math.min(200, zoom + 25))}
+                  disabled={zoom >= 200}
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* View Range Selector */}
+          {/* Search and Filter Controls */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une phase..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
-                  {viewRange === "daily" && "Quotidien"}
-                  {viewRange === "monthly" && "Mensuel"}
-                  {viewRange === "quarterly" && "Trimestriel"}
-                  <ChevronDown className="h-4 w-4 ml-1" />
+                  <Filter className="h-4 w-4 mr-2" />
+                  {filterStatus === "all"
+                    ? "Tous les statuts"
+                    : STATUS_CONFIG[filterStatus as Status]?.name}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setViewRange("daily")}>
-                  Affichage quotidien
+                <DropdownMenuItem onClick={() => setFilterStatus("all")}>
+                  Tous les statuts
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setViewRange("monthly")}>
-                  Affichage mensuel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setViewRange("quarterly")}>
-                  Affichage trimestriel
-                </DropdownMenuItem>
+                {Object.values(STATUS_CONFIG).map((status) => (
+                  <DropdownMenuItem
+                    key={status.id}
+                    onClick={() => setFilterStatus(status.id as Status)}
+                    className="flex items-center gap-2"
+                  >
+                    <div
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: status.color }}
+                    />
+                    {status.name}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Zoom Controls */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZoom(Math.max(50, zoom - 25))}
-                disabled={zoom <= 50}
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground w-12 text-center">
-                {zoom}%
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setZoom(Math.min(200, zoom + 25))}
-                disabled={zoom >= 200}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filter Controls */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher une phase..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-10"
-            />
-            {searchTerm && (
+            {(searchTerm || filterStatus !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSearchTerm("")}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterStatus("all");
+                }}
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4 mr-2" />
+                Effacer filtres
               </Button>
             )}
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                {filterStatus === "all"
-                  ? "Tous les statuts"
-                  : STATUS_CONFIG[filterStatus as Status]?.name}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setFilterStatus("all")}>
-                Tous les statuts
-              </DropdownMenuItem>
-              {Object.values(STATUS_CONFIG).map((status) => (
-                <DropdownMenuItem
-                  key={status.id}
-                  onClick={() => setFilterStatus(status.id as Status)}
-                  className="flex items-center gap-2"
-                >
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: status.color }}
-                  />
-                  {status.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {(searchTerm || filterStatus !== "all") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearchTerm("");
-                setFilterStatus("all");
-              }}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Effacer filtres
-            </Button>
-          )}
         </div>
-      </div>
+      </Card>
 
       {/* Gantt Chart */}
       <div
-        className="border rounded-lg overflow-hidden"
-        style={{ height: "600px" }}
+        className="border rounded-lg "
+        style={{ height: "550px", padding: "1px" }}
       >
         {ganttFeatures.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-4">

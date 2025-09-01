@@ -154,7 +154,9 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
 
   const openEditTaskModal = (task: TaskWithTags[0]) => {
     setOpen(
+      "edit-task-modal",
       <CustomSheet
+        modalId="edit-task-modal"
         title="Modifier la Tâche"
         subheading="Modifier les détails de la tâche"
       >
@@ -170,7 +172,9 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
 
   const openDeleteTaskModal = (task: TaskWithTags[0]) => {
     setOpen(
+      "delete-task-modal",
       <CustomModal
+        modalId="delete-task-modal"
         title="Supprimer la Tâche"
         subheading="Confirmer la suppression"
         size="sm"
@@ -199,7 +203,7 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
                   await deleteTask(task.id);
                   toast.success("Tâche supprimée avec succès");
                   router.refresh();
-                  setOpen(null);
+                  setOpen("delete-task-modal", null);
                 } catch (error) {
                   toast.error("Échec de la suppression de la tâche");
                   console.error(error);

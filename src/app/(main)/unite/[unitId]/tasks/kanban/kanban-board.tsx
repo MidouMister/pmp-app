@@ -115,7 +115,9 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
 
   const openAddLaneModal = () => {
     setOpen(
+      "add-lane-modal",
       <CustomModal
+        modalId="add-lane-modal"
         title="Créer une Colonne"
         subheading="Créer une nouvelle colonne pour vos tâches"
         size="sm"

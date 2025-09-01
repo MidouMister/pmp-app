@@ -192,7 +192,9 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="flex gap-2"
             onClick={() => {
               setOpen(
+                `client${rowData?.id}`,
                 <CustomModal
+                  modalId={`client${rowData?.id}`}
                   title="Modifier les détails client"
                   subheading="vous pouvez modifier les détails du client"
                 >

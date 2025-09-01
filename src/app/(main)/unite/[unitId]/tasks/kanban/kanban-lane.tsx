@@ -129,7 +129,9 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
 
   const openAddTaskModal = () => {
     setOpen(
+      "add-task-modal",
       <CustomModal
+        modalId="add-task-modal"
         title="Ajouter une Tâche"
         subheading="Ajouter une nouvelle tâche à cette colonne"
         size="md"
@@ -145,7 +147,9 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
 
   const openEditLaneModal = () => {
     setOpen(
+      "edit-lane-modal",
       <CustomModal
+        modalId="edit-lane-modal"
         title="Modifier la Colonne"
         subheading="Modifier les détails de la colonne"
         size="sm"
@@ -157,7 +161,9 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
 
   const openDeleteLaneModal = () => {
     setOpen(
+      "delete-lane-modal",
       <CustomModal
+        modalId="delete-lane-modal"
         title="Supprimer la Colonne"
         subheading="Confirmer la suppression"
         size="sm"
@@ -174,7 +180,7 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
             <Button
               variant="outline"
               onClick={() => {
-                setOpen(null);
+                setOpen("delete-lane-modal", null);
               }}
             >
               Annuler
@@ -186,7 +192,7 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
                   await deleteLane(lane.id);
                   toast.success("Colonne supprimée avec succès");
                   router.refresh();
-                  setOpen(null);
+                  setOpen("delete-lane-modal", null);
                 } catch (error) {
                   toast.error("Échec de la suppression de la colonne");
                   console.error(error);

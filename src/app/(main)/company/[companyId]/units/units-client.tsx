@@ -111,7 +111,9 @@ const UnitsClient = ({ units, company, user }: UnitsClientProps) => {
 
   const openUnitModal = (unit?: Unit) => {
     setOpen(
+      `unit${unit?.id}`,
       <CustomModal
+        modalId={`unit${unit?.id}`}
         title={unit ? "Modifier l'unité" : "Nouvelle unité"}
         subheading={
           unit ? "Modifier les détails de l'unité" : "Créer une nouvelle unité"

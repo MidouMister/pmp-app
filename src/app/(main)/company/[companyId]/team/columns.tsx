@@ -148,6 +148,7 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const modalId = `user-details-${rowData?.id}`;
   if (!rowData) return;
   if (!rowData.Company) return;
 
@@ -173,7 +174,9 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="flex gap-2"
             onClick={() => {
               setOpen(
+                modalId,
                 <CustomModal
+                  modalId={modalId}
                   title="Modifier les détails de l'utilisateur"
                   subheading="Vous ne pouvez modifier que le rôle de l'utilisateur et le poste"
                 >

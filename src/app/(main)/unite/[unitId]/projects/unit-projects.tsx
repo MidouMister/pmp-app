@@ -59,6 +59,7 @@ const UnitProjects = ({ projects, unitId }: UnitProjectsProps) => {
   const projectTypes = Array.from(
     new Set(projects.map((project) => project.type))
   );
+  const modalId = `project-form-${unitId}`;
 
   return (
     <div className="space-y-4">
@@ -185,7 +186,9 @@ const UnitProjects = ({ projects, unitId }: UnitProjectsProps) => {
             size="sm"
             onClick={() =>
               setOpen(
+                modalId,
                 <CustomModal
+                  modalId={modalId}
                   title="Ajouter Projet"
                   subheading="Ajouter un  nouveau Projet à votre Unité."
                 >

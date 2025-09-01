@@ -177,7 +177,9 @@ const ProjectCard = ({ project, unitId }: ProjectCardProps) => {
                       className="flex items-center cursor-pointer"
                       onClick={() => {
                         setOpen(
+                          "project-details-modal",
                           <CustomModal
+                            modalId="project-details-modal"
                             title="Détails du projet"
                             subheading="Informations détaillées du projet"
                           >
@@ -202,7 +204,9 @@ const ProjectCard = ({ project, unitId }: ProjectCardProps) => {
                       className="flex items-center cursor-pointer"
                       onClick={() => {
                         setOpen(
+                          "edit-project-modal",
                           <CustomModal
+                            modalId="edit-project-modal"
                             title="Modifier les détails du projet"
                             subheading="Vous pouvez modifier les détails du projet"
                           >

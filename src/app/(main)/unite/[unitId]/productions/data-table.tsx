@@ -275,7 +275,9 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           onClick={() => {
             if (modalChildren) {
               setOpen(
+                "add-production-modal",
                 <CustomModal
+                  modalId="add-production-modal"
                   title="Ajouter une production"
                   subheading="Ajouter une nouvelle production à l'unité"
                 >

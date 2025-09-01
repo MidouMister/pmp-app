@@ -81,6 +81,7 @@ const ActionsCell = ({ production }: { production: ProductionWithDetails }) => {
             onClick={() => {
               const modal = (
                 <CustomModal
+                  modalId="edit-production-modal"
                   title="Modifier la production"
                   subheading="Mettre à jour les informations de production"
                 >
@@ -101,7 +102,7 @@ const ActionsCell = ({ production }: { production: ProductionWithDetails }) => {
                   />
                 </CustomModal>
               );
-              setOpen(modal);
+              setOpen("edit-production-modal", modal);
             }}
           >
             <Edit className="mr-2 h-4 w-4" />

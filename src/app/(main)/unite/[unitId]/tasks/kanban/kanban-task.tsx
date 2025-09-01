@@ -63,7 +63,9 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
 
   const openEditTaskModal = () => {
     setOpen(
+      "edit-task-modal",
       <CustomSheet
+        modalId="edit-task-modal"
         title="Modifier la Tâche"
         subheading="Modifier les détails de la tâche"
       >
@@ -79,7 +81,9 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
 
   const openDeleteTaskModal = () => {
     setOpen(
+      "delete-task-modal",
       <CustomModal
+        modalId="delete-task-modal"
         title="Supprimer la Tâche"
         subheading="Confirmer la suppression"
         size="sm"
@@ -108,7 +112,7 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
                   await deleteTask(task.id);
                   toast.success("Tâche supprimée avec succès");
                   router.refresh();
-                  setOpen(null);
+                  setOpen("delete-task-modal", null);
                 } catch (error) {
                   toast.error("Échec de la suppression de la tâche");
                   console.error(error);

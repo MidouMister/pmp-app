@@ -433,7 +433,9 @@ export const MenuOptions = ({
                       onClick={() => {
                         setIsPopoverOpen(false);
                         setOpen(
+                          "add-unit-modal",
                           <CustomModal
+                            modalId="add-unit-modal"
                             title="Ajouter Unité"
                             subheading="Ajouter une nouvelle Unité à votre entreprise."
                           >
@@ -555,7 +557,9 @@ export const MenuOptions = ({
                       className="w-12 h-12 p-0 rounded-xl bg-gradient-to-br from-sidebar-primary/10 to-sidebar-primary/5 hover:from-sidebar-primary/20 hover:to-sidebar-primary/10 border border-sidebar-primary/20 text-sidebar-primary shadow-sm hover:shadow-md transition-all duration-200"
                       onClick={() =>
                         setOpen(
+                          "add-unit-modal",
                           <CustomModal
+                            modalId="add-unit-modal"
                             title="Ajouter Unité"
                             subheading="Ajouter une nouvelle Unité à votre entreprise."
                           >

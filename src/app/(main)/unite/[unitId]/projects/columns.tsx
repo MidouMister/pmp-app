@@ -321,7 +321,9 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             className="flex gap-2"
             onClick={() => {
               setOpen(
+                "edit-project-modal",
                 <CustomModal
+                  modalId="edit-project-modal"
                   title="Modifier les détails du projet"
                   subheading="Vous pouvez modifier les détails du projet"
                 >

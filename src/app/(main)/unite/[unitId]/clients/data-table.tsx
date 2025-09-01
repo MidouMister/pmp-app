@@ -65,7 +65,9 @@ export default function DataTable<TData, TValue>({
           onClick={() => {
             if (modalChildren) {
               setOpen(
+                "add-client-modal",
                 <CustomModal
+                  modalId="add-client-modal"
                   title="Ajouter un Client "
                   subheading="Ajouter un nouveau client à votre Unité."
                 >

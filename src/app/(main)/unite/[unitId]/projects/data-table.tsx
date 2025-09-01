@@ -63,7 +63,9 @@ export default function DataTable<TData, TValue>({
           onClick={() => {
             if (modalChildren) {
               setOpen(
+                "add-project-modal",
                 <CustomModal
+                  modalId="add-project-modal"
                   title="Ajouter un Projet"
                   subheading="Ajouter un nouveau projet à votre Portfeuil Projets de l'unité."
                 >
