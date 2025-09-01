@@ -37,7 +37,9 @@ const ProjectHeader = ({ project, unitId }: ProjectHeaderProps) => {
         <Button
           onClick={() =>
             setOpen(
+              "edit-project-modal",
               <CustomSheet
+                modalId="edit-project-modal"
                 key={`edit-project-${project.id}`}
                 title="Modifier le projet"
                 subheading="Modifiez les informations du projet"

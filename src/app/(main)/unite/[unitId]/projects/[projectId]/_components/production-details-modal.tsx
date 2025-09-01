@@ -55,6 +55,7 @@ const ProductionDetailsModal = ({
 
   return (
     <CustomSheet
+      modalId="production-details-modal"
       title={`${selectedPhase.name}`}
       subheading={`Détails des productions mensuelles`}
       defaultOpen={true}
@@ -67,8 +68,7 @@ const ProductionDetailsModal = ({
               Montant HT : {formatAmount(selectedPhase.montantHT)}
             </p>
             <p className="text-muted-foreground flex items-center gap-2">
-              Taux total :{" "}
-              <TauxChart taux={selectedPhase.Product?.taux || 0} />
+              Taux total : <TauxChart taux={selectedPhase.Product?.taux || 0} />
             </p>
             <p className=" text-muted-foreground">
               Montant produit :{" "}
