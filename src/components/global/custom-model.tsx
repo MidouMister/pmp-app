@@ -10,6 +10,7 @@ import {
 } from "../ui/dialog";
 
 type Props = {
+  modalId: string; // Now required
   title: string;
   subheading: string;
   children: React.ReactNode;
@@ -20,6 +21,7 @@ type Props = {
 };
 
 const CustomModal = ({
+  modalId, // Add modalId prop
   children,
   defaultOpen,
   subheading,
@@ -27,7 +29,10 @@ const CustomModal = ({
   size = "lg",
   className = "",
 }: Props) => {
-  const { isOpen, setClose } = useModal();
+  const { isModalOpen, setClose } = useModal();
+
+  // Only show this modal if its specific modalId is active
+  const isThisModalOpen = isModalOpen(modalId) || defaultOpen;
 
   // Classes de taille pour différentes largeurs - TAILLES OPTIMISÉES
   const sizeClasses = {
@@ -39,7 +44,7 @@ const CustomModal = ({
   };
 
   return (
-    <Dialog open={isOpen || defaultOpen} onOpenChange={setClose}>
+    <Dialog open={isThisModalOpen} onOpenChange={setClose}>
       <DialogContent
         className={`
           !overflow-auto 

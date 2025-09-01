@@ -10,16 +10,27 @@ import {
 import { useModal } from "@/providers/modal-provider";
 
 type Props = {
+  modalId: string; // Now required
   title: string;
   subheading: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
 };
 
-const CustomSheet = ({ children, defaultOpen, subheading, title }: Props) => {
-  const { isOpen, setClose } = useModal();
+const CustomSheet = ({
+  modalId,
+  children,
+  defaultOpen,
+  subheading,
+  title,
+}: Props) => {
+  const { isModalOpen, setClose } = useModal();
+
+  // Only show this sheet if its specific modalId is active
+  const isThisModalOpen = isModalOpen(modalId) || defaultOpen;
+
   return (
-    <Sheet open={isOpen || defaultOpen} onOpenChange={setClose}>
+    <Sheet open={isThisModalOpen} onOpenChange={setClose}>
       <SheetContent
         side="right"
         className="overflow-y-auto w-full sm:max-w-md md:max-w-lg lg:max-w-xl p-4 md:p-6"

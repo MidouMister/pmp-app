@@ -38,6 +38,7 @@ const ProjectHeader = ({ project, unitId }: ProjectHeaderProps) => {
           onClick={() =>
             setOpen(
               <CustomSheet
+                key={`edit-project-${project.id}`}
                 title="Modifier le projet"
                 subheading="Modifiez les informations du projet"
               >

@@ -12,7 +12,7 @@ import {
   TeamMember,
   User,
   NotificationType,
-  TaskDependency,
+  GanttMarker,
 } from "@prisma/client";
 import { db } from "./db";
 import {
@@ -125,6 +125,8 @@ export type ProjectWithDetails = Project & {
       Productions?: Production[];
     };
   })[];
+  GanttMarker?: GanttMarker[];
+
   team?:
     | (Team & {
         members: (TeamMember & {
@@ -173,41 +175,3 @@ export type LaneDetail = Lane & {
 export type TaskDetails = Prisma.PromiseReturnType<
   typeof _getTasksWithAllRelations
 >;
-
-// Gantt Chart Types
-export interface GanttTask {
-  id: string;
-  name: string;
-  start: Date;
-  end: Date;
-  progress: number;
-  type: "task" | "project" | "milestone";
-  dependencies?: string[];
-  isDisabled?: boolean;
-  styles?: {
-    backgroundColor?: string;
-    backgroundSelectedColor?: string;
-    progressColor?: string;
-    progressSelectedColor?: string;
-  };
-  project?: string;
-  displayOrder?: number;
-  hideChildren?: boolean;
-}
-
-export interface GanttDependency {
-  id: string;
-  predecessorId: string;
-  successorId: string;
-  type: "finishToStart" | "startToStart" | "finishToFinish" | "startToFinish";
-  lag: number;
-}
-
-export interface PhaseWithDependencies extends Phase {
-  predecessors: TaskDependency[];
-  successors: TaskDependency[];
-}
-
-export interface ProjectWithPhasesAndDependencies extends Project {
-  phases: PhaseWithDependencies[];
-}

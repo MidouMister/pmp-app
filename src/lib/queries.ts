@@ -13,7 +13,6 @@ import {
   Role,
   Tag,
   Task,
-  TaskDependencyType,
   Unit,
   User,
 } from "@prisma/client";
@@ -971,6 +970,9 @@ export const getProjectDetails = async (projectId: string) => {
             },
           },
         },
+        orderBy: {
+          start: "asc",
+        },
       },
       team: {
         include: {
@@ -981,6 +983,7 @@ export const getProjectDetails = async (projectId: string) => {
           },
         },
       },
+      GanttMarker: true,
     },
   });
 };
@@ -1040,7 +1043,62 @@ export const upsertPhase = async (phase: Phase) => {
     throw error;
   }
 };
+// Récupérer une phase par ID
+export const getPhaseById = async (phaseId: string) => {
+  try {
+    if (!phaseId) {
+      throw new Error("ID de la phase requis");
+    }
 
+    const phase = await db.phase.findUnique({
+      where: { id: phaseId },
+    });
+
+    if (!phase) {
+      throw new Error("Phase non trouvée");
+    }
+
+    return phase;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la phase:", error);
+    throw error;
+  }
+};
+// Modifier la phase drag
+export const onMovePhase = async (
+  id: string,
+  startDate: Date,
+  endDate: Date
+) => {
+  try {
+    const response = await db.phase.update({
+      where: {
+        id,
+      },
+      data: {
+        start: startDate,
+        end: endDate,
+      },
+      include: {
+        Project: {
+          select: { unitId: true },
+        },
+      },
+    });
+
+    if (response) {
+      await saveActivityLogsNotification({
+        unitId: response.Project.unitId,
+        description: `a modifié la periode de la phase ${response.name} du projet`,
+        type: "PHASE",
+      });
+    }
+    return response;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 // Supprimer une phase
 export const deletePhase = async (phaseId: string) => {
   try {
@@ -1074,6 +1132,90 @@ export const deletePhase = async (phaseId: string) => {
   } catch (error) {
     console.log(error);
     throw error;
+  }
+};
+// Gantt Marker CRUD Operations
+export const getGanttMarkers = async (projectId: string) => {
+  try {
+    const response = await db.ganttMarker.findMany({
+      where: { projectId },
+      orderBy: { date: "asc" },
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching gantt markers:", error);
+    throw new Error("Failed to fetch gantt markers");
+  }
+};
+
+export const createGanttMarker = async (data: {
+  label: string;
+  date: Date;
+  className?: string;
+  projectId: string;
+}) => {
+  try {
+    const response = await db.ganttMarker.create({
+      data: {
+        ...data,
+      },
+      include: {
+        Project: {
+          select: { unitId: true, name: true },
+        },
+      },
+    });
+    await saveActivityLogsNotification({
+      unitId: response.Project.unitId,
+      description: `nouveau marqueur pour le projet ${response.Project.name}`,
+      type: "PROJECT",
+    });
+  } catch (error) {
+    console.error("Error creating gantt marker:", error);
+    throw new Error("Failed to create gantt marker");
+  }
+};
+
+export const updateGanttMarker = async (
+  markerId: string,
+  data: Partial<{
+    label: string;
+    date: Date;
+    className: string;
+  }>
+) => {
+  try {
+    const response = await db.ganttMarker.update({
+      where: { id: markerId },
+      include: {
+        Project: {
+          select: { unitId: true, name: true },
+        },
+      },
+      data,
+    });
+
+    await saveActivityLogsNotification({
+      unitId: response.Project.unitId,
+      description: `marqueur ${response.label} est moddifier pour le projet ${response.Project.name} `,
+      type: "PROJECT",
+    });
+    return response;
+  } catch (error) {
+    console.error("Error updating gantt marker:", error);
+    throw new Error("Failed to update gantt marker");
+  }
+};
+
+export const deleteGanttMarker = async (markerId: string) => {
+  try {
+    return await db.ganttMarker.delete({
+      where: { id: markerId },
+    });
+  } catch (error) {
+    console.error("Error deleting gantt marker:", error);
+    throw new Error("Failed to delete gantt marker");
   }
 };
 
@@ -1295,28 +1437,6 @@ export const getUnitUsers = async (unitId: string) => {
   } catch (error) {
     console.log(error);
     return [];
-  }
-};
-
-// Récupérer une phase par ID
-export const getPhaseById = async (phaseId: string) => {
-  try {
-    if (!phaseId) {
-      throw new Error("ID de la phase requis");
-    }
-
-    const phase = await db.phase.findUnique({
-      where: { id: phaseId },
-    });
-
-    if (!phase) {
-      throw new Error("Phase non trouvée");
-    }
-
-    return phase;
-  } catch (error) {
-    console.error("Erreur lors de la récupération de la phase:", error);
-    throw error;
   }
 };
 
@@ -1790,157 +1910,4 @@ export const _getTasksWithAllRelations = async (laneId: string) => {
     },
   });
   return response;
-};
-
-/**
- * Fetches all phases for a specific project with their dependencies
- * @param projectId - The ID of the project
- * @returns Project with phases and their dependencies
- */
-export const getPhasesWithDependencies = async (projectId: string) => {
-  try {
-    if (!projectId) {
-      throw new Error("Project ID is required");
-    }
-
-    const project = await db.project.findUnique({
-      where: { id: projectId },
-      include: {
-        phases: {
-          include: {
-            predecessors: true,
-            successors: true,
-          },
-          orderBy: {
-            displayOrder: "asc",
-          },
-        },
-      },
-    });
-
-    if (!project) {
-      throw new Error("Project not found");
-    }
-
-    return project;
-  } catch (error) {
-    console.error("Error fetching phases with dependencies:", error);
-    throw error;
-  }
-};
-
-/**
- * Creates or updates a task dependency between phases
- * @param dependency - The dependency data
- * @returns The created or updated dependency
- */
-export const upsertTaskDependency = async (dependency: {
-  id: string;
-  predecessorId: string;
-  successorId: string;
-  type: TaskDependencyType;
-  lag: number;
-}) => {
-  try {
-    // Validate that predecessor and successor exist and are different
-    if (dependency.predecessorId === dependency.successorId) {
-      throw new Error("A phase cannot depend on itself");
-    }
-
-    const [predecessor, successor] = await Promise.all([
-      db.phase.findUnique({ where: { id: dependency.predecessorId } }),
-      db.phase.findUnique({ where: { id: dependency.successorId } }),
-    ]);
-
-    if (!predecessor || !successor) {
-      throw new Error("Both predecessor and successor phases must exist");
-    }
-
-    // Check if a dependency already exists between these tasks
-    const existingDependency = await db.taskDependency.findFirst({
-      where: {
-        predecessorId: dependency.predecessorId,
-        successorId: dependency.successorId,
-      },
-    });
-
-    let response;
-
-    if (existingDependency) {
-      // Update the existing dependency
-      response = await db.taskDependency.update({
-        where: { id: existingDependency.id },
-        data: {
-          type: dependency.type,
-          lag: dependency.lag,
-          isActive: true,
-        },
-      });
-    } else {
-      // Create a new dependency
-      response = await db.taskDependency.create({
-        data: {
-          id: dependency.id,
-          predecessorId: dependency.predecessorId,
-          successorId: dependency.successorId,
-          type: dependency.type,
-          lag: dependency.lag,
-          isActive: true,
-        },
-      });
-    }
-
-    return response;
-  } catch (error) {
-    console.error("Error upserting task dependency:", error);
-    throw error;
-  }
-};
-
-/**
- * Deletes a task dependency
- * @param dependencyId - The ID of the dependency to delete
- * @returns The deleted dependency
- */
-export const deleteTaskDependency = async (dependencyId: string) => {
-  try {
-    const response = await db.taskDependency.update({
-      where: { id: dependencyId },
-      data: { isActive: false },
-    });
-
-    return response;
-  } catch (error) {
-    console.error("Error deleting task dependency:", error);
-    throw error;
-  }
-};
-
-/**
- * Updates multiple phases in batch
- * @param phases - Array of phases to update
- * @returns The updated phases
- */
-export const updatePhasesInBatch = async (phases: Phase[]) => {
-  try {
-    const updateTransactions = phases.map((phase) =>
-      db.phase.update({
-        where: { id: phase.id },
-        data: {
-          name: phase.name,
-          start: phase.start,
-          end: phase.end,
-          progress: phase.progress,
-          displayOrder: phase.displayOrder,
-          isCollapsed: phase.isCollapsed,
-        },
-      })
-    );
-
-    const results = await db.$transaction(updateTransactions);
-    return results;
-  } catch (error) {
-    console.error("Error updating phases in batch:", error);
-    throw error;
-  }
 };

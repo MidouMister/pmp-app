@@ -72,9 +72,7 @@ export const TeamMemberModal = ({
 
   return (
     <CustomSheet
-      title={
-        selectedTeamMember ? "Modifier le membre" : "Ajouter un membre"
-      }
+      title={selectedTeamMember ? "Modifier le membre" : "Ajouter un membre"}
       subheading={
         selectedTeamMember
           ? "Modifier les détails du membre"
@@ -123,9 +121,7 @@ export const ProductionModal = ({
   return (
     <CustomSheet
       title={
-        selectedProduction
-          ? "Modifier la production"
-          : "Ajouter une production"
+        selectedProduction ? "Modifier la production" : "Ajouter une production"
       }
       subheading={
         selectedProduction

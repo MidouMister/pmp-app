@@ -195,24 +195,25 @@ model Notification {
 }
 
 model Project {
-  id         String    @id @default(uuid())
-  name       String
-  code       String
-  type       String
-  montantHT  Float
-  montantTTC Float
-  ods        DateTime?
-  delai      String
-  status     Status    @default(New)
-  signe      Boolean   @default(false)
-  Client     Client    @relation(fields: [clientId], references: [id])
-  clientId   String
-  Unit       Unit      @relation(fields: [unitId], references: [id])
-  unitId     String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  phases     Phase[]
-  team       Team?
+  id          String        @id @default(uuid())
+  name        String
+  code        String
+  type        String
+  montantHT   Float
+  montantTTC  Float
+  ods         DateTime?
+  delai       String
+  status      Status        @default(New)
+  signe       Boolean       @default(false)
+  Client      Client        @relation(fields: [clientId], references: [id])
+  clientId    String
+  Unit        Unit          @relation(fields: [unitId], references: [id])
+  unitId      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  phases      Phase[]
+  team        Team?
+  GanttMarker GanttMarker[]
 
   @@index([unitId])
 }
@@ -244,58 +245,46 @@ model TeamMember {
 
 // Enhanced Phase model with Gantt-specific fields
 model Phase {
-  id          String    @id @default(uuid())
-  name        String
-  code        String
-  montantHT   Float
-  start       DateTime?
-  end         DateTime?
-  status      Status    @default(New)
-  obs         String?
-  progress    Int       @default(0) // Progress percentage (0-100)
-  isMilestone Boolean   @default(false) // Whether this is a milestone
-
+  id        String    @id @default(uuid())
+  name      String
+  code      String
+  montantHT Float
+  start     DateTime?
+  end       DateTime?
+  status    Status    @default(New)
+  obs       String?
   // Gantt-specific fields
-  duration     Int? // Duration in days (calculated field)
-  displayOrder Int     @default(0) // Display order in Gantt chart
-  color        String? @default("#3b82f6") // Color for Gantt visualization
-  isCollapsed  Boolean @default(false) // For grouping/collapsing functionality
+  progress  Int       @default(0) // Progress percentage (0-100)
+  duration  Int? // Duration in days (calculated field)
 
   // Relationships
   Project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
   Product   Product?
 
-  // Enhanced dependency relations
-  predecessors TaskDependency[] @relation("PredecessorPhase")
-  successors   TaskDependency[] @relation("SuccessorPhase")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([start, end]) // Composite index for date range queries
+}
+
+// Gantt Marker model for project milestones and important dates
+model GanttMarker {
+  id        String   @id @default(uuid())
+  label     String // Marker title/label
+  date      DateTime // Date of the marker
+  className String? // Optional CSS classes for styling
+
+  // Relationships
+  Project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([projectId])
-  @@index([displayOrder])
-  @@index([start, end]) // Composite index for date range queries
-}
-
-// Enhanced TaskDependency model
-model TaskDependency {
-  id            String             @id @default(uuid())
-  predecessorId String
-  successorId   String
-  type          TaskDependencyType @default(finishToStart)
-  lag           Int                @default(0) // Lag time in days
-  isActive      Boolean            @default(true) // For soft deletion
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-
-  predecessor Phase @relation("PredecessorPhase", fields: [predecessorId], references: [id], onDelete: Cascade)
-  successor   Phase @relation("SuccessorPhase", fields: [successorId], references: [id], onDelete: Cascade)
-
-  @@unique([predecessorId, successorId])
-  @@index([predecessorId])
-  @@index([successorId])
-  @@index([isActive])
+  @@index([date]) // Index for date-based queries
 }
 
 model Product {

@@ -11,9 +11,7 @@ import ProjectForm from "@/components/forms/project-form";
 
 // Import des composants créés
 import ProjectHeader from "./project-header";
-
 import ProductionDetailsModal from "./production-details-modal";
-import { PhaseModal, TeamMemberModal, ProductionModal } from "./form-modals";
 import {
   DeletePhaseDialog,
   RemoveTeamMemberDialog,
@@ -23,10 +21,25 @@ import PhasesTab from "./phases-tab";
 import TeamTab from "./team-tab";
 import ProductionTab from "./production-tab";
 import { ProjectWithDetails } from "@/lib/types";
+import GanttTab from "./gantt-tab";
+import PhaseForm from "@/components/forms/phase-form";
+import TeamMemberForm from "@/components/forms/team-member-form";
+import ProductionForm from "@/components/forms/production-form";
+import { useModal } from "@/providers/modal-provider";
 
 interface ProjectDashboardProps {
   project: ProjectWithDetails;
   unitId: string;
+}
+
+// Define the marker type based on your Prisma schema and Gantt component props
+interface ProjectMarker {
+  id: string;
+  label: string;
+  date: Date;
+  color?: string;
+  className?: string;
+  projectId: string;
 }
 
 const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
@@ -60,7 +73,7 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
       })
     | undefined
   >();
-
+  const { setClose } = useModal();
   // Fonctions de gestion des phases
   const handleAddPhase = () => {
     setSelectedPhase(undefined);
@@ -275,11 +288,12 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
 
       {/* Onglets du projet */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Aperçu</TabsTrigger>
           <TabsTrigger value="phases">Phases</TabsTrigger>
           <TabsTrigger value="team">Équipe</TabsTrigger>
           <TabsTrigger value="production">Production</TabsTrigger>
+          <TabsTrigger value="gantt">Gantt</TabsTrigger>
         </TabsList>
 
         {/* Contenu des onglets */}
@@ -328,6 +342,10 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
             onAddPhase={handleAddPhase}
           />
         </TabsContent>
+
+        <TabsContent value="gantt" className="space-y-4">
+          <GanttTab project={project} />
+        </TabsContent>
       </Tabs>
 
       {/* Modales et dialogues */}
@@ -335,24 +353,52 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
         title="Modifier le projet"
         subheading="Modifier les détails du projet"
         defaultOpen={isEditProjectOpen}
+        modalId={`edit-project-${project.id}`}
       >
         <ProjectForm project={project} unitId={unitId} />
       </CustomSheet>
 
       {/* Modales de phase */}
-      <PhaseModal
-        isOpen={isAddPhaseOpen || isEditPhaseOpen}
-        projectId={project.id}
-        selectedPhase={selectedPhase}
-        onSuccess={handlePhaseFormSuccess}
-        onCancel={() => {
-          setIsAddPhaseOpen(false);
-          setIsEditPhaseOpen(false);
-        }}
-      />
+      <CustomSheet
+        title="Ajouter une phase"
+        subheading="Ajouter une nouvelle phase au projet"
+        defaultOpen={isAddPhaseOpen}
+        modalId={`add-phase-${project.id}`}
+      >
+        <PhaseForm
+          projectId={project.id}
+          onSuccess={handlePhaseFormSuccess}
+          onCancel={() => {
+            setIsAddPhaseOpen(false);
+            setIsEditPhaseOpen(false);
+          }}
+        />
+      </CustomSheet>
 
       {/* Modales de membre d'équipe */}
-      <TeamMemberModal
+      <CustomSheet
+        modalId={`team-member-${project.id}`}
+        title={selectedTeamMember ? "Modifier le membre" : "Ajouter un membre"}
+        subheading={
+          selectedTeamMember
+            ? "Modifier les détails du membre"
+            : "Ajouter un nouveau membre à l'équipe"
+        }
+        defaultOpen={isAddTeamMemberOpen || isEditTeamMemberOpen}
+      >
+        <TeamMemberForm
+          projectId={project.id}
+          teamId={project.team?.id}
+          teamMember={selectedTeamMember}
+          onSuccess={handleTeamMemberFormSuccess}
+          onCancel={() => {
+            setIsAddTeamMemberOpen(false);
+            setIsEditTeamMemberOpen(false);
+          }}
+          unitId={unitId}
+        />
+      </CustomSheet>
+      {/* <TeamMemberModal
         isOpen={isAddTeamMemberOpen || isEditTeamMemberOpen}
         projectId={project.id}
         teamId={project.team?.id}
@@ -363,10 +409,41 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
           setIsEditTeamMemberOpen(false);
         }}
         unitId={unitId}
-      />
+      /> */}
 
       {/* Modales de production */}
-      <ProductionModal
+      <CustomSheet
+        modalId={`production-${project.id}`}
+        title={
+          selectedProduction
+            ? "Modifier la production"
+            : "Ajouter une production"
+        }
+        subheading={
+          selectedProduction
+            ? "Modifier les détails de la production"
+            : "Ajouter une nouvelle production à la phase"
+        }
+        defaultOpen={isAddProductionOpen || isEditProductionOpen}
+      >
+        <ProductionForm
+          productId={selectedProductId}
+          phaseId={selectedProductId}
+          production={selectedProduction}
+          phaseData={{
+            montantHT:
+              project.phases.find((p) => p.id === selectedPhaseId)?.montantHT ||
+              0,
+          }}
+          onSuccess={handleProductionFormSuccess}
+          onCancel={() => {
+            setIsAddProductionOpen(false);
+            setIsEditProductionOpen(false);
+            setClose();
+          }}
+        />
+      </CustomSheet>
+      {/* <ProductionModal
         isOpen={isAddProductionOpen || isEditProductionOpen}
         productId={selectedProductId}
         phaseId={selectedPhaseId}
@@ -381,7 +458,7 @@ const ProjectDashboard = ({ project, unitId }: ProjectDashboardProps) => {
           setIsAddProductionOpen(false);
           setIsEditProductionOpen(false);
         }}
-      />
+      /> */}
 
       {/* Modale de détails de production */}
       <ProductionDetailsModal

@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useModal } from "@/providers/modal-provider";
+import Loading from "../global/loading";
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -40,6 +41,7 @@ const formSchema = z.object({
   start: z.string().optional(),
   end: z.string().optional(),
   status: z.enum(["New", "InProgress", "Pause", "Complete"]),
+  duration: z.coerce.number().optional(),
   obs: z.string().optional(),
 });
 
@@ -97,7 +99,11 @@ const PhaseForm = ({
         end: values.end ? new Date(values.end) : null,
         status: values.status as Status,
         obs: values.obs || null,
+        duration: values.duration || null,
         projectId: projectId,
+        progress: phase?.progress || 0,
+        createdAt: phase?.createdAt || new Date(),
+        updatedAt: new Date(),
       };
 
       await upsertPhase(phaseData);
@@ -251,7 +257,7 @@ const PhaseForm = ({
             Annuler
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Chargement..." : phase ? "Modifier" : "Ajouter"}
+            {isLoading ? <Loading /> : phase ? "Modifier" : "Ajouter"}
           </Button>
         </div>
       </form>
