@@ -527,7 +527,7 @@ export const MenuOptions = ({
                           >
                             {option.icon}
                             {isActive(option.link) && (
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-sidebar-primary rounded-full border-2 border-sidebar animate-pulse" />
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-sidebar-primary text-sidebar-accent-foreground rounded-full border-2 border-sidebar animate-pulse" />
                             )}
                           </Button>
                         </Link>
@@ -536,7 +536,7 @@ export const MenuOptions = ({
                         side="right"
                         className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                       >
-                        <p className="text-sm font-medium">{option.name}</p>
+                        <p className="text-sm font-medium text-sidebar-accent-foreground">{option.name}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
