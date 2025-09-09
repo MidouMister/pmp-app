@@ -4,7 +4,7 @@ import DataTable from "./data-table";
 import ClientForm from "@/components/forms/client-form";
 import { getUnitClients } from "@/lib/queries";
 import { Suspense } from "react";
-import UnitClientsSkeleton from "@/components/skeletons/unit-clients-skelton";
+import Loading from "@/components/global/loading";
 
 const ClientsPage = async ({
   params,
@@ -15,7 +15,9 @@ const ClientsPage = async ({
   const clients = await getUnitClients(unitId);
 
   return (
-    <Suspense fallback={<UnitClientsSkeleton />}>
+    <Suspense
+      fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
+    >
       <DataTable
         actionButtonText={
           <>

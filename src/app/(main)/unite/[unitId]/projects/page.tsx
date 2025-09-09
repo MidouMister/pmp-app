@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Unauthorized from "@/components/unauthorized";
 import UnitProjects from "./unit-projects";
 import { Suspense } from "react";
-import UnitProjectsSkeleton from "@/components/skeletons/unit-projects-skeleton";
+import Loading from "@/components/global/loading";
 
 const ProjectsPage = async ({
   params,
@@ -30,7 +30,9 @@ const ProjectsPage = async ({
 
   const projects = await getUnitProjects(unitId);
   return (
-    <Suspense fallback={<UnitProjectsSkeleton />}>
+    <Suspense
+      fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
+    >
       <UnitProjects projects={projects} unitId={unitId} />
     </Suspense>
   );
