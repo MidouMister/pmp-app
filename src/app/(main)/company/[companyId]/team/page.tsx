@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -6,6 +7,7 @@ import { Plus } from "lucide-react";
 import SendInvitation from "@/components/forms/send-invitation";
 import DataTable from "./data-table";
 import { columns } from "./columns";
+import TeamSkeleton from "./team-skeleton";
 
 const TeamPage = async ({
   params,
@@ -38,18 +40,20 @@ const TeamPage = async ({
   if (!companyDetails) return;
 
   return (
-    <DataTable
-      actionButtonText={
-        <>
-          <Plus size={15} />
-          Ajouter
-        </>
-      }
-      modalChildren={<SendInvitation companyId={companyDetails.id} />}
-      filterValue="name"
-      columns={columns}
-      data={teamMembers}
-    ></DataTable>
+    <Suspense fallback={<TeamSkeleton />}>
+      <DataTable
+        actionButtonText={
+          <>
+            <Plus size={15} />
+            Ajouter
+          </>
+        }
+        modalChildren={<SendInvitation companyId={companyDetails.id} />}
+        filterValue="name"
+        columns={columns}
+        data={teamMembers}
+      ></DataTable>
+    </Suspense>
   );
 };
 

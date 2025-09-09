@@ -3,6 +3,8 @@ import { getAuthUserDetails } from "@/lib/queries";
 import { redirect } from "next/navigation";
 import Unauthorized from "@/components/unauthorized";
 import UnitProjects from "./unit-projects";
+import { Suspense } from "react";
+import UnitProjectsSkeleton from "@/components/skeletons/unit-projects-skeleton";
 
 const ProjectsPage = async ({
   params,
@@ -27,8 +29,11 @@ const ProjectsPage = async ({
   }
 
   const projects = await getUnitProjects(unitId);
-
-  return <UnitProjects projects={projects} unitId={unitId} />;
+  return (
+    <Suspense fallback={<UnitProjectsSkeleton />}>
+      <UnitProjects projects={projects} unitId={unitId} />
+    </Suspense>
+  );
 };
 
 export default ProjectsPage;

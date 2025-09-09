@@ -536,7 +536,9 @@ export const MenuOptions = ({
                         side="right"
                         className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                       >
-                        <p className="text-sm font-medium text-sidebar-accent-foreground">{option.name}</p>
+                        <p className="text-sm font-medium text-sidebar-accent-foreground">
+                          {option.name}
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -578,7 +580,9 @@ export const MenuOptions = ({
                     side="right"
                     className="bg-sidebar border border-sidebar-border/50 shadow-lg"
                   >
-                    <p className="text-sm font-medium">Ajouter Unité</p>
+                    <p className="text-sm font-medium text-sidebar-accent-foreground">
+                      Ajouter Unité
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

@@ -82,7 +82,12 @@ const TasksPage = ({ params }: PageProps) => {
   if (loading || !unitId) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        <Loading />
+        <Loading
+          text="Chargement des tâches"
+          size="lg"
+          variant="dots"
+          key={"tasks"}
+        />
       </div>
     );
   }

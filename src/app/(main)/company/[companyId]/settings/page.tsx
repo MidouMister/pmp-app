@@ -4,18 +4,19 @@ import {
   createDefaultPlans,
 } from "@/lib/queries";
 import { redirect } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
+import Unauthorized from "@/components/unauthorized";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import CompanyDetails from "@/components/forms/company-details";
+import SubscriptionPlans from "@/components/forms/suscription-plan";
+import UserDetails from "@/components/forms/user-details";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardContent,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import UserDetails from "@/components/forms/user-details";
-import SubscriptionPlans from "@/components/forms/suscription-plan";
+import CompanyDetails from "@/components/forms/company-details";
 
 export default async function SettingsPage({
   params,
@@ -35,12 +36,7 @@ export default async function SettingsPage({
 
   // Make sure user has rights to access this company
   if (user.role !== "OWNER" || user.companyId !== companyId) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center">
-        <h1 className="text-3xl font-bold">Non autorisé</h1>
-        <p>Vous n&apos;avez pas les droits pour accéder à cette page.</p>
-      </div>
-    );
+    return <Unauthorized />;
   }
 
   // Get company details

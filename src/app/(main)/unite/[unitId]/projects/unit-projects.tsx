@@ -64,7 +64,10 @@ const UnitProjects = ({ projects, unitId }: UnitProjectsProps) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">Projets de l&apos;unité</h1>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold tracking-tight">Projets</h2>
+          <p className="text-muted-foreground">Gérez et suivez vos projets</p>
+        </div>
         <div className="flex items-center gap-2">
           <Tabs
             defaultValue={view}

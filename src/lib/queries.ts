@@ -807,6 +807,7 @@ export const getUnitProjects = async (unitId: string) => {
         createdAt: "desc",
       },
     });
+
     return projects;
   } catch (error) {
     console.log(error);

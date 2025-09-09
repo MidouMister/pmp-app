@@ -1,4 +1,6 @@
 import CompanyDetails from "@/components/forms/company-details";
+
+import Unauthorized from "@/components/unauthorized";
 import { getAuthUserDetails, verifyAndAcceptInvitation } from "@/lib/queries";
 import { redirect } from "next/navigation";
 
@@ -17,7 +19,7 @@ const page = async () => {
     } else if (user?.role === "OWNER") {
       return redirect(`/company/${companyId}`);
     } else {
-      return <div>Not authorized</div>;
+      return <Unauthorized />;
     }
   }
   //   const authUser = await getAuthUserDetails();

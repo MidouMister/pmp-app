@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import ModalProvider from "@/providers/modal-provider";
 import { SidebarCollapseProvider } from "@/providers/sidebar-collapse-provider";
+import { Suspense } from "react";
+import Loading from "@/components/global/loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +43,16 @@ export default function RootLayout({
           <ModalProvider>
             <SidebarCollapseProvider>
               <Toaster richColors />
-              {children}
+
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center h-full w-full">
+                    <Loading variant="dots" size="lg" text="Chargement..." />
+                  </div>
+                }
+              >
+                {children}
+              </Suspense>
             </SidebarCollapseProvider>
           </ModalProvider>
         </ThemeProvider>

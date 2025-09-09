@@ -3,11 +3,12 @@ import Link from "next/link";
 import { Logo } from "./logo";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "../global/mode-toggle";
 import AgentPulse from "../global/agentPulse";
 import { UserButton } from "@clerk/nextjs";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const menuItems = [
   { name: "Features", href: "#link" },
@@ -121,7 +122,19 @@ export const HeroHeader = () => {
                     <span>Commance</span>
                   </Link>
                 </Button>
-                <UserButton />
+                <Suspense
+                  fallback={
+                    <Avatar>
+                      <AvatarImage
+                        src="https://github.com/shadcn.png"
+                        alt="@shadcn"
+                      />
+                      <AvatarFallback>User</AvatarFallback>
+                    </Avatar>
+                  }
+                >
+                  <UserButton />
+                </Suspense>
 
                 <ModeToggle />
               </div>

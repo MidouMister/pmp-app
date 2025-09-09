@@ -149,7 +149,7 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
               <CardTitle className="text-2xl font-semibold text-foreground">
                 Envoyer une Invitation
               </CardTitle>
-              <CardDescription className="text-muted-foreground mt-1">
+              <CardDescription className="text-foreground mt-1">
                 Inviter un nouveau membre à rejoindre votre organisation
               </CardDescription>
             </div>

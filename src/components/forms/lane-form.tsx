@@ -106,8 +106,16 @@ const LaneForm: React.FC<CreateLaneFormProps> = ({ defaultData, unitId }) => {
               )}
             />
 
-            <Button className="w-20 mt-4" disabled={isLoading} type="submit">
-              {form.formState.isSubmitting ? <Loading /> : "Save"}
+            <Button className="w-60 mt-4" disabled={isLoading} type="submit">
+              {form.formState.isSubmitting ? (
+                <Loading
+                  size="sm"
+                  variant="spinner"
+                  text="Enregistrement en cours"
+                />
+              ) : (
+                "Enregistrer"
+              )}
             </Button>
           </form>
         </Form>
