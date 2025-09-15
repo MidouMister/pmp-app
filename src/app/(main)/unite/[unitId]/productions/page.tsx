@@ -110,7 +110,7 @@ async function UniteProduction({
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto ">
         <div className="relative">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,theme(colors.muted/20),transparent_70%)] pointer-events-none" />
 

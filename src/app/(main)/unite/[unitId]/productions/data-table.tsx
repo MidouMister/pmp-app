@@ -534,8 +534,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
       </Card>
       <Button
         size="lg"
-        className="flex gap-2 shadow-sm" // Modernized: Use default variant, add subtle shadow
-        // variant="default" // Default variant is applied automatically
+        className="flex gap-2 shadow-sm bg-chart-4 hover:bg-chart-4/70"
         onClick={() => {
           if (modalChildren) {
             setOpen(

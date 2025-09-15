@@ -58,7 +58,7 @@ export default function DataTable<TData, TValue>({
   return (
     <div className="bg-card p-1  rounded-md shadow-sm  ">
       <Button
-        className="flex gap-2"
+        className="flex gap-2 bg-chart-4 hover:bg-chart-4/70"
         onClick={() => {
           if (modalChildren) {
             setOpen(

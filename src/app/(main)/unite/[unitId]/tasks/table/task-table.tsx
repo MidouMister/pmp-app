@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import TaskTableSkeleton from "../../../../../../components/skeletons/task-table-skeleton";
+import TagComponent from "@/components/global/tag";
 
 type TaskTableProps = {
   unitId: string;
@@ -254,6 +255,7 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
                   )}
                 </div>
               </TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead
                 className="cursor-pointer hover:text-primary"
                 onClick={() => handleSort("dueDate")}
@@ -292,14 +294,31 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
                       {task.laneName}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {task.Tags && task.Tags.length > 0 ? (
+                        task.Tags.map((tag) => (
+                          <TagComponent
+                            key={tag.id}
+                            title={tag.name}
+                            colorName={tag.color}
+                          />
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          Aucun tag
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{formatDate(task.dueDate)}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
                       className={cn(
                         task.complete
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                          ? "text-emerald-400 border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-600 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/30"
+                          : "bg-orange-500/10 text-orange-400 border border-orange-400 shadow-sm hover:shadow-md"
                       )}
                     >
                       {task.complete ? "Terminée" : "En cours"}
@@ -329,7 +348,7 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-center text-muted-foreground h-24"
                 >
                   {searchTerm

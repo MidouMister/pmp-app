@@ -148,7 +148,7 @@ const UnitsClient = ({ units, company, user }: UnitsClientProps) => {
             </div>
             <Button
               onClick={() => openUnitModal()}
-              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
+              className="w-full sm:w-auto Inviter un membre bg-chart-4 hover:bg-chart-4/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg"
             >
               <Plus className="h-5 w-5 mr-2" />

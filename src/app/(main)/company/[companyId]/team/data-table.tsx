@@ -18,7 +18,7 @@ import {
 } from "@tanstack/react-table";
 
 import { useModal } from "@/providers/modal-provider";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import CustomModal from "@/components/global/custom-model";
@@ -62,7 +62,7 @@ export default function DataTable<TData, TValue>({
           />
         </div>
         <Button
-          className="flex gap-2"
+          className="flex gap-2 bg-chart-4 hover:bg-chart-4/70 "
           onClick={() => {
             if (modalChildren) {
               setOpen(
@@ -78,7 +78,8 @@ export default function DataTable<TData, TValue>({
             }
           }}
         >
-          {actionButtonText}
+          <Plus />
+          Inviter un membre
         </Button>
       </div>
       <div className="border bg-background rounded-lg">
