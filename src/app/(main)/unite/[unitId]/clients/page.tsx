@@ -1,10 +1,10 @@
-import { Plus } from "lucide-react";
-import { columns } from "./columns";
-import DataTable from "./data-table";
-import ClientForm from "@/components/forms/client-form";
+import Loading from "@/components/global/loading";
 import { getUnitClients } from "@/lib/queries";
 import { Suspense } from "react";
-import Loading from "@/components/global/loading";
+import DataTable from "./data-table";
+import { Plus } from "lucide-react";
+import ClientForm from "@/components/forms/client-form";
+import { columns } from "./columns";
 
 const ClientsPage = async ({
   params,
@@ -15,22 +15,32 @@ const ClientsPage = async ({
   const clients = await getUnitClients(unitId);
 
   return (
-    <Suspense
-      fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
-    >
-      <DataTable
-        actionButtonText={
-          <>
-            <Plus size={15} />
-            Ajouter
-          </>
-        }
-        modalChildren={<ClientForm unitId={unitId} />}
-        filterValue="name"
-        columns={columns}
-        data={clients}
-      ></DataTable>
-    </Suspense>
+    <div className="min-h-screen bg-background p-1">
+      <div className="container mx-auto py-6">
+        <div className="mb-3">
+          <h1 className="text-3xl font-bold">Clients</h1>
+          <p className="text-muted-foreground">
+            Gérez et suivez vos clients efficacement
+          </p>
+        </div>
+        <Suspense
+          fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
+        >
+          <DataTable
+            actionButtonText={
+              <>
+                <Plus size={15} />
+                Ajouter
+              </>
+            }
+            modalChildren={<ClientForm unitId={unitId} />}
+            filterValue="name"
+            columns={columns}
+            data={clients}
+          ></DataTable>
+        </Suspense>
+      </div>
+    </div>
   );
 };
 

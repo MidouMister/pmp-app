@@ -1,6 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useModal } from "@/providers/modal-provider";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { getLanesWithTaskAndTags, deleteTask } from "@/lib/queries";
+import type { LaneDetail, TaskWithTags } from "@/lib/types";
+import { Search } from "lucide-react";
+import TaskForm from "@/components/forms/task-form";
+import CustomSheet from "@/components/global/custom-sheet";
+import CustomModal from "@/components/global/custom-model";
 import {
   Table,
   TableBody,
@@ -9,34 +21,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useModal } from "@/providers/modal-provider";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { getLanesWithTaskAndTags, deleteTask } from "@/lib/queries";
-import type { LaneDetail, TaskWithTags } from "@/lib/types";
-import {
-  Search,
-  MoreHorizontal,
-  CheckCircle2,
-  Circle,
-  ArrowUpDown,
-  CalendarIcon,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import TagComponent from "@/components/global/tag";
-import TaskForm from "@/components/forms/task-form";
-import CustomSheet from "@/components/global/custom-sheet";
-import CustomModal from "@/components/global/custom-model";
-import Loading from "@/components/global/loading";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import TaskTableSkeleton from "../../../../../../components/skeletons/task-table-skeleton";
 
 type TaskTableProps = {
   unitId: string;
@@ -65,7 +52,7 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
       laneName: lane.name,
     }))
   );
-
+  console.log(allTasks);
   // Filter tasks based on search term
   const filteredTasks = allTasks.filter(
     (task) =>
@@ -224,26 +211,13 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full w-full">
-        <Loading />
-      </div>
-    );
+    return <TaskTableSkeleton />;
   }
 
   return (
     <div className="h-full w-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Search className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Liste des Tâches</h1>
-            <p className="text-sm">Visualisez et gérez toutes vos tâches</p>
-          </div>
-        </div>
-        <div className="relative w-64">
+        <div className="relative w-80  ">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher des tâches..."
@@ -254,206 +228,115 @@ const TaskTable = ({ unitId }: TaskTableProps) => {
         </div>
       </div>
 
-      <div className="rounded-md border border-border/50 overflow-hidden bg-card flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <Table>
-          <TableHeader className="bg-muted/30">
+          <TableHeader className="bg-muted/50 sticky top-0">
             <TableRow>
-              <TableHead className="w-12">État</TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("title")}
-                  className="flex items-center gap-1 hover:bg-transparent hover:text-primary"
-                >
+              <TableHead
+                className="cursor-pointer hover:text-primary"
+                onClick={() => handleSort("title")}
+              >
+                <div className="flex items-center gap-1">
                   Titre
-                  <ArrowUpDown size={14} />
-                </Button>
+                  {sortConfig.key === "title" && (
+                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
               </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("lane")}
-                  className="flex items-center gap-1 hover:bg-transparent hover:text-primary"
-                >
+              <TableHead
+                className="cursor-pointer hover:text-primary"
+                onClick={() => handleSort("lane")}
+              >
+                <div className="flex items-center gap-1">
                   Colonne
-                  <ArrowUpDown size={14} />
-                </Button>
+                  {sortConfig.key === "lane" && (
+                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
               </TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Assigné à</TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("dueDate")}
-                  className="flex items-center gap-1 hover:bg-transparent hover:text-primary"
-                >
+              <TableHead
+                className="cursor-pointer hover:text-primary"
+                onClick={() => handleSort("dueDate")}
+              >
+                <div className="flex items-center gap-1">
                   Date d&apos;échéance
-                  <ArrowUpDown size={14} />
-                </Button>
+                  {sortConfig.key === "dueDate" && (
+                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
               </TableHead>
-              <TableHead className="w-12">Actions</TableHead>
+              <TableHead
+                className="cursor-pointer hover:text-primary"
+                onClick={() => handleSort("status")}
+              >
+                <div className="flex items-center gap-1">
+                  Statut
+                  {sortConfig.key === "status" && (
+                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTasks.length === 0 ? (
+            {sortedTasks.length > 0 ? (
+              sortedTasks.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell>{task.title}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className="bg-primary/10 text-primary"
+                    >
+                      {task.laneName}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(task.dueDate)}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        task.complete
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                      )}
+                    >
+                      {task.complete ? "Terminée" : "En cours"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditTaskModal(task)}
+                      >
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive/80"
+                        onClick={() => openDeleteTaskModal(task)}
+                      >
+                        Supprimer
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <Search className="h-8 w-8 text-muted-foreground/50 mb-4" />
-                    <p className="text-muted-foreground">
-                      Aucune tâche trouvée
-                    </p>
-                  </div>
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-muted-foreground h-24"
+                >
+                  {searchTerm
+                    ? "Aucune tâche ne correspond à votre recherche"
+                    : "Aucune tâche disponible"}
                 </TableCell>
               </TableRow>
-            ) : (
-              sortedTasks.map((task) => {
-                // Determine if due date is overdue
-                const isOverdue =
-                  task.dueDate &&
-                  new Date(task.dueDate) < new Date() &&
-                  !task.complete;
-
-                return (
-                  <TableRow
-                    key={task.id}
-                    className={`${
-                      task.complete ? "bg-muted/20" : ""
-                    } hover:bg-muted/10 cursor-pointer transition-colors`}
-                    onClick={() => openEditTaskModal(task)}
-                  >
-                    <TableCell>
-                      <div
-                        className="flex justify-center"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle completion toggle here
-                        }}
-                      >
-                        {task.complete ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-muted-foreground/40 hover:text-primary/60 transition-colors" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">
-                        <span
-                          className={
-                            task.complete
-                              ? "line-through text-muted-foreground"
-                              : ""
-                          }
-                        >
-                          {task.title}
-                        </span>
-                      </div>
-                      {task.description && (
-                        <div className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                          {task.description}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-muted/30">
-                        {task.laneName}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {task.Tags.slice(0, 3).map((tag) => (
-                          <TagComponent
-                            key={tag.id}
-                            title={tag.name}
-                            colorName={tag.color}
-                          />
-                        ))}
-                        {task.Tags.length > 3 && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-muted/50 text-xs text-muted-foreground font-medium">
-                            +{task.Tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {task.Assigned ? (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6 ring-1 ring-border/20">
-                            <AvatarImage
-                              src={task.Assigned.avatarUrl || undefined}
-                            />
-                            <AvatarFallback className="text-xs bg-muted/70 font-medium text-muted-foreground">
-                              {task.Assigned.name?.charAt(0).toUpperCase() ||
-                                "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm truncate max-w-[100px]">
-                            {task.Assigned.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          Non assigné
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {task.dueDate ? (
-                        <div
-                          className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${
-                            isOverdue
-                              ? "text-red-600 bg-red-50 dark:bg-red-950/20 dark:text-red-400"
-                              : "text-muted-foreground bg-muted/30"
-                          }`}
-                        >
-                          <CalendarIcon size={12} />
-                          <span>{formatDate(task.dueDate)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          --
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-muted/50"
-                          >
-                            <MoreHorizontal size={16} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditTaskModal(task);
-                            }}
-                          >
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openDeleteTaskModal(task);
-                            }}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
             )}
           </TableBody>
         </Table>

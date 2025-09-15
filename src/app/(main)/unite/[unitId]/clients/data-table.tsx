@@ -48,23 +48,25 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                Clients
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Gérez et suivez vos clients efficacement
-              </p>
-            </div>
-          </div>
+      <div className="flex items-center justify-between gap-3 rounded-lg border bg-card/50 p-4 shadow-sm">
+        <div className="flex  items-center justify-center rounded-md bg-muted">
+          <Search className="h-4 w-4 text-muted-foreground" />
         </div>
-
+        <Input
+          placeholder="Rechercher un client par nom..."
+          value={
+            (table.getColumn(filterValue)?.getFilterValue() as string) ?? ""
+          }
+          onChange={(event) =>
+            table.getColumn(filterValue)?.setFilterValue(event.target.value)
+          }
+          className="flex-1 border-0 bg-transparent text-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+        />
+        {(table.getColumn(filterValue)?.getFilterValue() as string) && (
+          <div className="text-xs text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} résultat(s)
+          </div>
+        )}
         <Button
           onClick={() => {
             if (modalChildren) {
@@ -84,27 +86,6 @@ export default function DataTable<TData, TValue>({
         >
           {actionButtonText} Client
         </Button>
-      </div>
-
-      <div className="flex items-center gap-3 rounded-lg border bg-card/50 p-4 shadow-sm">
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted">
-          <Search className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <Input
-          placeholder="Rechercher un client par nom..."
-          value={
-            (table.getColumn(filterValue)?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn(filterValue)?.setFilterValue(event.target.value)
-          }
-          className="flex-1 border-0 bg-transparent text-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-        {(table.getColumn(filterValue)?.getFilterValue() as string) && (
-          <div className="text-xs text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} résultat(s)
-          </div>
-        )}
       </div>
 
       <Card className=" p-1 bg-card shadow-md min-h-64">

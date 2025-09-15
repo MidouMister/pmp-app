@@ -30,11 +30,21 @@ const ProjectsPage = async ({
 
   const projects = await getUnitProjects(unitId);
   return (
-    <Suspense
-      fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
-    >
-      <UnitProjects projects={projects} unitId={unitId} />
-    </Suspense>
+    <div className="min-h-screen bg-background p-1">
+      <div className=" container mx-auto py-6">
+        <div className="mb-3">
+          <h1 className="text-3xl font-bold">Projets</h1>
+          <p className="text-muted-foreground">
+            Gérez et suivez vos projets efficacement
+          </p>
+        </div>
+        <Suspense
+          fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
+        >
+          <UnitProjects projects={projects} unitId={unitId} />
+        </Suspense>
+      </div>
+    </div>
   );
 };
 

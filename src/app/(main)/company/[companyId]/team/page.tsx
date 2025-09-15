@@ -40,20 +40,36 @@ const TeamPage = async ({
   if (!companyDetails) return;
 
   return (
-    <Suspense fallback={<TeamSkeleton />}>
-      <DataTable
-        actionButtonText={
-          <>
-            <Plus size={15} />
-            Ajouter
-          </>
-        }
-        modalChildren={<SendInvitation companyId={companyDetails.id} />}
-        filterValue="name"
-        columns={columns}
-        data={teamMembers}
-      ></DataTable>
-    </Suspense>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 ">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                Membres
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Gérez vos membres de l&apos;unité
+              </p>
+            </div>
+          </div>
+          <Suspense fallback={<TeamSkeleton />}>
+            <DataTable
+              actionButtonText={
+                <>
+                  <Plus size={15} />
+                  Ajouter
+                </>
+              }
+              modalChildren={<SendInvitation companyId={companyDetails.id} />}
+              filterValue="name"
+              columns={columns}
+              data={teamMembers}
+            ></DataTable>
+          </Suspense>
+        </div>
+      </div>
+    </div>
   );
 };
 

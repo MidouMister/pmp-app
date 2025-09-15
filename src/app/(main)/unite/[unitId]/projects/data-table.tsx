@@ -20,7 +20,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useModal } from "@/providers/modal-provider";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CustomModal from "@/components/global/custom-model";
 
@@ -56,29 +56,28 @@ export default function DataTable<TData, TValue>({
   });
 
   return (
-    <>
-      <div className="flex items-center justify-between ">
-        <Button
-          className="flex gap-2"
-          onClick={() => {
-            if (modalChildren) {
-              setOpen(
-                "add-project-modal",
-                <CustomModal
-                  modalId="add-project-modal"
-                  title="Ajouter un Projet"
-                  subheading="Ajouter un nouveau projet à votre Portfeuil Projets de l'unité."
-                >
-                  {modalChildren}
-                </CustomModal>
-              );
-            }
-          }}
-        >
-          {actionButtonText}
-        </Button>
-      </div>
-      <div className="border bg-background rounded-lg">
+    <div className="bg-card p-1  rounded-md shadow-sm  ">
+      <Button
+        className="flex gap-2"
+        onClick={() => {
+          if (modalChildren) {
+            setOpen(
+              "add-project-modal",
+              <CustomModal
+                modalId="add-project-modal"
+                title="Ajouter un Projet"
+                subheading="Ajouter un nouveau projet à votre Portfeuil Projets de l'unité."
+              >
+                {modalChildren}
+              </CustomModal>
+            );
+          }
+        }}
+      >
+        <Plus />
+        Nouveau Projet
+      </Button>
+      <div className="border bg-background rounded-lg mt-2   ">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -159,6 +158,6 @@ export default function DataTable<TData, TValue>({
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

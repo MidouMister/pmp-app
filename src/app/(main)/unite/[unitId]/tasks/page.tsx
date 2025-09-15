@@ -1,13 +1,16 @@
 "use client";
 
 import { getAuthUserDetails } from "@/lib/queries";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+
+import Loading from "@/components/global/loading";
+import type { UserAuthDetails } from "@/lib/types";
+import { LayoutGrid, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import KanbanBoard from "./kanban/kanban-board";
 import TaskTable from "./table/task-table";
-import { Button } from "@/components/ui/button";
-import { LayoutGrid, List } from "lucide-react";
-import Loading from "@/components/global/loading";
-import { UserAuthDetails } from "@/lib/types";
+import KanbanBoardSkeleton from "@/components/skeletons/kanban-board-skeleton";
+import TaskTableSkeleton from "@/components/skeletons/task-table-skeleton";
 
 type PageProps = {
   params: Promise<{ unitId: string }>;
@@ -93,36 +96,56 @@ const TasksPage = ({ params }: PageProps) => {
   }
 
   return (
-    <div className="h-full w-full flex flex-col">
-      <div className="flex justify-end mb-4">
-        <div className="bg-card border border-border/50 rounded-lg p-1 flex items-center shadow-sm">
-          <Button
-            variant={view === "kanban" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setView("kanban")}
-            className="flex items-center gap-1.5"
-          >
-            <LayoutGrid size={16} />
-            <span>Kanban</span>
-          </Button>
-          <Button
-            variant={view === "table" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setView("table")}
-            className="flex items-center gap-1.5"
-          >
-            <List size={16} />
-            <span>Tableau</span>
-          </Button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background p-1">
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <LayoutGrid className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Tableau des Tâches
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Gérez vos tâches avec glisser-déposer
+              </p>
+            </div>
+          </div>
 
-      <div className="flex-1 overflow-hidden">
-        {view === "kanban" ? (
-          <KanbanBoard unitId={unitId} />
-        ) : (
-          <TaskTable unitId={unitId} />
-        )}
+          <div className="bg-card border border-border/30 rounded-xl p-1 flex items-center shadow-sm">
+            <Button
+              variant={view === "kanban" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setView("kanban")}
+              className="flex items-center gap-2 rounded-lg "
+            >
+              <LayoutGrid size={16} />
+              <span>Kanban</span>
+            </Button>
+            <Button
+              variant={view === "table" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setView("table")}
+              className="flex items-center gap-2 rounded-lg"
+            >
+              <List size={16} />
+              <span>Tableau</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          {view === "kanban" ? (
+            <Suspense fallback={<KanbanBoardSkeleton />}>
+              <KanbanBoard unitId={unitId} />
+            </Suspense>
+          ) : (
+            <Suspense fallback={<TaskTableSkeleton />}>
+              <TaskTable unitId={unitId} />
+            </Suspense>
+          )}
+        </div>
       </div>
     </div>
   );

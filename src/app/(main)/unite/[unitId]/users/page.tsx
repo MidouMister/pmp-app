@@ -25,33 +25,41 @@ const UnitUsersPage = async ({
   });
 
   return (
-    <div className="w-full h-full">
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center h-full w-full">
-            <Loading
-              text="Chargement des utilisateurs"
-              size="lg"
-              variant="pulse"
-            />
-          </div>
-        }
-      >
-        <DataTable
-          actionButtonText={
-            <>
-              <Plus size={15} />
-              Ajouter
-            </>
+    <div className="min-h-screen bg-background p-1">
+      <div className="container mx-auto py-6 ">
+        <div className="mb-3">
+          <h1 className="text-3xl font-bold">Membres</h1>
+          <p className="text-muted-foreground  ">
+            Gérez vos membres de l&apos;unité
+          </p>
+        </div>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-full w-full">
+              <Loading
+                text="Chargement des utilisateurs"
+                size="lg"
+                variant="pulse"
+              />
+            </div>
           }
-          modalChildren={
-            <SendInvitation companyId={companyId} unitId={unitId} />
-          }
-          filterValue="name"
-          columns={columns}
-          data={unitUsers}
-        ></DataTable>
-      </Suspense>
+        >
+          <DataTable
+            actionButtonText={
+              <>
+                <Plus size={15} />
+                Ajouter
+              </>
+            }
+            modalChildren={
+              <SendInvitation companyId={companyId} unitId={unitId} />
+            }
+            filterValue="name"
+            columns={columns}
+            data={unitUsers}
+          ></DataTable>
+        </Suspense>
+      </div>
     </div>
   );
 };

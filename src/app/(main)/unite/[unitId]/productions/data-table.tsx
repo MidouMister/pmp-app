@@ -108,21 +108,21 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           dateFromYear !== "all_years"
         ) {
           const fromDate = new Date(
-            parseInt(dateFromYear),
-            parseInt(dateFromMonth) - 1,
+            Number.parseInt(dateFromYear),
+            Number.parseInt(dateFromMonth) - 1,
             1
           );
           isValid = isValid && itemDate >= fromDate;
         } else if (dateFromYear && dateFromYear !== "all_years") {
           // Seulement l'année est spécifiée
-          const fromDate = new Date(parseInt(dateFromYear), 0, 1);
+          const fromDate = new Date(Number.parseInt(dateFromYear), 0, 1);
           isValid = isValid && itemDate >= fromDate;
         } else if (dateFromMonth && dateFromMonth !== "all_months") {
           // Seulement le mois est spécifié, on utilise l'année courante
           const currentYear = new Date().getFullYear();
           const fromDate = new Date(
             currentYear,
-            parseInt(dateFromMonth) - 1,
+            Number.parseInt(dateFromMonth) - 1,
             1
           );
           isValid = isValid && itemDate >= fromDate;
@@ -137,8 +137,8 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
         ) {
           // Dernier jour du mois spécifié
           const toDate = new Date(
-            parseInt(dateToYear),
-            parseInt(dateToMonth),
+            Number.parseInt(dateToYear),
+            Number.parseInt(dateToMonth),
             0
           );
           toDate.setHours(23, 59, 59, 999);
@@ -146,7 +146,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
         } else if (dateToYear && dateToYear !== "all_years") {
           // Dernier jour de l'année spécifiée
           const toDate = new Date(
-            parseInt(dateToYear),
+            Number.parseInt(dateToYear),
             11,
             31,
             23,
@@ -160,7 +160,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           const currentYear = new Date().getFullYear();
           const toDate = new Date(
             currentYear,
-            parseInt(dateToMonth),
+            Number.parseInt(dateToMonth),
             0,
             23,
             59,
@@ -258,43 +258,10 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
   ].filter(Boolean).length;
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight">Productions</h2>
-          <p className="text-muted-foreground">
-            Gérez et suivez vos productions par projet et phase
-          </p>
-        </div>
-
-        <Button
-          size="lg"
-          className="flex gap-2 shadow-sm" // Modernized: Use default variant, add subtle shadow
-          // variant="default" // Default variant is applied automatically
-          onClick={() => {
-            if (modalChildren) {
-              setOpen(
-                "add-production-modal",
-                <CustomModal
-                  modalId="add-production-modal"
-                  title="Ajouter une production"
-                  subheading="Ajouter une nouvelle production à l'unité"
-                >
-                  {modalChildren}
-                </CustomModal>
-              );
-            }
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Nouvelle production
-        </Button>
-      </div>
-
+    <div className="space-y-6 ">
       {/* Search and Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="md:col-span-2 border-0 shadow-sm hover:shadow transition-all duration-200">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 ">
+        <Card className="md:col-span-2 border-0 shadow-sm hover:shadow transition-all duration-200 bg-background">
           <CardContent className="p-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -318,7 +285,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm hover:shadow transition-all duration-200">
+        <Card className="border-0 shadow-sm hover:shadow transition-all duration-200 bg-background">
           <CardContent className="p-3 flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted/60">
               <BarChart3 className="h-5 w-5 text-muted-foreground" />
@@ -332,7 +299,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm hover:shadow transition-all duration-200">
+        <Card className="border-0 shadow-sm hover:shadow transition-all duration-200 bg-background">
           <CardContent className="p-3 flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted/60">
               <Building className="h-5 w-5 text-muted-foreground" />
@@ -348,7 +315,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
       </div>
 
       {/* Advanced Filters */}
-      <Card className="border-0 shadow-sm hover:shadow transition-all duration-200">
+      <Card className="border-0 shadow-sm hover:shadow transition-all duration-200 bg-background">
         <CardHeader className="pb-3 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-medium flex items-center gap-1.5">
@@ -565,9 +532,30 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
           </div>
         </CardContent>
       </Card>
-
+      <Button
+        size="lg"
+        className="flex gap-2 shadow-sm" // Modernized: Use default variant, add subtle shadow
+        // variant="default" // Default variant is applied automatically
+        onClick={() => {
+          if (modalChildren) {
+            setOpen(
+              "add-production-modal",
+              <CustomModal
+                modalId="add-production-modal"
+                title="Ajouter une production"
+                subheading="Ajouter une nouvelle production à l'unité"
+              >
+                {modalChildren}
+              </CustomModal>
+            );
+          }
+        }}
+      >
+        <Plus className="h-4 w-4" />
+        Nouvelle production
+      </Button>
       {/* Data Table */}
-      <Card className="border-0 shadow-sm overflow-hidden">
+      <Card className="border-0 shadow-sm overflow-hidden bg-background">
         <div className="rounded-md overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/30">
@@ -673,7 +661,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
-                className="hidden h-7 w-7 p-0 lg:flex border-0 ring-1 ring-border"
+                className="hidden h-7 w-7 p-0 lg:flex border-0 ring-1 ring-border bg-transparent"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -682,7 +670,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
               </Button>
               <Button
                 variant="outline"
-                className="h-7 w-7 p-0 border-0 ring-1 ring-border"
+                className="h-7 w-7 p-0 border-0 ring-1 ring-border bg-transparent"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -691,7 +679,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
               </Button>
               <Button
                 variant="outline"
-                className="h-7 w-7 p-0 border-0 ring-1 ring-border"
+                className="h-7 w-7 p-0 border-0 ring-1 ring-border bg-transparent"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
@@ -700,7 +688,7 @@ export function DataTable<TData extends ProductionWithDetails, TValue>({
               </Button>
               <Button
                 variant="outline"
-                className="hidden h-7 w-7 p-0 lg:flex border-0 ring-1 ring-border"
+                className="hidden h-7 w-7 p-0 lg:flex border-0 ring-1 ring-border bg-transparent"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >

@@ -21,13 +21,13 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import KanbanLane from "./kanban-lane";
 import { Button } from "../../../../../../components/ui/button";
-import { PlusIcon, LayoutGrid } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import LaneForm from "../../../../../../components/forms/lane-form";
 import { DragOverlay } from "@dnd-kit/core";
 import { createPortal } from "react-dom";
 import KanbanTask from "./kanban-task";
 import CustomModal from "../../../../../../components/global/custom-model";
-import Loading from "@/components/global/loading";
+import KanbanBoardSkeleton from "../../../../../../components/skeletons/kanban-board-skeleton";
 
 type KanbanBoardProps = {
   unitId: string;
@@ -368,28 +368,15 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full w-full">
-        <Loading />
-      </div>
-    );
+    return <KanbanBoardSkeleton />;
   }
 
   return (
     <div className="h-full w-full  p-1">
       <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <LayoutGrid className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Tableau des Tâches</h1>
-            <p className="text-sm">Gérez vos tâches avec glisser-déposer</p>
-          </div>
-        </div>
         <Button
           onClick={openAddLaneModal}
-          className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="flex items-center gap-2 bg-chart-4 hover:bg-chart-4/70 text-primary-foreground shadow-sm"
         >
           <PlusIcon size={16} />
           Ajouter une Colonne
@@ -402,7 +389,7 @@ const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto pb-6 h-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 border border-dashed rounded-md p-2">
+        <div className="flex gap-6 overflow-x-auto pb-6 h-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 border border-dashed rounded-md p-2  ">
           <SortableContext items={lanes.map((lane) => lane.id)}>
             {lanes.map((lane) => (
               <KanbanLane

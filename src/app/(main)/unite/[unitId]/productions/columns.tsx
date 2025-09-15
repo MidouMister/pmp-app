@@ -1,19 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import {
-  ArrowUpDown,
-  Building,
-  Calendar,
-  DollarSign,
-  Edit,
-  FileText,
-  MoreHorizontal,
-  Percent,
-  Sparkles,
-  Trash,
-} from "lucide-react";
-import { ColumnDef } from "@tanstack/react-table";
+
+import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatAmount, formatMonthYear } from "@/lib/utils";
@@ -40,10 +29,22 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { ProductionWithDetails } from "@/lib/types";
+import type { ProductionWithDetails } from "@/lib/types";
 import { deleteProduction } from "@/lib/queries";
 import { toast } from "sonner";
 import { useModal } from "@/providers/modal-provider";
+import {
+  ArrowUpDown,
+  Building,
+  Calendar,
+  DollarSign,
+  Edit,
+  FileText,
+  MoreHorizontal,
+  Percent,
+  Sparkles,
+  Trash,
+} from "lucide-react";
 
 // Actions Cell Component
 const ActionsCell = ({ production }: { production: ProductionWithDetails }) => {

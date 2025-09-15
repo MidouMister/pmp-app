@@ -1,6 +1,6 @@
 "use client";
 
-import { Unit, Company } from "@prisma/client";
+import type { Unit, Company } from "@prisma/client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,9 @@ import {
   Mail,
   MapPin,
   Search,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useModal } from "@/providers/modal-provider";
 import UnitDetails from "@/components/forms/unite-details";
@@ -131,352 +134,433 @@ const UnitsClient = ({ units, company, user }: UnitsClientProps) => {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Unités
-        </h1>
-        <Button onClick={() => openUnitModal()} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Nouvelle Unité</span>
-          <span className="sm:hidden">Nouvelle</span>
-        </Button>
-      </div>
-
-      {/* Search, Sort and View Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex gap-3 flex-1">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher une unité..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-          <select
-            className="px-3 py-2 rounded-md border bg-background"
-            value={sortField}
-            onChange={(e) => setSortField(e.target.value as keyof Unit)}
-          >
-            <option value="name">Nom</option>
-            <option value="email">Email</option>
-            <option value="address">Adresse</option>
-          </select>
-          <Button
-            variant="outline"
-            onClick={() =>
-              setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-            }
-          >
-            {sortDirection === "asc" ? "↑" : "↓"}
-          </Button>
-        </div>
-        <Tabs
-          value={view}
-          onValueChange={(value) => setView(value as "grid" | "list")}
-          className="w-full sm:w-auto"
-        >
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="grid" className="flex-1 sm:flex-none">
-              <Grid className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Cartes</span>
-            </TabsTrigger>
-            <TabsTrigger value="list" className="flex-1 sm:flex-none">
-              <List className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Tableau</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* Content Section */}
-      {filteredUnits.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
-            <div className="rounded-full bg-muted p-3 mb-3 sm:mb-4">
-              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8 ">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+                Unités
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Gérez vos unités d&apos;affaires
+              </p>
             </div>
-            <h3 className="text-lg font-semibold mb-1">Aucune unité trouvée</h3>
-            <p className="text-muted-foreground mb-4 max-w-md text-sm sm:text-base">
-              {searchQuery
-                ? `Aucune unité ne correspond à votre recherche "${searchQuery}".`
-                : "Vous n'avez pas encore créé d'unités."}
-            </p>
-            {searchQuery ? (
-              <Button
-                variant="outline"
-                onClick={() => setSearchQuery("")}
-                size="sm"
-              >
-                Effacer la recherche
-              </Button>
-            ) : (
-              <Button onClick={() => openUnitModal()} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Créer une unité
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {view === "grid" ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {isLoading
-                  ? Array.from({ length: itemsPerPage }).map((_, index) => (
-                      <Card key={index} className="animate-pulse">
-                        <CardHeader className="space-y-0 p-3 sm:p-4 border-b">
-                          <div className="h-6 bg-muted rounded" />
-                        </CardHeader>
-                        <CardContent className="p-3 sm:p-4 space-y-3">
-                          <div className="h-4 bg-muted rounded w-3/4" />
-                          <div className="h-4 bg-muted rounded w-1/2" />
-                        </CardContent>
-                      </Card>
-                    ))
-                  : paginatedUnits.map((unit) => (
-                      <Card
-                        key={unit.id}
-                        className="overflow-hidden transition-all hover:shadow-md dark:hover:shadow-primary/10 hover:border-primary/30"
-                      >
-                        <CardHeader className="space-y-0 p-3 sm:p-4 border-b">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg sm:text-xl font-bold truncate">
+            <Button
+              onClick={() => openUnitModal()}
+              className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Nouvelle Unité
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par nom, email ou adresse..."
+                  className="pl-10 h-11 bg-card border-border/50 focus:border-primary/50 transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+              <div className="flex gap-2">
+                <select
+                  className="px-4 py-2.5 rounded-lg border border-border/50 bg-card text-foreground focus:border-primary/50 focus:outline-none transition-colors min-w-[120px]"
+                  value={sortField}
+                  onChange={(e) => setSortField(e.target.value as keyof Unit)}
+                >
+                  <option value="name">Nom</option>
+                  <option value="email">Email</option>
+                  <option value="address">Adresse</option>
+                </select>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() =>
+                    setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+                  }
+                  className="px-4 border-border/50 hover:border-primary/50"
+                >
+                  {sortDirection === "asc" ? "↑" : "↓"}
+                </Button>
+              </div>
+            </div>
+
+            <Tabs
+              value={view}
+              onValueChange={(value) => setView(value as "grid" | "list")}
+              className="w-full sm:w-auto"
+            >
+              <TabsList className="grid w-full grid-cols-2 sm:w-auto bg-muted/50">
+                <TabsTrigger value="grid" className="flex items-center gap-2">
+                  <Grid className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cartes</span>
+                </TabsTrigger>
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <List className="h-4 w-4" />
+                  <span className="hidden sm:inline">Tableau</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        {filteredUnits.length === 0 ? (
+          <Card className="border-dashed border-2 border-border/50 bg-card/50">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="rounded-full bg-primary/10 p-4 mb-6">
+                <Building2 className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">
+                {searchQuery ? "Aucun résultat" : "Aucune unité"}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                {searchQuery
+                  ? `Aucune unité ne correspond à "${searchQuery}". Essayez avec d'autres termes.`
+                  : "Commencez par créer votre première unité d'affaires."}
+              </p>
+              {searchQuery ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setSearchQuery("")}
+                  className="border-border/50 hover:border-primary/50"
+                >
+                  Effacer la recherche
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => openUnitModal()}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer une unité
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {view === "grid" ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {isLoading
+                    ? Array.from({ length: itemsPerPage }).map((_, index) => (
+                        <Card key={index} className="animate-pulse">
+                          <CardHeader className="space-y-3 p-6">
+                            <div className="h-6 bg-muted rounded-lg" />
+                          </CardHeader>
+                          <CardContent className="p-6 pt-0 space-y-4">
+                            <div className="h-4 bg-muted rounded w-3/4" />
+                            <div className="h-4 bg-muted rounded w-1/2" />
+                            <div className="h-4 bg-muted rounded w-2/3" />
+                          </CardContent>
+                        </Card>
+                      ))
+                    : paginatedUnits.map((unit) => (
+                        <Card
+                          key={unit.id}
+                          className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/30 bg-card border-border/50"
+                        >
+                          <CardHeader className="p-6 pb-4">
+                            <CardTitle className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                               <Link
-                                className="relative inline-block transition-colors hover:text-primary after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full"
                                 href={`/unite/${unit.id}`}
+                                className="flex items-center gap-2 hover:underline decoration-primary/50 underline-offset-4"
                               >
+                                <Building2 className="h-5 w-5 text-primary" />
                                 {unit.name}
                               </Link>
                             </CardTitle>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
-                          {/* Email */}
-                          <div className="flex items-center gap-2 sm:gap-3 group">
-                            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary">
-                              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                Email
-                              </p>
-                              <p
-                                className="text-sm sm:font-medium truncate"
-                                title={unit.email || ""}
-                              >
-                                {unit.email || "N/A"}
-                              </p>
-                            </div>
-                          </div>
+                          </CardHeader>
 
-                          {/* Phone */}
-                          <div className="flex items-center gap-2 sm:gap-3 group">
-                            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary">
-                              <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                Téléphone
-                              </p>
-                              <p className="text-sm sm:font-medium">
-                                {unit.phone || "N/A"}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Address */}
-                          <div className="flex items-start gap-2 sm:gap-3 group">
-                            <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary mt-0.5">
-                              <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                Adresse
-                              </p>
-                              <p className="text-sm sm:font-medium">
-                                {unit.address || "N/A"}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                        <CardFooter className="p-3 sm:p-4 pt-0 flex justify-end gap-1 sm:gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openUnitModal(unit)}
-                            className="text-xs sm:text-sm"
-                          >
-                            <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
-                            Modifier
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs sm:text-sm text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
-                              >
-                                <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
-                                Supprimer
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Confirmer la suppression
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Êtes-vous sûr de vouloir supprimer cette unité
-                                  ? Cette action est irréversible.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                <AlertDialogAction
-                                  disabled={isDeleting}
-                                  onClick={() => handleDelete(unit.id)}
-                                  className={cn(
-                                    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                                    isDeleting &&
-                                      "opacity-50 cursor-not-allowed"
-                                  )}
+                          <CardContent className="p-6 pt-0 space-y-4">
+                            {/* Email */}
+                            <div className="flex items-center gap-3 group/item">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary group-hover/item:bg-primary/20 transition-colors">
+                                <Mail className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  Email
+                                </p>
+                                <p
+                                  className="text-sm font-medium text-foreground truncate"
+                                  title={unit.email || ""}
                                 >
-                                  {isDeleting ? "Suppression..." : "Supprimer"}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </CardFooter>
-                      </Card>
-                    ))}
-              </div>
-              {/* Pagination Controls */}
-              <div className="mt-6 flex justify-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="flex items-center px-3 py-2 border rounded-md">
-                  {currentPage} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="p-0">
-                <div className="rounded-md overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[120px]">Nom</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Téléphone</TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          Adresse
-                        </TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUnits.map((unit) => (
-                        <TableRow key={unit.id}>
-                          <TableCell className="font-medium">
-                            {unit.name}
-                          </TableCell>
-                          <TableCell>{unit.email || "N/A"}</TableCell>
-                          <TableCell>{unit.phone || "N/A"}</TableCell>
-                          <TableCell
-                            className="hidden md:table-cell max-w-xs truncate"
-                            title={unit.address || ""}
-                          >
-                            {unit.address || "N/A"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openUnitModal(unit)}
-                                className="h-8 w-8"
-                              >
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Modifier</span>
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Supprimer</span>
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Confirmer la suppression
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Êtes-vous sûr de vouloir supprimer cette
-                                      unité ? Cette action est irréversible.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Annuler
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      disabled={isDeleting}
-                                      onClick={() => handleDelete(unit.id)}
-                                      className={cn(
-                                        "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                                        isDeleting &&
-                                          "opacity-50 cursor-not-allowed"
-                                      )}
-                                    >
-                                      {isDeleting
-                                        ? "Suppression..."
-                                        : "Supprimer"}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                  {unit.email || "Non renseigné"}
+                                </p>
+                              </div>
                             </div>
-                          </TableCell>
-                        </TableRow>
+
+                            {/* Phone */}
+                            <div className="flex items-center gap-3 group/item">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary group-hover/item:bg-primary/20 transition-colors">
+                                <Phone className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  Téléphone
+                                </p>
+                                <p className="text-sm font-medium text-foreground">
+                                  {unit.phone || "Non renseigné"}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Address */}
+                            <div className="flex items-start gap-3 group/item">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary group-hover/item:bg-primary/20 transition-colors mt-0.5">
+                                <MapPin className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  Adresse
+                                </p>
+                                <p className="text-sm font-medium text-foreground line-clamp-2">
+                                  {unit.address || "Non renseignée"}
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+
+                          <CardFooter className="p-6 pt-4 flex justify-end gap-2 border-t border-border/50">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openUnitModal(unit)}
+                              className="border-border/50 hover:border-primary/50 hover:text-primary"
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Modifier
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 bg-transparent"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Supprimer
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Confirmer la suppression
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Êtes-vous sûr de vouloir supprimer
+                                    l&apos;unité &quot;{unit.name}&quot; ? Cette
+                                    action est irréversible.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    disabled={isDeleting}
+                                    onClick={() => handleDelete(unit.id)}
+                                    className={cn(
+                                      "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                                      isDeleting &&
+                                        "opacity-50 cursor-not-allowed"
+                                    )}
+                                  >
+                                    {isDeleting
+                                      ? "Suppression..."
+                                      : "Supprimer"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </CardFooter>
+                        </Card>
                       ))}
-                    </TableBody>
-                  </Table>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+
+                {totalPages > 1 && (
+                  <div className="mt-12 flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={currentPage === 1}
+                      className="border-border/50 hover:border-primary/50"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Précédent
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={
+                                currentPage === pageNum ? "default" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={cn(
+                                "w-10 h-10",
+                                currentPage === pageNum
+                                  ? "bg-primary text-primary-foreground"
+                                  : "border-border/50 hover:border-primary/50"
+                              )}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        }
+                      )}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="border-border/50 hover:border-primary/50"
+                    >
+                      Suivant
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Enhanced table view with better styling */
+              <Card className="border-border/50 bg-card overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border/50 hover:bg-muted/50">
+                          <TableHead className="font-semibold text-foreground">
+                            Nom
+                          </TableHead>
+                          <TableHead className="font-semibold text-foreground">
+                            Email
+                          </TableHead>
+                          <TableHead className="font-semibold text-foreground">
+                            Téléphone
+                          </TableHead>
+                          <TableHead className="hidden lg:table-cell font-semibold text-foreground">
+                            Adresse
+                          </TableHead>
+                          <TableHead className="text-right font-semibold text-foreground">
+                            Actions
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedUnits.map((unit) => (
+                          <TableRow
+                            key={unit.id}
+                            className="border-border/50 hover:bg-muted/30 transition-colors"
+                          >
+                            <TableCell className="font-medium text-foreground">
+                              <Link
+                                href={`/unite/${unit.id}`}
+                                className="flex items-center gap-2 hover:text-primary transition-colors text-xl"
+                              >
+                                <Building2 className="h-4 w-4 text-primary" />
+                                {unit.name}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {unit.email || "Non renseigné"}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {unit.phone || "Non renseigné"}
+                            </TableCell>
+                            <TableCell
+                              className="hidden lg:table-cell max-w-xs truncate text-muted-foreground"
+                              title={unit.address || ""}
+                            >
+                              {unit.address || "Non renseignée"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openUnitModal(unit)}
+                                  className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Modifier</span>
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                      <span className="sr-only">Supprimer</span>
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Confirmer la suppression
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Êtes-vous sûr de vouloir supprimer
+                                        l&apos;unité &quot;{unit.name}&quot; ?
+                                        Cette action est irréversible.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Annuler
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        disabled={isDeleting}
+                                        onClick={() => handleDelete(unit.id)}
+                                        className={cn(
+                                          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                                          isDeleting &&
+                                            "opacity-50 cursor-not-allowed"
+                                        )}
+                                      >
+                                        {isDeleting
+                                          ? "Suppression..."
+                                          : "Supprimer"}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
