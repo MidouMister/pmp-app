@@ -1,28 +1,37 @@
-const UnitPage = async () => {
-  // const companyId = await verifyAndAcceptInvitation();
-  // if (!companyId) return <Unauthorized />;
+import LayoutSkeleton from "@/components/skeletons/layout-skeleton";
+import Unauthorized from "@/components/unauthorized";
+import { getAuthUserDetails, verifyAndAcceptInvitation } from "@/lib/queries";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
-  // const user = await getAuthUserDetails();
-  // if (!user) return null;
-  // if (user.role !== "OWNER") {
-  //   return redirect(`/unite/${user.unitId}`);
-  // }
-  // if (user.role === "OWNER") {
-  //   return redirect(`/company/${companyId}/units`);
-  // }
-  // return <Unauthorized />;
+const UnitePage = async () => {
+  
+  
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Informations Unité</h1>
-          <p className="text-muted-foreground">
-            Vous trouver toutes les informations sur Votre Unité
-          </p>
-        </div>
+    <Suspense fallback={
+      <div className="h-screen w-full flex items-center justify-center"   >
+        <LayoutSkeleton />
       </div>
-    </div>
-  );
+    }>
+      <UnitePageContent />
+    </Suspense>
+  )
 };
+const UnitePageContent = async () => {
+  const companyId = await verifyAndAcceptInvitation();
+  if (!companyId) return <Unauthorized />;
 
-export default UnitPage;
+  const user = await getAuthUserDetails();
+  if (!user) return null;
+  
+  if (user.role === "OWNER") {
+    return redirect(`/company/${companyId}/units`);
+  } 
+  
+  if (user.role === "ADMIN") {
+    return redirect(`/unite/${user.unitId}`);
+  }
+  return <Unauthorized />;
+}
+
+export default UnitePage;

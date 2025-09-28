@@ -4,7 +4,7 @@ import { dark } from "@clerk/themes";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { ourFileRouter } from "@/app/api/uploadthing/core";
-import Loading from "@/components/global/loading";
+import LayoutSkeleton from "@/components/skeletons/layout-skeleton";
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
@@ -20,7 +20,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <Suspense
         fallback={
           <div className="flex items-center justify-center h-full w-full">
-            <Loading variant="dots" size="lg" text="Chargement..." />
+            <LayoutSkeleton />
           </div>
         }
       >

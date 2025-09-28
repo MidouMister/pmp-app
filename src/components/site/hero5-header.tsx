@@ -7,7 +7,7 @@ import React, { Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "../global/mode-toggle";
 import AgentPulse from "../global/agentPulse";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const menuItems = [
@@ -20,6 +20,7 @@ const menuItems = [
 export const HeroHeader = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const { isSignedIn } = useAuth();
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -94,34 +95,39 @@ export const HeroHeader = () => {
                 </ul>
               </div>
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className={cn(isScrolled && "lg:hidden")}
-                >
-                  <Link href="/company">
-                    <span>Login</span>
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
-                  className={cn(isScrolled && "lg:hidden")}
-                >
-                  <Link href="/company">
-                    <span>Sign Up</span>
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
-                  className={cn(isScrolled ? "lg:inline-flex" : "hidden")}
-                >
-                  <Link href="/company">
-                    <span>Commance</span>
-                  </Link>
-                </Button>
+                {!isSignedIn ? (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className={cn(isScrolled && "lg:hidden")}
+                    >
+                      <Link href="/company">
+                        <span>Login</span>
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      size="sm"
+                      className={cn(isScrolled && "lg:hidden")}
+                    >
+                      <Link href="/company">
+                        <span>Sign Up</span>
+                      </Link>
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    asChild
+                    size="sm"
+                    className={cn(isScrolled ? "lg:inline-flex" : "hidden")}
+                  >
+                    <Link href="/company">
+                      <span>Dashboard</span>
+                    </Link>
+                  </Button>
+                )}
                 <Suspense
                   fallback={
                     <Avatar>
@@ -133,9 +139,8 @@ export const HeroHeader = () => {
                     </Avatar>
                   }
                 >
-                  <UserButton />
+                  <UserButton   />
                 </Suspense>
-
                 <ModeToggle />
               </div>
             </div>
