@@ -1,5 +1,4 @@
 import { getAuthUserDetails } from "@/lib/queries";
-
 import { SidebarOption } from "@/lib/types";
 import { Company } from "@prisma/client";
 import {
@@ -27,126 +26,134 @@ const Sidebar = async ({ id, type }: Props) => {
   if (!user) return null;
   if (!user.companyId) return;
 
-  // get the details of the company and there units
+  // Get the details of the company or unit
   const details =
     type === "company"
       ? user.Company
-      : user.Company?.units.find((unit) => unit.id === id);
-
-  if (!details) return null;
-
-  // get the logo of the company
-  const sideBarLogo = user.Company?.logo || "";
-  console.log(sideBarLogo);
-  const ownerSidebarOptions: SidebarOption[] = [
-    {
-      id: "1",
-      name: "Tableau de Bord",
-      icon: <LayoutDashboard />,
-      link: `/company/${user.companyId}`,
-    },
-    {
-      id: "2",
-      name: "Commencer",
-      icon: <ClipboardIcon />,
-      link: `/company/${user.companyId}/launchpad`,
-    },
-    {
-      id: "3",
-      name: "Paiment",
-      icon: <CreditCard />,
-      link: `/company/${user.companyId}/billing`,
-    },
-    {
-      id: "4",
-      name: "Paramètres",
-      icon: <Settings />,
-      link: `/company/${user.companyId}/settings`,
-    },
-    {
-      id: "5",
-      name: "Unités",
-      icon: <Boxes />,
-      link: `/company/${user.companyId}/units`,
-    },
-    {
-      id: "6",
-      name: "Equipes",
-      icon: <ShieldUser />,
-      link: `/company/${user.companyId}/team`,
-    },
-  ];
-
-  const adminSidebarOptions: SidebarOption[] = [
-    {
-      id: "1",
-      name: "Tableau de Bord",
-      icon: <LayoutDashboard />,
-      link: `/unite/${details.id}/dashboard`,
-    },
-    {
-      id: "2",
-      name: "Equipe",
-      icon: <ShieldUser />,
-      link: `/unite/${details.id}/users`,
-    },
-    {
-      id: "3",
-      name: "Projects",
-      icon: <FolderOpenDot />,
-      link: `/unite/${details.id}/projects`,
-    },
-    {
-      id: "4",
-      name: "Clients",
-      icon: <Contact />,
-      link: `/unite/${details.id}/clients`,
-    },
-    {
-      id: "5",
-      name: "Tasks",
-      icon: <ListTodo />,
-      link: `/unite/${details.id}/tasks`,
-    },
-    {
-      id: "6",
-      name: "Productions",
-      icon: <Goal />,
-      link: `/unite/${details.id}/productions`,
-    },
-  ];
-
-  const userSidebarOptions: SidebarOption[] = [
-    {
-      id: "1",
-      name: "Dashboard",
-      icon: <LayoutDashboard />,
-      link: `/unite/${user.unitId}/dashboard`,
-    },
-    {
-      id: "2",
-      name: "Projects",
-      icon: <SwatchBook />,
-      link: `/unite/${user.unitId}/projects`,
-    },
-    {
-      id: "3",
-      name: "Tasks",
-      icon: <ListTodo />,
-      link: `/unite/${user.unitId}/tasks`,
-    },
-  ];
-  const sideBarOpt =
-    type === "company"
-      ? ownerSidebarOptions
       : type === "unit"
-      ? adminSidebarOptions
-      : userSidebarOptions;
-  // New logic based on user role
-  const units = user.Company?.units || [];
+      ? user.Company?.units.find((unit) => unit.id === id)
+      : user.Company; // <-- pour "user", on affiche les infos de l’entreprise
 
+  // Get the logo of the company
+  const sideBarLogo = user.Company?.logo || "";
+
+  // Helper function to get sidebar options based on user role and context
+  const getSidebarOptions = (): SidebarOption[] => {
+    // Company-level navigation (only for OWNER)
+    if (type === "company" && user.role === "OWNER") {
+      return [
+        {
+          id: "1",
+          name: "Tableau de Bord",
+          icon: <LayoutDashboard />,
+          link: `/company/${user.companyId}`,
+        },
+        {
+          id: "2",
+          name: "Commencer",
+          icon: <ClipboardIcon />,
+          link: `/company/${user.companyId}/launchpad`,
+        },
+        {
+          id: "3",
+          name: "Paiment",
+          icon: <CreditCard />,
+          link: `/company/${user.companyId}/billing`,
+        },
+        {
+          id: "4",
+          name: "Paramètres",
+          icon: <Settings />,
+          link: `/company/${user.companyId}/settings`,
+        },
+        {
+          id: "5",
+          name: "Unités",
+          icon: <Boxes />,
+          link: `/company/${user.companyId}/units`,
+        },
+        {
+          id: "6",
+          name: "Equipes",
+          icon: <ShieldUser />,
+          link: `/company/${user.companyId}/team`,
+        },
+      ];
+    }
+
+    // Unit-level navigation for OWNER and ADMIN
+    if (type === "unit" && (user.role === "OWNER" || user.role === "ADMIN")) {
+      return [
+        {
+          id: "1",
+          name: "Tableau de Bord",
+          icon: <LayoutDashboard />,
+          link: `/unite/${id}/dashboard`,
+        },
+        {
+          id: "2",
+          name: "Equipe",
+          icon: <ShieldUser />,
+          link: `/unite/${id}/users`,
+        },
+        {
+          id: "3",
+          name: "Projects",
+          icon: <FolderOpenDot />,
+          link: `/unite/${id}/projects`,
+        },
+        {
+          id: "4",
+          name: "Clients",
+          icon: <Contact />,
+          link: `/unite/${id}/clients`,
+        },
+        {
+          id: "5",
+          name: "Tasks",
+          icon: <ListTodo />,
+          link: `/unite/${id}/tasks`,
+        },
+        {
+          id: "6",
+          name: "Productions",
+          icon: <Goal />,
+          link: `/unite/${id}/productions`,
+        },
+      ];
+    }
+
+    // Default user-level navigation (regular USER role)
+    if (type === "user" && user.role === "USER") {
+      return [
+        {
+          id: "1",
+          name: "Dashboard",
+          icon: <LayoutDashboard />,
+          link: `/user/${user.unitId}/dashboard`,
+        },
+        {
+          id: "2",
+          name: "Projects",
+          icon: <SwatchBook />,
+          link: `/user/${user.unitId}/projects`,
+        },
+        {
+          id: "3",
+          name: "Tasks",
+          icon: <ListTodo />,
+          link: `/user/${user.unitId}/tasks`,
+        },
+      ];
+    }
+    return [];
+  };
+
+  const sideBarOpt = getSidebarOptions();
+  const units = user.Company?.units || [];
   return (
     <>
+      {/* Desktop sidebar */}
       <MenuOptions
         defaultOpen={true}
         units={units}
@@ -156,7 +163,7 @@ const Sidebar = async ({ id, type }: Props) => {
         user={user}
         id={id}
       />
-      {/* mobile nav bar */}
+      {/* Mobile sidebar */}
       <MenuOptions
         units={units}
         roleSidebarOptions={sideBarOpt}
