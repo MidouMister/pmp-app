@@ -32,7 +32,7 @@ const Sidebar = async ({ id, type }: Props) => {
       ? user.Company
       : type === "unit"
       ? user.Company?.units.find((unit) => unit.id === id)
-      : user.Company; // <-- pour "user", on affiche les infos de l’entreprise
+      : user.Unit?.name; // <-- pour "user", on affiche les infos de l’entreprise
 
   // Get the logo of the company
   const sideBarLogo = user.Company?.logo || "";

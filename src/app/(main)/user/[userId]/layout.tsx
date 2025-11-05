@@ -13,14 +13,15 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import React from "react";
 import { NotificationProvider } from "@/providers/notification-provider";
+import { db } from "@/lib/db";
 
 type Props = {
   children: React.ReactNode;
-  params: Promise<{ unitId: string }>;
+  params: Promise<{ userId: string }>;
 };
 
 const UserLayout = async ({ children, params }: Props) => {
-  const { unitId } = await params;
+  const { userId } = await params;
   const companyId = await verifyAndAcceptInvitation();
   if (!companyId) {
     return <Unauthorized />;
@@ -29,6 +30,18 @@ const UserLayout = async ({ children, params }: Props) => {
   if (!user) {
     return redirect("/");
   }
+
+  // Get user data including their unit
+  const userData = await db.user.findUnique({
+    where: { id: userId },
+    include: { Unit: true },
+  });
+
+  if (!userData?.Unit) {
+    return <Unauthorized />;
+  }
+
+  const unitId = userData.Unit.id;
   let notifications: NotificationWithUser = [];
 
   if (!user.privateMetadata.role) {

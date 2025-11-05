@@ -120,7 +120,7 @@ export const MenuOptions = ({
   };
 
   if (!isMounted) return null;
-
+  console.log(details);
   return (
     <Sheet modal={false} {...openState}>
       <SheetTrigger asChild className="fixed left-4 top-4 z-[100] md:hidden">
@@ -200,18 +200,14 @@ export const MenuOptions = ({
                       className={clsx(
                         "transition-all duration-300 bg-gradient-to-r from-sidebar-accent/20 to-sidebar-accent/10 hover:from-sidebar-accent/30 hover:to-sidebar-accent/20 border border-sidebar-border/30 backdrop-blur-sm font-medium shadow-sm hover:shadow-md",
                         {
-                          "w-full h-12 justify-start px-3":
+                          "w-full min-h-16 justify-start px-3":
                             !isCollapsed || !defaultOpen,
                           "w-12 h-12 justify-center p-0":
                             isCollapsed && defaultOpen,
                         }
                       )}
                       variant="ghost"
-                      disabled={
-                        !hasMultipleOptions &&
-                        units.length === 0 &&
-                        !user?.Company
-                      }
+                      disabled={user?.role !== "OWNER"}
                     >
                       <div
                         className={clsx(
@@ -226,19 +222,35 @@ export const MenuOptions = ({
                           <Compass className="h-4 w-4 text-sidebar-primary" />
                         </div>
                         {(!isCollapsed || !defaultOpen) && (
-                          <>
-                            <div className="flex flex-col flex-1 min-w-0 text-left">
-                              <span className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
-                                {details.name}
-                              </span>
-                              <span className="text-xs text-sidebar-foreground/60 truncate">
-                                {details.companyAddress}
-                              </span>
-                            </div>
-                            {hasMultipleOptions && (
+                          <div className="flex">
+                            {user?.role === "OWNER" ? (
+                              <div className="flex flex-col flex-1 min-w-0 text-left">
+                                <>
+                                  <span className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                                    {details.name}
+                                  </span>
+                                  <span className="text-xs text-sidebar-foreground/60 truncate">
+                                    {details.companyAddress.toLocaleLowerCase()}
+                                  </span>
+                                </>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col flex-1 min-w-0 text-left">
+                                <>
+                                  <span className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                                    {user?.Unit?.name}
+                                  </span>
+                                  <span className="text-xs text-sidebar-foreground/60 truncate">
+                                    {user?.Unit?.address.toLocaleLowerCase()}
+                                  </span>
+                                </>
+                              </div>
+                            )}
+
+                            {user?.role === "OWNER" && hasMultipleOptions && (
                               <ChevronsUpDown className="h-4 w-4 text-sidebar-foreground/50 shrink-0" />
                             )}
-                          </>
+                          </div>
                         )}
                       </div>
                     </Button>
@@ -256,6 +268,11 @@ export const MenuOptions = ({
                       <p className="text-xs text-sidebar-foreground/60">
                         {details.companyAddress}
                       </p>
+                      {user?.role !== "OWNER" && (
+                        <p className="text-xs text-sidebar-foreground/50 mt-1 italic">
+                          Réservé aux propriétaires
+                        </p>
+                      )}
                     </div>
                   </TooltipContent>
                 )}
