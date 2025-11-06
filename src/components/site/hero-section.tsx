@@ -7,6 +7,7 @@ import { TextEffect } from "@/components/motion-primitives/text-effect";
 import { HeroHeader } from "@/components/site/hero5-header";
 import { TextShimmerWave } from "../motion-primitives/text-shimmer-wave";
 import { AnimatedGroup } from "../motion-primitives/animated-group";
+import LightRays from "../LightRays";
 
 const transitionVariants = {
   item: {
@@ -31,6 +32,19 @@ const transitionVariants = {
 export default function HeroSection() {
   return (
     <>
+      <div className="absolute inset-0 top-0 z-[-1] min-h-screen  ">
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#093bf1"
+          raysSpeed={0.8}
+          lightSpread={2}
+          rayLength={1.8}
+          followMouse={true}
+          mouseInfluence={0.02}
+          noiseAmount={0.0}
+          distortion={0.01}
+        />
+      </div>
       <HeroHeader />
       <main className="overflow-hidden">
         <div

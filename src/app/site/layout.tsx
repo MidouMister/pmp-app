@@ -1,3 +1,4 @@
+import LightRays from "@/components/LightRays";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import React from "react";
