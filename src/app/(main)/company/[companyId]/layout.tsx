@@ -1,5 +1,6 @@
 // layout.tsx - Updated with Suspense
-import React, { Suspense } from "react";
+
+import React, { Suspense, use } from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import Sidebar from "@/components/sidebar";
 import { redirect } from "next/navigation";
@@ -35,7 +36,7 @@ async function LayoutContent({
     return <Unauthorized />;
   }
 
-  const notifications = await getNotificationAndUser(companyId);
+  const notifications = await getNotificationAndUser(companyId, user.id);
   const allNoti: NotificationWithUser = notifications || [];
 
   return (

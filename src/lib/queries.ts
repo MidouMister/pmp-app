@@ -178,10 +178,11 @@ export const saveActivityLogsNotification = async ({
 };
 export const getNotificationAndUser = async (
   companyId: string,
+  userId: string,
   unitId?: string
 ) => {
-  const authUser = await currentUser();
-  if (!authUser) {
+  "use cache";
+  if (!userId) {
     console.log("User not authenticated.");
     return [];
   }
@@ -191,7 +192,7 @@ export const getNotificationAndUser = async (
       where: {
         companyId: companyId,
         ...(unitId && { unitId: unitId }),
-        userId: authUser.id, // Filter by authenticated user's ID
+        userId: userId, // Filter by authenticated user's ID
       },
       include: {
         User: true,

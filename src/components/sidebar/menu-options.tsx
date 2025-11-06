@@ -120,7 +120,6 @@ export const MenuOptions = ({
   };
 
   if (!isMounted) return null;
-  console.log(details);
   return (
     <Sheet modal={false} {...openState}>
       <SheetTrigger asChild className="fixed left-4 top-4 z-[100] md:hidden">

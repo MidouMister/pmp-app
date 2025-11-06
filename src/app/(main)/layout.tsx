@@ -8,15 +8,6 @@ import LayoutSkeleton from "@/components/skeletons/layout-skeleton";
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
-      <NextSSRPlugin
-        /**
-         * The `extractRouterConfig` will extract **only** the route configs
-         * from the router to prevent additional information from being
-         * leaked to the client. The data passed to the client is the same
-         * as if you were to fetch `/api/uploadthing` directly.
-         */
-        routerConfig={extractRouterConfig(ourFileRouter)}
-      />
       <Suspense
         fallback={
           <div className="flex items-center justify-center h-full w-full">

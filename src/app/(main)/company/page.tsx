@@ -7,11 +7,13 @@ import { Suspense } from "react";
 
 const CompanyPage = async () => {
   return (
-    <Suspense fallback={
-      <div className="h-screen w-full flex items-center justify-center">
-        <Loading size="lg" text="Verification et Redirection en cours..." />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="h-screen w-full flex items-center justify-center">
+          <Loading size="lg" text="Verification et Redirection en cours..." />
+        </div>
+      }
+    >
       <CompanyPageContent />
     </Suspense>
   );
@@ -20,19 +22,18 @@ const CompanyPage = async () => {
 const CompanyPageContent = async () => {
   // Verify if user is invited
   const companyId = await verifyAndAcceptInvitation();
-  
+
   // Get user details
   const user = await getAuthUserDetails();
 
   if (companyId) {
-    if (user?.role === "ADMIN" ) {
+    if (user?.role === "ADMIN") {
       return redirect("/unite");
     } else if (user?.role === "OWNER") {
       return redirect(`/company/${companyId}`);
-    } else if (user?.role === "USER")   { 
+    } else if (user?.role === "USER") {
       return redirect(`/user/${user.id}`);
-      
-    }else {
+    } else {
       return <Unauthorized />;
     }
   }
