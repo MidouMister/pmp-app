@@ -4,6 +4,7 @@ import ResponsiveLayoutWrapper from "@/components/layout/responsive-layout-wrapp
 import Sidebar from "@/components/sidebar";
 import Unauthorized from "@/components/unauthorized";
 import {
+  getAuthUserDetails,
   getNotificationAndUser,
   verifyAndAcceptInvitation,
 } from "@/lib/queries";
@@ -13,7 +14,6 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import React from "react";
 import { NotificationProvider } from "@/providers/notification-provider";
-import { db } from "@/lib/db";
 
 type Props = {
   children: React.ReactNode;
@@ -32,10 +32,13 @@ const UserLayout = async ({ children, params }: Props) => {
   }
 
   // Get user data including their unit
-  const userData = await db.user.findUnique({
-    where: { id: userId },
-    include: { Unit: true },
-  });
+  // const userData = await db.user.findUnique({
+  //   where: { id: userId },
+  //   include: { Unit: true },
+  // });
+  const userData = await getAuthUserDetails(
+    user.emailAddresses[0].emailAddress
+  );
 
   if (!userData?.Unit) {
     return <Unauthorized />;
@@ -65,7 +68,7 @@ const UserLayout = async ({ children, params }: Props) => {
 
   return (
     <div className="h-screen overflow-hidden">
-      <Sidebar id={unitId} type="user" />
+      <Sidebar id={unitId} type="user" user={userData} />
       <ResponsiveLayoutWrapper>
         <NotificationProvider
           initialNotifications={notifications}
