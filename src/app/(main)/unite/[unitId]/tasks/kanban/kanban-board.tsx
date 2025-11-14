@@ -31,10 +31,11 @@ import KanbanBoardSkeleton from "../../../../../../components/skeletons/kanban-b
 
 type KanbanBoardProps = {
   unitId: string;
+  initialLanes: LaneDetail[];
 };
 
-const KanbanBoard = ({ unitId }: KanbanBoardProps) => {
-  const [lanes, setLanes] = useState<LaneDetail[]>([]);
+const KanbanBoard = ({ unitId, initialLanes }: KanbanBoardProps) => {
+  const [lanes, setLanes] = useState<LaneDetail[]>(initialLanes);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeLane, setActiveLane] = useState<Lane | null>(null);
   const [loading, setLoading] = useState(true);

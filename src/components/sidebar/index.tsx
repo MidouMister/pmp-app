@@ -1,5 +1,4 @@
-import { getAuthUserDetails } from "@/lib/queries";
-import { SidebarOption } from "@/lib/types";
+import { SidebarOption, UserAuthDetails } from "@/lib/types";
 import { Company } from "@prisma/client";
 import {
   Boxes,
@@ -19,10 +18,10 @@ import { MenuOptions } from "./menu-options";
 type Props = {
   id: string;
   type: "company" | "unit" | "user";
+  user: UserAuthDetails;
 };
 
-const Sidebar = async ({ id, type }: Props) => {
-  const user = await getAuthUserDetails();
+const Sidebar = ({ id, type, user }: Props) => {
   if (!user) return null;
   if (!user.companyId) return;
 

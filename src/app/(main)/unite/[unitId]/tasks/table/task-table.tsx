@@ -28,6 +28,7 @@ import TagComponent from "@/components/global/tag";
 
 type TaskTableProps = {
   unitId: string;
+  initialLanes: LaneDetail[];
 };
 
 type SortConfig = {
@@ -35,8 +36,8 @@ type SortConfig = {
   direction: "asc" | "desc";
 };
 
-const TaskTable = ({ unitId }: TaskTableProps) => {
-  const [lanes, setLanes] = useState<LaneDetail[]>([]);
+const TaskTable = ({ unitId, initialLanes }: TaskTableProps) => {
+  const [lanes, setLanes] = useState<LaneDetail[]>(initialLanes);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({

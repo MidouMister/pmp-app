@@ -1,10 +1,10 @@
 import { getUnitProjects } from "@/lib/queries";
-import { getAuthUserDetails } from "@/lib/queries";
 import { redirect } from "next/navigation";
 import Unauthorized from "@/components/unauthorized";
 import UnitProjects from "./unit-projects";
 import { Suspense } from "react";
-import Loading from "@/components/global/loading";
+import UnitProjectsSkeleton from "@/components/skeletons/unit-projects-skeleton";
+import { currentUser } from "@clerk/nextjs/server";
 
 const ProjectsPage = async ({
   params,
@@ -14,21 +14,20 @@ const ProjectsPage = async ({
   const { unitId } = await params;
 
   // Vérifier si l'utilisateur est autorisé (OWNER ou ADMIN)
-  const user = await getAuthUserDetails();
+  const user = await currentUser();
 
   if (!user) {
     return redirect("/sign-in");
   }
 
   // Vérifier si l'utilisateur est OWNER ou ADMIN de cette unité
-  const isOwner = user.role === "OWNER";
-  const isAdmin = user.role === "ADMIN";
+  const isOwner = user.privateMetadata.role === "OWNER";
+  const isAdmin = user.privateMetadata.role === "ADMIN";
 
   if (!isOwner && !isAdmin) {
     return <Unauthorized />;
   }
 
-  const projects = await getUnitProjects(unitId);
   return (
     <div className="min-h-screen bg-background p-1">
       <div className=" container mx-auto py-6">
@@ -38,10 +37,8 @@ const ProjectsPage = async ({
             Gérez et suivez vos projets efficacement
           </p>
         </div>
-        <Suspense
-          fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
-        >
-          <UnitProjects projects={projects} unitId={unitId} />
+        <Suspense fallback={<UnitProjectsSkeleton />}>
+          <UnitProjectsData unitId={unitId} />
         </Suspense>
       </div>
     </div>
@@ -49,3 +46,12 @@ const ProjectsPage = async ({
 };
 
 export default ProjectsPage;
+async function UnitProjectsData({ unitId }: { unitId: string }) {
+  "use cache";
+  const projects = await getUnitProjects(unitId);
+  return (
+    <div>
+      <UnitProjects projects={projects} unitId={unitId} />
+    </div>
+  );
+}

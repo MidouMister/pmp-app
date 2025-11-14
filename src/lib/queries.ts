@@ -181,7 +181,6 @@ export const getNotificationAndUser = async (
   userId: string,
   unitId?: string
 ) => {
-  "use cache";
   if (!userId) {
     console.log("User not authenticated.");
     return [];
@@ -295,15 +294,10 @@ export const verifyAndAcceptInvitation = async () => {
     return company ? company.companyId : null;
   }
 };
-export const getAuthUserDetails = async () => {
-  const user = await currentUser();
-
-  if (!user) {
-    return;
-  }
+export const getAuthUserDetails = async (userEmail: string) => {
   const userData = await db.user.findUnique({
     where: {
-      email: user.emailAddresses[0].emailAddress,
+      email: userEmail,
     },
 
     include: {
@@ -539,6 +533,24 @@ export const createOrUpdateSubscription = async (
     return null;
   }
 };
+
+export const getUsersWithCompanyUnit = async (companyId: string) => {
+  return await db.user.findFirst({
+    where: {
+      Company: {
+        id: companyId,
+      },
+    },
+    include: {
+      Company: {
+        include: {
+          units: true,
+        },
+      },
+    },
+  });
+};
+
 export const getUnitDetails = async (unitId: string) => {
   const response = await db.unit.findUnique({
     where: { id: unitId },

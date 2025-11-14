@@ -2,10 +2,18 @@ import CompanyDetails from "@/components/forms/company-details";
 import Loading from "@/components/global/loading";
 import Unauthorized from "@/components/unauthorized";
 import { getAuthUserDetails, verifyAndAcceptInvitation } from "@/lib/queries";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 const CompanyPage = async () => {
+  const clerkUser = await currentUser();
+
+  if (!clerkUser) {
+    return redirect("/sign-in");
+  }
+  // Verify if user is invited
+  await verifyAndAcceptInvitation();
   return (
     <Suspense
       fallback={
@@ -14,23 +22,23 @@ const CompanyPage = async () => {
         </div>
       }
     >
-      <CompanyPageContent />
+      <CompanyPageContent
+        userEmail={clerkUser.emailAddresses[0].emailAddress}
+      />
     </Suspense>
   );
 };
 
-const CompanyPageContent = async () => {
-  // Verify if user is invited
-  const companyId = await verifyAndAcceptInvitation();
+const CompanyPageContent = async ({ userEmail }: { userEmail: string }) => {
+  "use cache";
 
   // Get user details
-  const user = await getAuthUserDetails();
-
-  if (companyId) {
+  const user = await getAuthUserDetails(userEmail);
+  if (user?.companyId) {
     if (user?.role === "ADMIN") {
       return redirect("/unite");
     } else if (user?.role === "OWNER") {
-      return redirect(`/company/${companyId}`);
+      return redirect(`/company/${user.companyId}`);
     } else if (user?.role === "USER") {
       return redirect(`/user/${user.id}`);
     } else {

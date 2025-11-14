@@ -1,20 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Plus,
-  LayoutGrid,
-  List,
-  FileText,
-  DollarSign,
-  Calculator,
-} from "lucide-react";
+import { Plus, FileText, DollarSign, Calculator } from "lucide-react";
 import { formatAmount } from "@/lib/utils";
 import { columns } from "./columns";
 import DataTable from "./data-table";
 
 import { Project } from "@prisma/client";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectForm from "@/components/forms/project-form";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,11 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ProjectCard from "./project-card";
 import { useModal } from "@/providers/modal-provider";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import CustomModal from "@/components/global/custom-model";
 
 interface UnitProjectsProps {
   projects: (Project & { Client: { name: string } })[];
@@ -63,26 +52,6 @@ const UnitProjects = ({ projects, unitId }: UnitProjectsProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2">
-          <Tabs
-            defaultValue={view}
-            onValueChange={(v) => setView(v as "table" | "card")}
-          >
-            <TabsList>
-              <TabsTrigger value="table" className="flex items-center gap-2">
-                <List size={16} />
-                Tableau
-              </TabsTrigger>
-              <TabsTrigger value="card" className="flex items-center gap-2">
-                <LayoutGrid size={16} />
-                Cartes
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
-
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
         <div className="flex-1">
           <Input
@@ -121,173 +90,72 @@ const UnitProjects = ({ projects, unitId }: UnitProjectsProps) => {
           </Select>
         </div>
       </div>
-      {view === "card" && (
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-            <Card className="w-full md:w-full lg:w-64 h-24">
-              <CardContent className="flex items-center p-4 h-full">
-                <div className="bg-primary/10 p-2 rounded-full mr-4">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">
-                    Nombres de projets
-                  </span>
-                  <span className="text-lg font-semibold">
-                    {projects.length}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="w-full md:w-full lg:w-64 h-24">
-              <CardContent className="flex items-center p-4 h-full">
-                <div className="bg-primary/10 p-2 rounded-full mr-4">
-                  <DollarSign className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex flex-col flex-1 overflow-hidden">
-                  <span className="text-sm text-muted-foreground">
-                    Total HT
-                  </span>
-                  <span className="text-lg font-semibold truncate">
-                    {formatAmount(
-                      projects.reduce(
-                        (total, project) => total + project.montantHT,
-                        0
-                      )
-                    )}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="w-full md:w-full lg:w-64 h-24">
-              <CardContent className="flex items-center p-4 h-full">
-                <div className="bg-primary/10 p-2 rounded-full mr-4">
-                  <Calculator className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex flex-col flex-1 overflow-hidden">
-                  <span className="text-sm text-muted-foreground">
-                    Total TTC
-                  </span>
-                  <span className="text-lg font-semibold truncate">
-                    {formatAmount(
-                      projects.reduce(
-                        (total, project) => total + project.montantTTC,
-                        0
-                      )
-                    )}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <Button
-            className="flex items-center gap-2"
-            size="sm"
-            onClick={() =>
-              setOpen(
-                modalId,
-                <CustomModal
-                  modalId={modalId}
-                  title="Ajouter Projet"
-                  subheading="Ajouter un  nouveau Projet à votre Unité."
-                >
-                  <ProjectForm unitId={unitId} />
-                </CustomModal>
-              )
-            }
-          >
-            <Plus className="h-4 w-4" />
-            <span>Ajouter</span>
-          </Button>
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4  ">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+          <Card className="w-full md:w-full lg:w-64 h-24">
+            <CardContent className="flex items-center p-4 h-full">
+              <div className="bg-primary/10 p-2 rounded-full mr-4">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground">
+                  Total projets
+                </span>
+                <span className="text-lg font-semibold">{projects.length}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="w-full md:w-full lg:w-64 h-24">
+            <CardContent className="flex items-center p-4 h-full">
+              <div className="bg-primary/10 p-2 rounded-full mr-4">
+                <DollarSign className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <span className="text-sm text-muted-foreground">Total HT</span>
+                <span className="text-lg font-semibold truncate">
+                  {formatAmount(
+                    projects.reduce(
+                      (total, project) => total + project.montantHT,
+                      0
+                    )
+                  )}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="w-full md:w-full lg:w-64 h-24">
+            <CardContent className="flex items-center p-4 h-full">
+              <div className="bg-primary/10 p-2 rounded-full mr-4">
+                <Calculator className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <span className="text-sm text-muted-foreground">Total TTC</span>
+                <span className="text-lg font-semibold truncate">
+                  {formatAmount(
+                    projects.reduce(
+                      (total, project) => total + project.montantTTC,
+                      0
+                    )
+                  )}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      )}
-      {view === "table" ? (
-        <>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4  ">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-              <Card className="w-full md:w-full lg:w-64 h-24">
-                <CardContent className="flex items-center p-4 h-full">
-                  <div className="bg-primary/10 p-2 rounded-full mr-4">
-                    <FileText className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm text-muted-foreground">
-                      Total projets
-                    </span>
-                    <span className="text-lg font-semibold">
-                      {projects.length}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="w-full md:w-full lg:w-64 h-24">
-                <CardContent className="flex items-center p-4 h-full">
-                  <div className="bg-primary/10 p-2 rounded-full mr-4">
-                    <DollarSign className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <span className="text-sm text-muted-foreground">
-                      Total HT
-                    </span>
-                    <span className="text-lg font-semibold truncate">
-                      {formatAmount(
-                        projects.reduce(
-                          (total, project) => total + project.montantHT,
-                          0
-                        )
-                      )}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="w-full md:w-full lg:w-64 h-24">
-                <CardContent className="flex items-center p-4 h-full">
-                  <div className="bg-primary/10 p-2 rounded-full mr-4">
-                    <Calculator className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <span className="text-sm text-muted-foreground">
-                      Total TTC
-                    </span>
-                    <span className="text-lg font-semibold truncate">
-                      {formatAmount(
-                        projects.reduce(
-                          (total, project) => total + project.montantTTC,
-                          0
-                        )
-                      )}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-          <DataTable
-            actionButtonText={
-              <>
-                <Plus size={15} />
-                Ajouter
-              </>
-            }
-            modalChildren={<ProjectForm unitId={unitId} />}
-            filterValue="name"
-            columns={columns}
-            data={filteredProjects}
-          />
-        </>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProjects.length > 0 ? (
-            filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} unitId={unitId} />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10 text-muted-foreground">
-              Aucun projet trouvé.
-            </div>
-          )}
-        </div>
-      )}
+      </div>
+      <DataTable
+        actionButtonText={
+          <>
+            <Plus size={15} />
+            Ajouter
+          </>
+        }
+        modalChildren={<ProjectForm unitId={unitId} />}
+        filterValue="name"
+        columns={columns}
+        data={filteredProjects}
+      />
     </div>
   );
 };

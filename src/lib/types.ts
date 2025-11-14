@@ -18,7 +18,9 @@ import { db } from "./db";
 import {
   _getTasksWithAllRelations,
   getAuthUserDetails,
+  getCompanySubscription,
   getTasksWithTags,
+  getUsersWithCompanyUnit,
 } from "./queries";
 
 export type SidebarOption = {
@@ -79,23 +81,6 @@ export type RealtimeSubscriptionStatus =
   | "TIMED_OUT"
   | "CLOSED"
   | "CHANNEL_ERROR";
-
-export const getUsersWithCompanyUnit = async (companyId: string) => {
-  return await db.user.findFirst({
-    where: {
-      Company: {
-        id: companyId,
-      },
-    },
-    include: {
-      Company: {
-        include: {
-          units: true,
-        },
-      },
-    },
-  });
-};
 
 export type UsersWithCompanyUnit = Prisma.PromiseReturnType<
   typeof getUsersWithCompanyUnit
@@ -174,4 +159,7 @@ export type LaneDetail = Lane & {
 
 export type TaskDetails = Prisma.PromiseReturnType<
   typeof _getTasksWithAllRelations
+>;
+export type Subscription = Prisma.PromiseReturnType<
+  typeof getCompanySubscription
 >;

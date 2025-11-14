@@ -1,9 +1,10 @@
 import { Suspense } from "react";
-import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 
-import Loading from "@/components/global/loading";
-import UnitsClient from "./units-client";
+import { getAuthUserDetails, getCompanyUnits } from "@/lib/queries";
+import Unauthorized from "@/components/unauthorized";
+import UnitsCompany from "./units-company";
+import UnitCompanySkeleton from "@/components/skeletons/unit-company-skeleton";
 
 export default async function UnitsPage({
   params,
@@ -13,36 +14,38 @@ export default async function UnitsPage({
   const { companyId } = await params;
   const user = await currentUser();
   if (!user) return null;
-
-  const units = await db.unit.findMany({
-    where: {
-      companyId: companyId,
-    },
-  });
-
-  const company = await db.company.findUnique({
-    where: {
-      id: companyId,
-    },
-  });
-
-  if (!company) return null;
-
-  const dbUser = await db.user.findUnique({
-    where: {
-      id: user.id,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
-
-  if (!dbUser) return null;
+  if (
+    user.privateMetadata.role !== "OWNER" &&
+    user.privateMetadata.role !== "ADMIN"
+  ) {
+    return <Unauthorized />;
+  }
+  const emailAddress = user.emailAddresses[0].emailAddress;
 
   return (
-    <Suspense fallback={<Loading />}>
-      <UnitsClient units={units} company={company} user={dbUser} />
+    <Suspense fallback={<UnitCompanySkeleton />}>
+      <CompanyUnits userEmail={emailAddress} companyId={companyId} />
     </Suspense>
+  );
+}
+async function CompanyUnits({
+  userEmail,
+  companyId,
+}: {
+  userEmail: string;
+  companyId: string;
+}) {
+  "use cache";
+  const user = await getAuthUserDetails(userEmail);
+  if (!user) return null;
+  const units = await getCompanyUnits(companyId);
+  const company = user.Company;
+  if (!company) {
+    return null;
+  }
+  return (
+    <div>
+      <UnitsCompany units={units} company={company} user={user} />
+    </div>
   );
 }

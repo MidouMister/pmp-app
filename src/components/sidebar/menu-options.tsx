@@ -229,7 +229,8 @@ export const MenuOptions = ({
                                     {details.name}
                                   </span>
                                   <span className="text-xs text-sidebar-foreground/60 truncate">
-                                    {details.companyAddress.toLocaleLowerCase()}
+                                    {details.companyAddress?.toLocaleLowerCase() ??
+                                      ""}
                                   </span>
                                 </>
                               </div>
@@ -240,7 +241,8 @@ export const MenuOptions = ({
                                     {user?.Unit?.name}
                                   </span>
                                   <span className="text-xs text-sidebar-foreground/60 truncate">
-                                    {user?.Unit?.address.toLocaleLowerCase()}
+                                    {user?.Unit?.address?.toLocaleLowerCase() ??
+                                      ""}
                                   </span>
                                 </>
                               </div>

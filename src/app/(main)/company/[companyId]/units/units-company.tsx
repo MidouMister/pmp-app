@@ -64,7 +64,7 @@ interface UnitsClientProps {
   };
 }
 
-const UnitsClient = ({ units, company, user }: UnitsClientProps) => {
+const UnitsCompany = ({ units, company, user }: UnitsClientProps) => {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -565,4 +565,4 @@ const UnitsClient = ({ units, company, user }: UnitsClientProps) => {
   );
 };
 
-export default UnitsClient;
+export default UnitsCompany;

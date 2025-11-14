@@ -12,7 +12,6 @@ const ClientsPage = async ({
   params: Promise<{ unitId: string }>;
 }) => {
   const { unitId } = await params;
-  const clients = await getUnitClients(unitId);
 
   return (
     <div className="min-h-screen bg-background p-1">
@@ -24,20 +23,11 @@ const ClientsPage = async ({
           </p>
         </div>
         <Suspense
-          fallback={<Loading text="Chargement..." variant="pulse" size="md" />}
+          fallback={
+            <Loading text="Chargement..." variant="spinner" size="md" />
+          }
         >
-          <DataTable
-            actionButtonText={
-              <>
-                <Plus size={15} />
-                Ajouter
-              </>
-            }
-            modalChildren={<ClientForm unitId={unitId} />}
-            filterValue="name"
-            columns={columns}
-            data={clients}
-          ></DataTable>
+          <ClientTable unitId={unitId} />
         </Suspense>
       </div>
     </div>
@@ -45,3 +35,22 @@ const ClientsPage = async ({
 };
 
 export default ClientsPage;
+
+async function ClientTable({ unitId }: { unitId: string }) {
+  "use cache";
+  const clients = await getUnitClients(unitId);
+  return (
+    <DataTable
+      actionButtonText={
+        <>
+          <Plus size={15} />
+          Ajouter
+        </>
+      }
+      modalChildren={<ClientForm unitId={unitId} />}
+      filterValue="name"
+      columns={columns}
+      data={clients}
+    ></DataTable>
+  );
+}

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 
 import { Plus } from "lucide-react";
@@ -8,6 +7,8 @@ import SendInvitation from "@/components/forms/send-invitation";
 import DataTable from "./data-table";
 import { columns } from "./columns";
 import TeamSkeleton from "./team-skeleton";
+import { getUsersWithCompanyUnit } from "@/lib/queries";
+import Unauthorized from "@/components/unauthorized";
 
 const TeamPage = async ({
   params,
@@ -16,28 +17,10 @@ const TeamPage = async ({
 }) => {
   const { companyId } = await params;
   const authUser = await currentUser();
-  const teamMembers = await db.user.findMany({
-    where: {
-      companyId: companyId,
-    },
-    include: {
-      Company: {
-        include: {
-          units: true,
-        },
-      },
-    },
-  });
   if (!authUser) return null;
-  const companyDetails = await db.company.findUnique({
-    where: {
-      id: companyId,
-    },
-    include: {
-      units: true,
-    },
-  });
-  if (!companyDetails) return;
+  if (authUser.privateMetadata.role !== "OWNER") {
+    return <Unauthorized />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,18 +37,7 @@ const TeamPage = async ({
             </div>
           </div>
           <Suspense fallback={<TeamSkeleton />}>
-            <DataTable
-              actionButtonText={
-                <>
-                  <Plus size={15} />
-                  Ajouter
-                </>
-              }
-              modalChildren={<SendInvitation companyId={companyDetails.id} />}
-              filterValue="name"
-              columns={columns}
-              data={teamMembers}
-            ></DataTable>
+            <UserTable companyId={companyId} />
           </Suspense>
         </div>
       </div>
@@ -74,3 +46,25 @@ const TeamPage = async ({
 };
 
 export default TeamPage;
+
+async function UserTable({ companyId }: { companyId: string }) {
+  "use cache";
+
+  const teamMembers = await getUsersWithCompanyUnit(companyId);
+  const companyDetails = teamMembers?.Company;
+  if (!companyDetails) return null;
+  return (
+    <DataTable
+      actionButtonText={
+        <>
+          <Plus size={15} />
+          Ajouter
+        </>
+      }
+      modalChildren={<SendInvitation companyId={companyDetails.id} />}
+      filterValue="name"
+      columns={columns}
+      data={teamMembers ? [teamMembers] : []}
+    />
+  );
+}

@@ -139,7 +139,7 @@ export const HeroHeader = () => {
                     </Avatar>
                   }
                 >
-                  <UserButton   />
+                  <UserButton />
                 </Suspense>
                 <ModeToggle />
               </div>
