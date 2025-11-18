@@ -19,8 +19,8 @@ import {
   _getTasksWithAllRelations,
   getAuthUserDetails,
   getCompanySubscription,
+  getCompanyUsersWithUnit,
   getTasksWithTags,
-  getUsersWithCompanyUnit,
 } from "./queries";
 
 export type SidebarOption = {
@@ -83,7 +83,7 @@ export type RealtimeSubscriptionStatus =
   | "CHANNEL_ERROR";
 
 export type UsersWithCompanyUnit = Prisma.PromiseReturnType<
-  typeof getUsersWithCompanyUnit
+  typeof getCompanyUsersWithUnit
 >;
 
 export type UserAuthDetails = Prisma.PromiseReturnType<

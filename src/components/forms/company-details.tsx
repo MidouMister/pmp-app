@@ -1,10 +1,17 @@
 "use client";
 
+import { wilayas } from "@/lib/constants";
+import { deleteCompany, initUser, upsertCompany } from "@/lib/queries";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Company } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
+import FileUpload from "../global/file-upload";
+import Loading from "../global/loading";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
@@ -39,14 +47,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { wilayas } from "@/lib/constants";
-import { Button } from "../ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { deleteCompany, initUser, upsertCompany } from "@/lib/queries";
-import Loading from "../global/loading";
-import FileUpload from "../global/file-upload";
 
 type Props = {
   data?: Partial<Company> | null; // Typage flexible pour gérer undefined/null
@@ -120,7 +120,7 @@ const CompanyDetails = ({ data, noCard = false }: Props) => {
     try {
       let newUserData;
       if (!data?.id) {
-        newUserData = await initUser({ role: "OWNER" });
+        newUserData = await initUser();
       }
       await upsertCompany({
         id: data?.id ? data.id : uuidv4(),
@@ -142,7 +142,7 @@ const CompanyDetails = ({ data, noCard = false }: Props) => {
       toast.success(
         data?.id ? "Entreprise mise à jour" : "Entreprise créée avec succès"
       );
-      router.push("/company");
+      router.refresh();
     } catch (error) {
       console.error(error);
       toast.error("Erreur", {

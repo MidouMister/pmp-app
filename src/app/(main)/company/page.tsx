@@ -12,8 +12,16 @@ const CompanyPage = async () => {
   if (!clerkUser) {
     return redirect("/sign-in");
   }
-  // Verify if user is invited
-  await verifyAndAcceptInvitation();
+   // Verify if user is invited
+   const userEmail = clerkUser.emailAddresses[0].emailAddress;
+  const userId = clerkUser.id;
+  const userName = `${clerkUser.firstName} ${clerkUser.lastName}`;
+  const userImage = clerkUser.imageUrl;
+  
+  await verifyAndAcceptInvitation(userId, userEmail, userName, userImage);
+
+  
+
   return (
     <Suspense
       fallback={
@@ -23,15 +31,21 @@ const CompanyPage = async () => {
       }
     >
       <CompanyPageContent
-        userEmail={clerkUser.emailAddresses[0].emailAddress}
+        userEmail={userEmail}
+ 
       />
     </Suspense>
   );
 };
 
-const CompanyPageContent = async ({ userEmail }: { userEmail: string }) => {
-  "use cache";
-
+const CompanyPageContent = async ({
+  userEmail,
+   
+}: {
+  userEmail: string;
+  
+}) => {
+  
   // Get user details
   const user = await getAuthUserDetails(userEmail);
   if (user?.companyId) {

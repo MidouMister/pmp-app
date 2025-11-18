@@ -48,6 +48,7 @@ import {
   Shield,
   UserCheck,
 } from "lucide-react";
+import { useModal } from "@/providers/modal-provider";
 
 interface SendInvitationProps {
   companyId: string;
@@ -58,6 +59,7 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
   companyId,
   unitId,
 }) => {
+  const { setClose } = useModal();
   const userDataSchema = z.object({
     email: z.string().email("Veuillez saisir une adresse email valide"),
     role: z.enum(["ADMIN", "USER"]),
@@ -117,6 +119,7 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
       });
       toast.success("Invitation envoyée avec succès !");
       form.reset();
+      setClose();
     } catch (error) {
       console.error("Failed to send invitation:", error);
       toast.error("Échec de l'envoi de l'invitation. Veuillez réessayer.");

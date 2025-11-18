@@ -2,6 +2,7 @@ import BlurPage from "@/components/global/blur-page";
 import InfoBar from "@/components/global/infobar";
 import ResponsiveLayoutWrapper from "@/components/layout/responsive-layout-wrapper";
 import Sidebar from "@/components/sidebar";
+import LayoutSkeleton from "@/components/skeletons/layout-skeleton";
 import Unauthorized from "@/components/unauthorized";
 import {
   getAuthUserDetails,
@@ -9,12 +10,11 @@ import {
   verifyAndAcceptInvitation,
 } from "@/lib/queries";
 import { NotificationWithUser } from "@/lib/types";
+import { NotificationProvider } from "@/providers/notification-provider";
 import { currentUser } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
-import { NotificationProvider } from "@/providers/notification-provider";
-import LayoutSkeleton from "@/components/skeletons/layout-skeleton";
 
 type Props = {
   children: React.ReactNode;
@@ -23,17 +23,24 @@ type Props = {
 
 const UnitLayout = async ({ children, params }: Props) => {
   const { unitId } = await params;
-  const user = await currentUser();
-  if (!user) {
+  const clerkUser = await currentUser();
+  if (!clerkUser) {
     return redirect("/");
-  }
-  const companyId = await verifyAndAcceptInvitation();
+  }// Verify if user is invited
+   const userEmail = clerkUser.emailAddresses[0].emailAddress;
+  const userId = clerkUser.id;
+  const userName = `${clerkUser.firstName} ${clerkUser.lastName}`;
+  const userImage = clerkUser.imageUrl;
+  
+  const companyId = await verifyAndAcceptInvitation(userId, userEmail, userName, userImage);
+
+        
   if (!companyId) {
     return <Unauthorized />;
   }
   let notifications: NotificationWithUser = [];
 
-  if (!user.privateMetadata.role) {
+  if (!clerkUser.privateMetadata.role) {
     return <Unauthorized />;
   }
 
@@ -41,9 +48,9 @@ const UnitLayout = async ({ children, params }: Props) => {
     <Suspense fallback={<LayoutSkeleton />}>
       <LayoutContent
         companyId={companyId}
-        userId={user.id}
-        userRole={user.privateMetadata.role as Role}
-        userEmail={user.emailAddresses[0].emailAddress}
+        userId={clerkUser.id}
+        userRole={clerkUser.privateMetadata.role as Role}
+        userEmail={clerkUser.emailAddresses[0].emailAddress}
         unitId={unitId}
       >
         {children}

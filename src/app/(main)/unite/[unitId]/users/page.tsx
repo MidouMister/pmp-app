@@ -7,6 +7,10 @@ import DataTable from "./data-table";
 import { columns } from "./columns";
 import { Suspense } from "react";
 import TeamSkeleton from "@/app/(main)/company/[companyId]/team/team-skeleton";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { getAuthUserDetails } from "@/lib/queries";
+import Unauthorized from "@/components/unauthorized";
 
 const UnitUsersPage = async ({
   params,
@@ -14,6 +18,10 @@ const UnitUsersPage = async ({
   params: Promise<{ unitId: string }>;
 }) => {
   const { unitId } = await params;
+  const user = await currentUser();
+  if (!user) {
+    redirect("/sign-in");
+  }
 
   return (
     <div className="min-h-screen bg-background p-1">
@@ -25,7 +33,10 @@ const UnitUsersPage = async ({
           </p>
         </div>
         <Suspense fallback={<TeamSkeleton />}>
-          <UnitTeamData unitId={unitId} />
+          <UnitTeamData
+            unitId={unitId}
+            userEmail={user.emailAddresses[0].emailAddress}
+          />
         </Suspense>
       </div>
     </div>
@@ -34,15 +45,31 @@ const UnitUsersPage = async ({
 
 export default UnitUsersPage;
 
-async function UnitTeamData({ unitId }: { unitId: string }) {
+async function UnitTeamData({
+  unitId,
+  userEmail,
+}: {
+  unitId: string;
+  userEmail: string;
+}) {
   "use cache";
+  const authUser = await getAuthUserDetails(userEmail);
+  if (!authUser) {
+    redirect("/sign-in");
+  }
+  if (authUser.role !== "ADMIN" && authUser.role !== "OWNER") {
+    return <Unauthorized />;
+  }
+  const companyId = authUser.companyId;
+  if (!companyId) {
+    redirect("/company");
+  }
   const unitUsers = await db.user.findMany({
     where: {
       unitId,
     },
   });
-  const companyId = unitUsers[0].companyId;
-  if (!companyId) return null;
+
   return (
     <DataTable
       actionButtonText={

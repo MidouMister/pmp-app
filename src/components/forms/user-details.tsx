@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "@prisma/client";
+import { User, Role } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,14 +13,22 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { initUser } from "@/lib/queries";
+import { updateUser } from "@/lib/queries";
 import Loading from "../global/loading";
 import FileUpload from "../global/file-upload";
+import { useModal } from "@/providers/modal-provider";
 
 type Props = {
   data?: Partial<User> | null;
@@ -32,11 +40,17 @@ const FormSchema = z.object({
   }),
   jobeTitle: z.string().optional(),
   avatarUrl: z.string().optional(),
+  role: z.nativeEnum(Role),
 });
 
 const UserDetails = ({ data }: Props) => {
   const router = useRouter();
+  const { setClose } = useModal();
+
   const [isFormReady, setIsFormReady] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<Role | null>(
+    data?.role || null
+  );
 
   const form = useForm<z.infer<typeof FormSchema>>({
     mode: "onChange",
@@ -45,6 +59,7 @@ const UserDetails = ({ data }: Props) => {
       name: data?.name ?? "",
       jobeTitle: data?.jobeTitle ?? "",
       avatarUrl: data?.avatarUrl ?? "",
+      role: data?.role ?? Role.USER,
     },
   });
 
@@ -55,23 +70,27 @@ const UserDetails = ({ data }: Props) => {
         name: data.name ?? "",
         jobeTitle: data.jobeTitle ?? "",
         avatarUrl: data.avatarUrl ?? "",
+        role: data.role ?? Role.USER,
       });
       setIsFormReady(true);
     }
   }, [data, form, isFormReady]);
 
   const isLoading = form.formState.isSubmitting;
+  const canEditRole = currentUserRole === data?.role;
 
   const handleSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      await initUser({
+      await updateUser(data?.id || "", {
         name: values.name,
         jobeTitle: values.jobeTitle || "",
         avatarUrl: values.avatarUrl || "",
+        role: values.role,
       });
 
       toast.success("Profil mis à jour avec succès");
       router.refresh();
+      setClose();
     } catch (error) {
       console.error(error);
       toast.error("Erreur", {
@@ -88,7 +107,7 @@ const UserDetails = ({ data }: Props) => {
   return (
     <div className="relative mt-4">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-50 rounded-lg">
           <Loading />
         </div>
       )}
@@ -97,7 +116,7 @@ const UserDetails = ({ data }: Props) => {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-8"
+              className="space-y-6"
             >
               <FormField
                 disabled={isLoading}
@@ -117,6 +136,7 @@ const UserDetails = ({ data }: Props) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 disabled={isLoading}
                 control={form.control}
@@ -134,6 +154,7 @@ const UserDetails = ({ data }: Props) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 disabled={isLoading}
                 control={form.control}
@@ -152,6 +173,55 @@ const UserDetails = ({ data }: Props) => {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                disabled={isLoading || !canEditRole}
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rôle</FormLabel>
+                    <Select
+                      disabled={isLoading || !canEditRole}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez un rôle" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={Role.OWNER}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                            Owner (Propriétaire)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value={Role.ADMIN}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-orange-400" />
+                            Admin (Administrateur)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value={Role.USER}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            User (Utilisateur)
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {!canEditRole && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Seul le propriétaire peut modifier les rôles
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
                 type="submit"
                 disabled={isLoading}

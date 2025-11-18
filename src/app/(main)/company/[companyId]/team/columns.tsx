@@ -42,86 +42,49 @@ export const columns: ColumnDef<UsersWithCompanyUnit>[] = [
   {
     accessorKey: "id",
     header: "",
-    cell: () => {
-      return null;
-    },
+    cell: () => null,
   },
   {
     accessorKey: "name",
     header: "Nom",
     cell: ({ row }) => {
-      const avatarUrl = row.getValue("avatarUrl") as string;
+      const avatarUrl = row.original.avatarUrl;
+      const name = row.getValue("name") as string;
+
       return (
         <div className="flex items-center gap-4">
           <div className="h-11 w-11 relative flex-none">
             <Image
-              src={avatarUrl}
+              src={avatarUrl || "/default-avatar.png"}
               fill
               className="rounded-full object-cover"
-              alt="avatar image"
+              alt={`Avatar de ${name}`}
             />
           </div>
-          <span>{row.getValue("name")}</span>
+          <span className="font-medium">{name}</span>
         </div>
       );
     },
   },
   {
-    accessorKey: "avatarUrl",
-    header: "",
-    cell: () => {
-      return null;
-    },
-  },
-  { accessorKey: "email", header: "Email" },
-
-  {
-    accessorKey: "unitId",
-    header: "Unité",
+    accessorKey: "email",
+    header: "Email",
     cell: ({ row }) => {
-      const isCompanyOwner = row.getValue("role") === "OWNER";
-      const units = row.original?.Company?.units;
-
-      if (isCompanyOwner)
-        return (
-          <div className="flex flex-col items-start">
-            <div className="flex flex-col gap-2">
-              <Badge className="border-emerald-500 whitespace-nowrap bg-transparent text-emerald-500 hover:text-white">
-                Owner: {row?.original?.Company?.name}
-              </Badge>
-            </div>
-          </div>
-        );
-      return (
-        <div className="flex flex-col items-start">
-          <div className="flex flex-col gap-2">
-            {units && units.length > 0 && (
-              <Badge className="border-primary whitespace-nowrap bg-transparent text-primary hover:text-white">
-                Unit:{" "}
-                {units.find((unit) => unit.id === row.getValue("unitId"))
-                  ?.name || "Unknown"}
-              </Badge>
-            )}
-          </div>
-        </div>
-      );
+      const email = row.getValue("email") as string;
+      return <span className="text-muted-foreground">{email}</span>;
     },
-  },
-  {
-    accessorKey: "jobeTitle",
-    header: "Poste",
   },
   {
     accessorKey: "role",
-    header: "Role",
+    header: "Rôle",
     cell: ({ row }) => {
       const role: Role = row.getValue("role");
       return (
         <Badge
-          className={clsx({
-            "bg-emerald-500": role === "OWNER",
-            "bg-orange-400": role === "ADMIN",
-            "bg-primary": role === "USER",
+          className={clsx("font-semibold", {
+            "bg-emerald-500 hover:bg-emerald-600": role === "OWNER",
+            "bg-orange-400 hover:bg-orange-500": role === "ADMIN",
+            "bg-primary hover:bg-primary/90": role === "USER",
           })}
         >
           {role}
@@ -130,10 +93,61 @@ export const columns: ColumnDef<UsersWithCompanyUnit>[] = [
     },
   },
   {
+    accessorKey: "unitId",
+    header: "Unité / Entreprise",
+    cell: ({ row }) => {
+      const role = row.getValue("role") as Role;
+      const isOwner = role === "OWNER";
+      const companyName = row.original.Company?.name;
+      const unitName = row.original.Unit?.name;
+
+      if (isOwner && companyName) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-emerald-500 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-100 whitespace-nowrap"
+          >
+            Entreprise: {companyName}
+          </Badge>
+        );
+      }
+
+      if (unitName) {
+        return (
+          <Badge
+            variant="outline"
+            className="border-primary text-primary bg-primary/5 hover:bg-primary/10 whitespace-nowrap"
+          >
+            Unité: {unitName}
+          </Badge>
+        );
+      }
+
+      return (
+        <Badge
+          variant="outline"
+          className="border-muted-foreground/30 text-muted-foreground whitespace-nowrap"
+        ></Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "jobeTitle",
+    header: "Poste",
+    cell: ({ row }) => {
+      const jobTitle = row.getValue("jobeTitle") as string | null;
+      return (
+        <span className="text-muted-foreground">
+          {jobTitle || "Non spécifié"}
+        </span>
+      );
+    },
+  },
+  {
     id: "actions",
+    header: "",
     cell: ({ row }) => {
       const rowData = row.original;
-
       return <CellActions rowData={rowData} />;
     },
   },
@@ -145,19 +159,20 @@ interface CellActionsProps {
 
 const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
   const { setOpen } = useModal();
-
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const modalId = `user-details-${rowData?.id}`;
-  if (!rowData) return;
-  if (!rowData.Company) return;
+  const modalId = `user-details-${rowData.id}`;
+
+  if (!rowData || !rowData.Company) return null;
+
+  const isOwner = rowData.role === "OWNER";
 
   return (
     <AlertDialog>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Ouvrir le menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -165,9 +180,12 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuItem
             className="flex gap-2"
-            onClick={() => navigator.clipboard.writeText(rowData?.email)}
+            onClick={() => {
+              navigator.clipboard.writeText(rowData.email);
+              toast.success("Email copié dans le presse-papiers");
+            }}
           >
-            <Copy size={15} /> Copy Email
+            <Copy size={15} /> Copier l&apos;email
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -183,7 +201,7 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
                   <UserDetails data={rowData} />
                 </CustomModal>,
                 async () => {
-                  const user = await getUser(rowData?.id);
+                  const user = await getUser(rowData.id);
                   return { user: user || undefined };
                 }
               );
@@ -192,9 +210,9 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
             <Edit size={15} />
             Modifier les détails
           </DropdownMenuItem>
-          {rowData.role !== "OWNER" && (
+          {!isOwner && (
             <AlertDialogTrigger asChild>
-              <DropdownMenuItem className="flex gap-2" onClick={() => {}}>
+              <DropdownMenuItem className="flex gap-2 text-destructive focus:text-destructive">
                 <Trash size={15} /> Supprimer l&apos;utilisateur
               </DropdownMenuItem>
             </AlertDialogTrigger>
@@ -208,20 +226,27 @@ const CellActions: React.FC<CellActionsProps> = ({ rowData }) => {
           </AlertDialogTitle>
           <AlertDialogDescription className="text-left">
             Cette action est irréversible. Cela supprimera définitivement
-            l&apos;utilisateur et les données associées.
+            l&apos;utilisateur <strong>{rowData.name}</strong> et les données
+            associées.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex items-center">
           <AlertDialogCancel className="mb-2">Annuler</AlertDialogCancel>
           <AlertDialogAction
             disabled={loading}
-            className="bg-destructive hover:bg-destructive"
+            className="bg-destructive hover:bg-destructive/90"
             onClick={async () => {
               setLoading(true);
-              await deleteUser(rowData.id);
-              toast.success("Utilaieur supprimé avec succès");
-              setLoading(false);
-              router.refresh();
+              try {
+                await deleteUser(rowData.id);
+                toast.success("Utilisateur supprimé avec succès");
+                router.refresh();
+              } catch (error) {
+                toast.error("Erreur lors de la suppression de l'utilisateur");
+                console.error(error);
+              } finally {
+                setLoading(false);
+              }
             }}
           >
             Supprimer

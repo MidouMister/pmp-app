@@ -132,17 +132,18 @@ model Plan {
 }
 
 model Invitation {
-  id        String           @id @default(uuid())
-  email     String           @unique
-  Unit      Unit             @relation(fields: [unitId], references: [id])
-  unitId    String
-  status    InvitationStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  Company   Company          @relation(fields: [companyId], references: [id])
-  companyId String
-  role      Role             @default(USER)
-  jobeTilte String?
+  id                String           @id @default(uuid())
+  email             String           @unique
+  Unit              Unit             @relation(fields: [unitId], references: [id])
+  unitId            String
+  status            InvitationStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  Company           Company          @relation(fields: [companyId], references: [id])
+  companyId         String
+  role              Role             @default(USER)
+  jobeTilte         String?
+  clerkInvitationId String?
 
   @@index([companyId])
   @@index([unitId])

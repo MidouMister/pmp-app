@@ -1,8 +1,6 @@
 "use server";
 
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
-import { db } from "./db";
-import { redirect } from "next/navigation";
 import {
   Client,
   Company,
@@ -16,12 +14,14 @@ import {
   Unit,
   User,
 } from "@prisma/client";
-import { updateProductTaux, validateProductionTaux } from "./utils";
 import { v4 } from "uuid";
+import { db } from "./db";
+import { updateProductTaux, validateProductionTaux } from "./utils";
 
 const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
 import { NotificationType } from "@prisma/client";
+import { updateTag } from "next/cache";
 
 // Enhanced queries for better realtime support
 
@@ -57,7 +57,6 @@ export const markNotificationAsRead = async (notificationId: string) => {
     throw error;
   }
 };
-
 export const deleteNotification = async (notificationId: string) => {
   try {
     // First, get the notification to ensure it exists
@@ -240,14 +239,18 @@ export const AddUser = async (
 ) => {
   if (user.role === "OWNER") return null;
   const response = await db.user.create({ data: { ...user } });
+
   return response;
 };
-export const verifyAndAcceptInvitation = async () => {
-  const user = await currentUser();
-  if (!user) return redirect("/sign-in");
+export const verifyAndAcceptInvitation = async (
+  userId: string,
+  userEmail: string,
+  userName: string,
+  userImage?: string
+) => {
   const invitationExists = await db.invitation.findUnique({
     where: {
-      email: user.emailAddresses[0].emailAddress,
+      email: userEmail,
       status: "PENDING",
     },
   });
@@ -255,10 +258,10 @@ export const verifyAndAcceptInvitation = async () => {
     const userDetails = await AddUser(invitationExists.companyId, {
       email: invitationExists.email,
       companyId: invitationExists.companyId,
-      avatarUrl: user.imageUrl || avatarUrl,
+      avatarUrl: userImage || avatarUrl,
       unitId: invitationExists.unitId,
-      id: user.id,
-      name: `${user.firstName} ${user.lastName}`,
+      id: userId,
+      name: userName,
       role: invitationExists.role as Role,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -274,26 +277,91 @@ export const verifyAndAcceptInvitation = async () => {
     if (userDetails) {
       // Await the clerkClient() function call first
       const clerk = await clerkClient();
-      await clerk.users.updateUserMetadata(user.id, {
+      await clerk.users.updateUserMetadata(userId, {
         // Use clerkClient() as a function
         privateMetadata: {
-          role: userDetails.role || "USER", // add jobeTilte
+          role: userDetails.role || "USER", // add jobetitle
         },
       });
       // delete invitation from db
-      await db.invitation.delete({ where: { email: userDetails.email } });
-      await clerk.invitations.revokeInvitation(userDetails.email);
+      const deletedInvitation = await db.invitation.delete({
+        where: { email: userDetails.email },
+      });
+      if (deletedInvitation.clerkInvitationId) {
+        await clerk.invitations.revokeInvitation(
+          deletedInvitation.clerkInvitationId
+        );
+      }
       return userDetails.companyId;
     } else return null;
   } else {
     const company = await db.user.findUnique({
       where: {
-        email: user.emailAddresses[0].emailAddress,
+        email: userEmail,
       },
     });
+
     return company ? company.companyId : null;
   }
 };
+export const sendInvitation = async (
+  role: Role,
+  email: string,
+  companyId: string,
+  unitId: string,
+  jobeTilte: string
+) => {
+  // Check if an invitation already exists
+  const existingInvitation = await db.invitation.findUnique({
+    where: { email },
+  });
+
+  let response;
+  if (existingInvitation) {
+    // Update the existing invitation
+    response = await db.invitation.update({
+      where: { email },
+      data: { companyId, role, unitId, status: "PENDING", jobeTilte },
+    });
+  } else {
+    try {
+      // Await the clerkClient() function call first
+      const clerk = await clerkClient();
+
+      const invitation = await clerk.invitations.createInvitation({
+        emailAddress: email,
+        redirectUrl: process.env.NEXT_PUBLIC_URL || "",
+        publicMetadata: {
+          throughInvitation: true,
+          role,
+        },
+        ignoreExisting: true, // Add this to handle existing invitations/users
+      });
+      if (invitation) {
+        // Create a new invitation
+        response = await db.invitation.create({
+          data: {
+            email,
+            companyId,
+            role,
+            unitId,
+            jobeTilte,
+            clerkInvitationId: invitation.id,
+          },
+        });
+      }
+      console.log(`Clerk invitation sent successfully to ${email}`);
+    } catch (error) {
+      console.error("Clerk invitation error:", error);
+      throw error;
+    }
+  }
+
+  console.log(response);
+
+  return response;
+};
+
 export const getAuthUserDetails = async (userEmail: string) => {
   const userData = await db.user.findUnique({
     where: {
@@ -313,33 +381,67 @@ export const getAuthUserDetails = async (userEmail: string) => {
   });
   return userData;
 };
-export const initUser = async (newUser: Partial<User>) => {
+export const initUser = async () => {
   const user = await currentUser();
   if (!user) return;
 
-  const userData = await db.user.upsert({
-    where: {
-      email: user.emailAddresses[0].emailAddress,
-    },
-    update: newUser,
-    create: {
+  const userData = await db.user.create({
+    data: {
       id: user.id,
       avatarUrl: user.imageUrl,
       email: user.emailAddresses[0].emailAddress,
       name: `${user.firstName} ${user.lastName}`,
-      role: newUser.role || "USER",
-      jobeTitle: newUser.jobeTitle,
+      role: "OWNER",
+      jobeTitle: "",
     },
+  });
+
+  return userData;
+};
+export const updateUser = async (
+  userId: string,
+  updatedUser: Partial<User>
+) => {
+  const user = await currentUser();
+  if (!user) return;
+  if (user.privateMetadata.role !== "OWNER") return;
+  const response = await db.user.update({
+    where: { id: userId },
+    data: updatedUser,
   });
   try {
     // Await the clerkClient() function call first
     const clerk = await clerkClient();
-    await clerk.users.updateUserMetadata(user.id, {
+    await clerk.users.updateUserMetadata(userId, {
       privateMetadata: {
-        role: newUser.role || "USER",
+        role: updatedUser.role || "USER",
       },
     });
-    return userData;
+    if (response) {
+      await saveActivityLogsNotification({
+        companyId: response.companyId || undefined,
+        unitId: response.unitId || undefined,
+        description:
+          `${user.fullName}` + "a modifié   le client " + `${user.fullName}`,
+
+        type: "TEAM",
+      });
+    }
+    updateTag("company-settings");
+    return response;
+  } catch (error) {
+    console.error("Clerk metadata update error:", error);
+    throw error;
+  }
+};
+export const deleteUser = async (userId: string) => {
+  try {
+    // Await the clerkClient() function call first
+    const clerk = await clerkClient();
+    await clerk.users.deleteUser(userId);
+    const deletedUser = await db.user.delete({ where: { id: userId } });
+
+    return deletedUser;
   } catch (error) {
     console.error("Clerk metadata update error:", error);
     throw error;
@@ -406,7 +508,7 @@ export const upsertCompany = async (company: Company) => {
         },
       });
     }
-
+    updateTag("company-settings");
     return companyDetails;
   } catch (error) {
     console.log(error);
@@ -526,7 +628,7 @@ export const createOrUpdateSubscription = async (
         active: true,
       },
     });
-
+    updateTag("company-settings");
     return subscription;
   } catch (error) {
     console.log(error);
@@ -534,8 +636,8 @@ export const createOrUpdateSubscription = async (
   }
 };
 
-export const getUsersWithCompanyUnit = async (companyId: string) => {
-  return await db.user.findFirst({
+export const getCompanyUsersWithUnit = async (companyId: string) => {
+  return await db.user.findMany({
     where: {
       Company: {
         id: companyId,
@@ -543,8 +645,15 @@ export const getUsersWithCompanyUnit = async (companyId: string) => {
     },
     include: {
       Company: {
-        include: {
-          units: true,
+        select: {
+          name: true,
+          id: true,
+        },
+      },
+      Unit: {
+        select: {
+          name: true,
+          id: true,
         },
       },
     },
@@ -594,23 +703,7 @@ export const getUser = async (id: string) => {
 
   return user;
 };
-export const deleteUser = async (userId: string) => {
-  try {
-    // Await the clerkClient() function call first
-    const clerk = await clerkClient();
-    await clerk.users.updateUserMetadata(userId, {
-      privateMetadata: {
-        role: undefined,
-      },
-    });
-    const deletedUser = await db.user.delete({ where: { id: userId } });
 
-    return deletedUser;
-  } catch (error) {
-    console.error("Clerk metadata update error:", error);
-    throw error;
-  }
-};
 export const getCompanyUnits = async (companyId: string) => {
   const units = await db.unit.findMany({
     where: {
@@ -619,56 +712,6 @@ export const getCompanyUnits = async (companyId: string) => {
   });
 
   return units;
-};
-export const sendInvitation = async (
-  role: Role,
-  email: string,
-  companyId: string,
-  unitId: string,
-  jobeTilte: string
-) => {
-  // Check if an invitation already exists
-  const existingInvitation = await db.invitation.findUnique({
-    where: { email },
-  });
-
-  let response;
-  if (existingInvitation) {
-    // Update the existing invitation
-    response = await db.invitation.update({
-      where: { email },
-      data: { companyId, role, unitId, status: "PENDING", jobeTilte },
-    });
-  } else {
-    // Create a new invitation
-    response = await db.invitation.create({
-      data: { email, companyId, role, unitId, jobeTilte },
-    });
-  }
-
-  console.log(response);
-
-  try {
-    // Await the clerkClient() function call first
-    const clerk = await clerkClient();
-
-    await clerk.invitations.createInvitation({
-      emailAddress: email,
-      redirectUrl: process.env.NEXT_PUBLIC_URL || "",
-      publicMetadata: {
-        throughInvitation: true,
-        role,
-      },
-      ignoreExisting: true, // Add this to handle existing invitations/users
-    });
-
-    console.log(`Clerk invitation sent successfully to ${email}`);
-  } catch (error) {
-    console.error("Clerk invitation error:", error);
-    throw error;
-  }
-
-  return response;
 };
 
 // Récupérer tous les clients d'une unité

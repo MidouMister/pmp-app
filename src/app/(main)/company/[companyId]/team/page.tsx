@@ -7,8 +7,9 @@ import SendInvitation from "@/components/forms/send-invitation";
 import DataTable from "./data-table";
 import { columns } from "./columns";
 import TeamSkeleton from "./team-skeleton";
-import { getUsersWithCompanyUnit } from "@/lib/queries";
+import { getCompanyUsersWithUnit } from "@/lib/queries";
 import Unauthorized from "@/components/unauthorized";
+import { cacheLife, cacheTag } from "next/cache";
 
 const TeamPage = async ({
   params,
@@ -49,10 +50,9 @@ export default TeamPage;
 
 async function UserTable({ companyId }: { companyId: string }) {
   "use cache";
-
-  const teamMembers = await getUsersWithCompanyUnit(companyId);
-  const companyDetails = teamMembers?.Company;
-  if (!companyDetails) return null;
+  cacheLife("hours");
+  cacheTag("company-users");
+  const teamMembers = await getCompanyUsersWithUnit(companyId);
   return (
     <DataTable
       actionButtonText={
@@ -61,10 +61,10 @@ async function UserTable({ companyId }: { companyId: string }) {
           Ajouter
         </>
       }
-      modalChildren={<SendInvitation companyId={companyDetails.id} />}
+      modalChildren={<SendInvitation companyId={companyId} />}
       filterValue="name"
       columns={columns}
-      data={teamMembers ? [teamMembers] : []}
+      data={teamMembers || []}
     />
   );
 }

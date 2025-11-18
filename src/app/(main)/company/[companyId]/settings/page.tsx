@@ -1,26 +1,27 @@
-import {
-  getCompanySubscription,
-  createDefaultPlans,
-  getAuthUserDetails,
-} from "@/lib/queries";
-import { redirect } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
-import Unauthorized from "@/components/unauthorized";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CompanyDetails from "@/components/forms/company-details";
 import SubscriptionPlans from "@/components/forms/suscription-plan";
 import UserDetails from "@/components/forms/user-details";
+import TabsContentSkeleton from "@/components/skeletons/tabs-content-skeleton";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
-import CompanyDetails from "@/components/forms/company-details";
-import { Company } from "@prisma/client";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Unauthorized from "@/components/unauthorized";
+import {
+  createDefaultPlans,
+  getAuthUserDetails,
+  getCompanySubscription,
+} from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
+import { Company } from "@prisma/client";
+import { cacheLife, cacheTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import TabsContentSkeleton from "@/components/skeletons/tabs-content-skeleton";
 
 export default async function SettingsPage({
   params,
@@ -61,6 +62,8 @@ export default async function SettingsPage({
 }
 async function TabsContentComponent({ userEmail }: { userEmail: string }) {
   "use cache";
+  cacheLife("hours")
+  cacheTag("company-settings")
   const userData = await getAuthUserDetails(userEmail);
   const company = userData?.Company as Company;
   // Create default plans if they don't exist
