@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Client,
+  GanttMarker,
   Lane,
+  NotificationType,
   Phase,
   Prisma,
   Product,
@@ -11,8 +13,6 @@ import {
   Team,
   TeamMember,
   User,
-  NotificationType,
-  GanttMarker,
 } from "@prisma/client";
 import { db } from "./db";
 import {
@@ -84,8 +84,9 @@ export type RealtimeSubscriptionStatus =
 
 export type UsersWithCompanyUnit = Prisma.PromiseReturnType<
   typeof getCompanyUsersWithUnit
->;
-
+> extends (infer U)[]
+  ? U // Si c'est un tableau, extrait le type de l'élément (U)
+  : Prisma.PromiseReturnType<typeof getCompanyUsersWithUnit>;
 export type UserAuthDetails = Prisma.PromiseReturnType<
   typeof getAuthUserDetails
 >;

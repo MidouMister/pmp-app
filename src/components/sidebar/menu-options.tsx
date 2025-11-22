@@ -1,6 +1,23 @@
 "use client";
 import type { SidebarOption, UserAuthDetails } from "@/lib/types";
+import { useModal } from "@/providers/modal-provider";
+import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
 import type { Company, Unit } from "@prisma/client";
+import clsx from "clsx";
+import {
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Compass,
+  Crown,
+  Menu,
+  PlusCircleIcon,
+  User,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -8,37 +25,10 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "../ui/sheet";
-import { Button } from "../ui/button";
-import {
-  Building2,
-  ChevronsUpDown,
-  Compass,
-  Menu,
-  PlusCircleIcon,
-  ChevronLeft,
-  ChevronRight,
-  User,
-  Crown,
-  Dot,
-} from "lucide-react";
-import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
-import clsx from "clsx";
+import UnitDetails from "../forms/unite-details";
+import CustomModal from "../global/custom-model";
 import { AspectRatio } from "../ui/aspect-ratio";
-import Image from "next/image";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
 import {
   Command,
   CommandEmpty,
@@ -46,18 +36,27 @@ import {
   CommandItem,
   CommandList,
 } from "../ui/command";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useModal } from "@/providers/modal-provider";
-import CustomModal from "../global/custom-model";
-import UnitDetails from "../forms/unite-details";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 type Props = {
   defaultOpen?: boolean;
   units: Unit[];
   roleSidebarOptions: SidebarOption[];
   sidebarLogo: string;
-  details: Company;
+  details: Company | Unit;
   user: UserAuthDetails;
   id: string;
   isCollapsed?: boolean;
@@ -225,11 +224,16 @@ export const MenuOptions = ({
                             {user?.role === "OWNER" ? (
                               <div className="flex flex-col flex-1 min-w-0 text-left">
                                 <>
-                                  <span className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                                  <span className="text-[13px] font-semibold text-sidebar-foreground truncate leading-tight">
                                     {details.name}
                                   </span>
-                                  <span className="text-xs text-sidebar-foreground/60 truncate">
-                                    {details.companyAddress?.toLocaleLowerCase() ??
+                                  <span className="text-[11px] text-sidebar-foreground/60 truncate">
+                                    {(
+                                      details as Company
+                                    ).companyAddress?.toLocaleLowerCase() ??
+                                      (
+                                        details as Unit
+                                      ).address?.toLocaleLowerCase() ??
                                       ""}
                                   </span>
                                 </>
@@ -237,10 +241,10 @@ export const MenuOptions = ({
                             ) : (
                               <div className="flex flex-col flex-1 min-w-0 text-left">
                                 <>
-                                  <span className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
+                                  <span className="text-[13px] font-semibold text-sidebar-foreground truncate leading-tight">
                                     {user?.Unit?.name}
                                   </span>
-                                  <span className="text-xs text-sidebar-foreground/60 truncate">
+                                  <span className="text-[11px] text-sidebar-foreground/60 truncate">
                                     {user?.Unit?.address?.toLocaleLowerCase() ??
                                       ""}
                                   </span>
@@ -267,7 +271,8 @@ export const MenuOptions = ({
                         {details.name}
                       </p>
                       <p className="text-xs text-sidebar-foreground/60">
-                        {details.companyAddress}
+                        {(details as Company).companyAddress ??
+                          (details as Unit).address}
                       </p>
                       {user?.role !== "OWNER" && (
                         <p className="text-xs text-sidebar-foreground/50 mt-1 italic">
@@ -322,10 +327,10 @@ export const MenuOptions = ({
                               />
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-semibold text-sm truncate">
+                              <span className="font-semibold text-[13px] truncate">
                                 {user.Company.name}
                               </span>
-                              <span className="text-xs text-sidebar-foreground/60 truncate">
+                              <span className="text-[11px] text-sidebar-foreground/60 truncate">
                                 {user.Company.companyAddress}
                               </span>
                             </div>
@@ -355,10 +360,10 @@ export const MenuOptions = ({
                                 />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-semibold text-sm truncate">
+                                <span className="font-semibold text-[13px] truncate">
                                   {user.Company.name}
                                 </span>
-                                <span className="text-xs text-sidebar-foreground/60 truncate">
+                                <span className="text-[11px] text-sidebar-foreground/60 truncate">
                                   {user.Company.companyAddress}
                                 </span>
                               </div>
@@ -392,10 +397,10 @@ export const MenuOptions = ({
                                 <Building2 className="h-5 w-5 text-sidebar-foreground/70" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="font-semibold text-sm truncate">
+                                <span className="font-semibold text-[13px] truncate">
                                   {unit.name}
                                 </span>
-                                <span className="text-xs text-sidebar-foreground/60 truncate">
+                                <span className="text-[11px] text-sidebar-foreground/60 truncate">
                                   {unit.address}
                                 </span>
                               </div>
@@ -420,10 +425,10 @@ export const MenuOptions = ({
                                   <Building2 className="h-5 w-5 text-sidebar-foreground/70" />
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                  <span className="font-semibold text-sm truncate">
+                                  <span className="font-semibold text-[13px] truncate">
                                     {unit.name}
                                   </span>
-                                  <span className="text-xs text-sidebar-foreground/60 truncate">
+                                  <span className="text-[11px] text-sidebar-foreground/60 truncate">
                                     {unit.address}
                                   </span>
                                 </div>
@@ -490,23 +495,23 @@ export const MenuOptions = ({
                     key={option.id}
                     href={option.link}
                     className={clsx(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-sm font-medium relative overflow-hidden",
+                      "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group text-[13px] font-medium relative overflow-hidden",
                       {
-                        "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/80 text-sidebar-accent-foreground shadow-sm border border-sidebar-accent-foreground/10":
+                        "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm":
                           isActive(option.link),
-                        "hover:bg-sidebar-accent/30 text-sidebar-foreground/80 hover:text-sidebar-foreground":
+                        "hover:bg-sidebar-accent/40 text-sidebar-foreground/70 hover:text-sidebar-foreground":
                           !isActive(option.link),
                       }
                     )}
                   >
                     <div
                       className={clsx(
-                        "transition-colors duration-200 relative z-10",
+                        "transition-colors duration-200 relative z-10 [&_svg]:size-4.5",
                         {
                           "text-sidebar-accent-foreground": isActive(
                             option.link
                           ),
-                          "text-sidebar-foreground/70 group-hover:text-sidebar-foreground":
+                          "text-sidebar-foreground/60 group-hover:text-sidebar-foreground":
                             !isActive(option.link),
                         }
                       )}
@@ -516,7 +521,7 @@ export const MenuOptions = ({
                     <span className="relative z-10">{option.name}</span>
                     {isActive(option.link) && (
                       <div className="ml-auto relative z-10">
-                        <Dot className="h-4 w-4 text-sidebar-accent-foreground animate-pulse" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-sidebar-primary animate-pulse" />
                       </div>
                     )}
                   </Link>
@@ -533,19 +538,18 @@ export const MenuOptions = ({
                             variant="ghost"
                             size="sm"
                             className={clsx(
-                              "w-12 h-12 relative transition-all duration-200 p-0 rounded-xl",
+                              "w-10 h-10 relative transition-all duration-200 p-0 rounded-lg [&_svg]:size-5",
                               {
-                                "bg-gradient-to-br from-sidebar-accent to-sidebar-accent/80 text-sidebar-accent-foreground shadow-sm border border-sidebar-accent-foreground/10":
+                                "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm":
                                   isActive(option.link),
-                                "hover:bg-sidebar-accent/30": !isActive(
-                                  option.link
-                                ),
+                                "hover:bg-sidebar-accent/40 text-sidebar-foreground/70 hover:text-sidebar-foreground":
+                                  !isActive(option.link),
                               }
                             )}
                           >
                             {option.icon}
                             {isActive(option.link) && (
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-sidebar-primary text-sidebar-accent-foreground rounded-full border-2 border-sidebar animate-pulse" />
+                              <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-pulse" />
                             )}
                           </Button>
                         </Link>
@@ -632,11 +636,11 @@ export const MenuOptions = ({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                  <p className="text-[13px] font-semibold text-sidebar-foreground truncate">
                     {user?.name || "Utilisateur"}
                   </p>
                 </div>
-                <p className="text-xs text-sidebar-foreground/60 truncate">
+                <p className="text-[11px] text-sidebar-foreground/60 truncate">
                   {user?.role === "OWNER"
                     ? "Propriétaire"
                     : user?.role || "Utilisateur"}

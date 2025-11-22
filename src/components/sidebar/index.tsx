@@ -1,5 +1,5 @@
 import { SidebarOption, UserAuthDetails } from "@/lib/types";
-import { Company } from "@prisma/client";
+import { Company, Unit } from "@prisma/client";
 import {
   Boxes,
   ClipboardIcon,
@@ -158,7 +158,7 @@ const Sidebar = ({ id, type, user }: Props) => {
         units={units}
         roleSidebarOptions={sideBarOpt}
         sidebarLogo={sideBarLogo}
-        details={details as Company}
+        details={details as Company | Unit}
         user={user}
         id={id}
       />

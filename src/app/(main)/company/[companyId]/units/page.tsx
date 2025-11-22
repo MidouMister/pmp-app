@@ -1,10 +1,11 @@
-import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
+import { Suspense } from "react";
 
-import { getAuthUserDetails, getCompanyUnits } from "@/lib/queries";
-import Unauthorized from "@/components/unauthorized";
-import UnitsCompany from "./units-company";
 import UnitCompanySkeleton from "@/components/skeletons/unit-company-skeleton";
+import Unauthorized from "@/components/unauthorized";
+import { getAuthUserDetails, getCompanyUnits } from "@/lib/queries";
+import { cacheLife, cacheTag } from "next/cache";
+import UnitsCompany from "./units-company";
 
 export default async function UnitsPage({
   params,
@@ -36,6 +37,9 @@ async function CompanyUnits({
   companyId: string;
 }) {
   "use cache";
+  cacheLife("hours");
+  cacheTag("company-units");
+
   const user = await getAuthUserDetails(userEmail);
   if (!user) return null;
   const units = await getCompanyUnits(companyId);

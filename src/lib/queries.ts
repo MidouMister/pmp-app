@@ -21,7 +21,7 @@ import { updateProductTaux, validateProductionTaux } from "./utils";
 const avatarUrl = "https://cdn-icons-png.flaticon.com/512/3607/3607444.png";
 
 import { NotificationType } from "@prisma/client";
-import { updateTag } from "next/cache";
+import { cacheTag, updateTag } from "next/cache";
 
 // Enhanced queries for better realtime support
 
@@ -231,15 +231,23 @@ export const getNotificationWithUser = async (notificationId: string) => {
     return null;
   }
 };
-
+export const checkInvitationStatus = async (email: string) => {
+  return await db.invitation.findUnique({
+    where: { email, status: "PENDING" },
+  });
+};
 export const AddUser = async (
   companyId: string,
 
   user: User
 ) => {
   if (user.role === "OWNER") return null;
-  const response = await db.user.create({ data: { ...user } });
-
+  const response = await db.user.upsert({
+    where: { id: user.id },
+    update: { ...user },
+    create: { ...user },
+  });
+  // const response = await db.user.create({ data: { ...user } });
   return response;
 };
 export const verifyAndAcceptInvitation = async (
@@ -292,6 +300,7 @@ export const verifyAndAcceptInvitation = async (
           deletedInvitation.clerkInvitationId
         );
       }
+
       return userDetails.companyId;
     } else return null;
   } else {
@@ -428,6 +437,8 @@ export const updateUser = async (
       });
     }
     updateTag("company-settings");
+    updateTag(`company-users-${response.companyId}`);
+
     return response;
   } catch (error) {
     console.error("Clerk metadata update error:", error);
@@ -440,7 +451,7 @@ export const deleteUser = async (userId: string) => {
     const clerk = await clerkClient();
     await clerk.users.deleteUser(userId);
     const deletedUser = await db.user.delete({ where: { id: userId } });
-
+    updateTag(`company-users-${deletedUser.companyId}`);
     return deletedUser;
   } catch (error) {
     console.error("Clerk metadata update error:", error);
@@ -516,6 +527,8 @@ export const upsertCompany = async (company: Company) => {
 };
 
 export const getCompanySubscription = async (companyId: string) => {
+  "use cache";
+  cacheTag(`company-subscription-${companyId}`);
   try {
     const subscription = await db.subscription.findUnique({
       where: {
@@ -533,6 +546,8 @@ export const getCompanySubscription = async (companyId: string) => {
 };
 
 export const getPlans = async () => {
+  "use cache";
+  cacheTag("plans");
   try {
     const plans = await db.plan.findMany();
     return plans;
@@ -629,6 +644,7 @@ export const createOrUpdateSubscription = async (
       },
     });
     updateTag("company-settings");
+    updateTag(`company-subscription-${companyId}`);
     return subscription;
   } catch (error) {
     console.log(error);
@@ -637,6 +653,8 @@ export const createOrUpdateSubscription = async (
 };
 
 export const getCompanyUsersWithUnit = async (companyId: string) => {
+  "use cache";
+  cacheTag(`company-users-${companyId}`);
   return await db.user.findMany({
     where: {
       Company: {
@@ -661,6 +679,8 @@ export const getCompanyUsersWithUnit = async (companyId: string) => {
 };
 
 export const getUnitDetails = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-${unitId}`);
   const response = await db.unit.findUnique({
     where: { id: unitId },
   });
@@ -686,12 +706,20 @@ export const upsertUnit = async (unit: Unit) => {
       ...unit,
     },
   });
+  updateTag("company-units");
+  updateTag(`company-units-${unit.companyId}`);
+  updateTag(`unit-${unit.id}`);
   return response;
 };
 export const deleteUnit = async (unitId: string) => {
   const response = await db.unit.delete({
     where: { id: unitId },
   });
+  updateTag("company-units");
+  if (response) {
+    updateTag(`company-units-${response.companyId}`);
+    updateTag(`unit-${unitId}`);
+  }
   return response;
 };
 export const getUser = async (id: string) => {
@@ -705,6 +733,8 @@ export const getUser = async (id: string) => {
 };
 
 export const getCompanyUnits = async (companyId: string) => {
+  "use cache";
+  cacheTag(`company-units-${companyId}`);
   const units = await db.unit.findMany({
     where: {
       companyId,
@@ -716,6 +746,8 @@ export const getCompanyUnits = async (companyId: string) => {
 
 // Récupérer tous les clients d'une unité
 export const getUnitClients = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-clients-${unitId}`);
   try {
     const clients = await db.client.findMany({
       where: {
@@ -734,6 +766,8 @@ export const getUnitClients = async (unitId: string) => {
 
 // Récupérer un client par son ID
 export const getClientById = async (clientId: string) => {
+  "use cache";
+  cacheTag(`client-${clientId}`);
   try {
     const client = await db.client.findUnique({
       where: {
@@ -806,6 +840,9 @@ export const upsertClient = async (client: Client) => {
       type: "CLIENT",
     });
 
+    updateTag(`unit-clients-${client.unitId}`);
+    updateTag(`client-${client.id}`);
+
     return response;
   } catch (error) {
     console.log(error);
@@ -842,6 +879,9 @@ export const deleteClient = async (clientId: string, unitId: string) => {
       type: "CLIENT",
     });
 
+    updateTag(`unit-clients-${unitId}`);
+    updateTag(`client-${clientId}`);
+
     return client;
   } catch (error) {
     console.log(error);
@@ -851,6 +891,8 @@ export const deleteClient = async (clientId: string, unitId: string) => {
 
 // Récupérer tous les projets d'une unité
 export const getUnitProjects = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-projects-${unitId}`);
   try {
     const projects = await db.project.findMany({
       where: {
@@ -873,6 +915,8 @@ export const getUnitProjects = async (unitId: string) => {
 
 // Récupérer les projets d'une unité avec leurs phases pour le filtre du DataTable
 export const getProjectsByUnitId = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-projects-list-${unitId}`);
   try {
     const projects = await db.project.findMany({
       where: {
@@ -897,6 +941,8 @@ export const getProjectsByUnitId = async (unitId: string) => {
 
 // Récupérer un projet par son ID
 export const getProjectById = async (projectId: string) => {
+  "use cache";
+  cacheTag(`project-${projectId}`);
   try {
     const project = await db.project.findUnique({
       where: {
@@ -983,6 +1029,11 @@ export const upsertProject = async (project: Project) => {
       type: "PROJECT",
     });
 
+    updateTag(`unit-projects-${project.unitId}`);
+    updateTag(`unit-projects-list-${project.unitId}`);
+    updateTag(`project-${project.id}`);
+    updateTag(`project-details-${project.id}`);
+
     return response;
   } catch (error) {
     console.log(error);
@@ -1005,6 +1056,11 @@ export const deleteProject = async (projectId: string, unitId: string) => {
       type: "PROJECT",
     });
 
+    updateTag(`unit-projects-${unitId}`);
+    updateTag(`unit-projects-list-${unitId}`);
+    updateTag(`project-${projectId}`);
+    updateTag(`project-details-${projectId}`);
+
     return project;
   } catch (error) {
     console.log(error);
@@ -1013,6 +1069,8 @@ export const deleteProject = async (projectId: string, unitId: string) => {
 };
 // Récupérer les détails d'un projet
 export const getProjectDetails = async (projectId: string) => {
+  "use cache";
+  cacheTag(`project-details-${projectId}`);
   return await db.project.findUnique({
     where: {
       id: projectId,
@@ -1094,6 +1152,9 @@ export const upsertPhase = async (phase: Phase) => {
       });
     }
 
+    updateTag(`project-details-${phase.projectId}`);
+    updateTag(`phase-${phase.id}`);
+
     return response;
   } catch (error) {
     console.log(error);
@@ -1102,6 +1163,8 @@ export const upsertPhase = async (phase: Phase) => {
 };
 // Récupérer une phase par ID
 export const getPhaseById = async (phaseId: string) => {
+  "use cache";
+  cacheTag(`phase-${phaseId}`);
   try {
     if (!phaseId) {
       throw new Error("ID de la phase requis");
@@ -1149,6 +1212,8 @@ export const onMovePhase = async (
         description: `a modifié la periode de la phase ${response.name} du projet`,
         type: "PHASE",
       });
+      updateTag(`project-details-${response.projectId}`);
+      updateTag(`phase-${id}`);
     }
     return response;
   } catch (error) {
@@ -1185,6 +1250,9 @@ export const deletePhase = async (phaseId: string) => {
       type: "PHASE",
     });
 
+    updateTag(`project-details-${phase.projectId}`);
+    updateTag(`phase-${phaseId}`);
+
     return response;
   } catch (error) {
     console.log(error);
@@ -1193,6 +1261,8 @@ export const deletePhase = async (phaseId: string) => {
 };
 // Gantt Marker CRUD Operations
 export const getGanttMarkers = async (projectId: string) => {
+  "use cache";
+  cacheTag(`project-gantt-${projectId}`);
   try {
     const response = await db.ganttMarker.findMany({
       where: { projectId },
@@ -1228,6 +1298,8 @@ export const createGanttMarker = async (data: {
       description: `nouveau marqueur pour le projet ${response.Project.name}`,
       type: "PROJECT",
     });
+    updateTag(`project-gantt-${data.projectId}`);
+    updateTag(`project-details-${data.projectId}`);
   } catch (error) {
     console.error("Error creating gantt marker:", error);
     throw new Error("Failed to create gantt marker");
@@ -1258,6 +1330,8 @@ export const updateGanttMarker = async (
       description: `marqueur ${response.label} est moddifier pour le projet ${response.Project.name} `,
       type: "PROJECT",
     });
+    updateTag(`project-gantt-${response.projectId}`);
+    updateTag(`project-details-${response.projectId}`);
     return response;
   } catch (error) {
     console.error("Error updating gantt marker:", error);
@@ -1267,9 +1341,12 @@ export const updateGanttMarker = async (
 
 export const deleteGanttMarker = async (markerId: string) => {
   try {
-    return await db.ganttMarker.delete({
+    const response = await db.ganttMarker.delete({
       where: { id: markerId },
     });
+    updateTag(`project-gantt-${response.projectId}`);
+    updateTag(`project-details-${response.projectId}`);
+    return response;
   } catch (error) {
     console.error("Error deleting gantt marker:", error);
     throw new Error("Failed to delete gantt marker");
@@ -1314,6 +1391,8 @@ export const createTeamForProject = async (projectId: string) => {
         type: "TEAM",
       });
     }
+
+    updateTag(`project-details-${projectId}`);
 
     return team;
   } catch (error) {
@@ -1379,6 +1458,8 @@ export const addTeamMember = async (
       type: "TEAM",
     });
 
+    updateTag(`project-details-${teamMember.team.projectId}`);
+
     return teamMember;
   } catch (error) {
     console.log(error);
@@ -1427,6 +1508,8 @@ export const updateTeamMember = async (teamMemberId: string, role: string) => {
       type: "TEAM",
     });
 
+    updateTag(`project-details-${existingMember.team.projectId}`);
+
     return teamMember;
   } catch (error) {
     console.log(error);
@@ -1472,6 +1555,8 @@ export const removeTeamMember = async (teamMemberId: string) => {
       type: "TEAM",
     });
 
+    updateTag(`project-details-${teamMember.team.projectId}`);
+
     return teamMember;
   } catch (error) {
     console.log(error);
@@ -1481,6 +1566,8 @@ export const removeTeamMember = async (teamMemberId: string) => {
 
 // Récupérer les utilisateurs disponibles pour une unité (pour ajouter à l'équipe)
 export const getUnitUsers = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-users-${unitId}`);
   try {
     const users = await db.user.findMany({
       where: {
@@ -1499,6 +1586,9 @@ export const getUnitUsers = async (unitId: string) => {
 
 // Récupérer un produit par ID ou par phaseId
 export const getProductById = async (id?: string, phaseId?: string) => {
+  "use cache";
+  if (id) cacheTag(`product-${id}`);
+  if (phaseId) cacheTag(`phase-product-${phaseId}`);
   try {
     if (!id && !phaseId) {
       throw new Error("ID du produit ou ID de la phase requis");
@@ -1576,6 +1666,9 @@ export const createProduct = async (phaseId: string) => {
       },
     });
 
+    updateTag(`phase-product-${phaseId}`);
+    updateTag(`project-details-${phase.projectId}`);
+
     return product;
   } catch (error) {
     console.error("Erreur lors de la création du produit:", error);
@@ -1593,6 +1686,15 @@ export const deleteProduct = async (id: string) => {
     // Vérifier si le produit existe
     const product = await db.product.findUnique({
       where: { id },
+      include: {
+        Phase: {
+          include: {
+            Project: {
+              select: { id: true },
+            },
+          },
+        },
+      },
     });
 
     if (!product) {
@@ -1604,6 +1706,9 @@ export const deleteProduct = async (id: string) => {
       where: { id },
     });
 
+    updateTag(`phase-product-${product.phaseId}`);
+    updateTag(`project-details-${product.Phase.Project.id}`);
+
     return { success: true };
   } catch (error) {
     console.error("Erreur lors de la suppression du produit:", error);
@@ -1613,6 +1718,8 @@ export const deleteProduct = async (id: string) => {
 
 // Récupérer toutes les productions d'un produit
 export const getProductionsByProductId = async (productId: string) => {
+  "use cache";
+  cacheTag(`productions-${productId}`);
   try {
     if (!productId) {
       throw new Error("ID du produit requis");
@@ -1660,6 +1767,9 @@ export const createProduction = async (
     // Mettre à jour le taux total du produit
     await updateProductTaux(productId);
 
+    updateTag(`productions-${productId}`);
+    updateTag(`product-${productId}`);
+
     return production;
   } catch (error) {
     console.error("Erreur lors de la création de la production:", error);
@@ -1698,6 +1808,9 @@ export const updateProduction = async (
     // Mettre à jour le taux total du produit
     await updateProductTaux(productId);
 
+    updateTag(`productions-${productId}`);
+    updateTag(`product-${productId}`);
+
     return production;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de la production:", error);
@@ -1707,6 +1820,8 @@ export const updateProduction = async (
 
 // Récupérer toutes les productions d'une unité avec détails
 export const getUnitProductionsWithDetails = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-productions-${unitId}`);
   try {
     if (!unitId) {
       throw new Error("ID de l'unité requis");
@@ -1789,6 +1904,9 @@ export const deleteProduction = async (id: string) => {
     // Mettre à jour le taux total du produit
     await updateProductTaux(productId);
 
+    updateTag(`productions-${productId}`);
+    updateTag(`product-${productId}`);
+
     return { success: true };
   } catch (error) {
     console.error("Erreur lors de la suppression de la production:", error);
@@ -1796,6 +1914,8 @@ export const deleteProduction = async (id: string) => {
   }
 };
 export const getTasksWithTags = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-tasks-${unitId}`);
   const response = await db.task.findMany({
     where: {
       Lane: {
@@ -1819,10 +1939,12 @@ export const upsertTag = async (
     update: tag,
     create: { ...tag, unitId: unitId },
   });
-
+  updateTag(`unit-tags-${unitId}`);
   return response;
 };
 export const getTagsForUnit = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-tags-${unitId}`);
   const response = await db.unit.findUnique({
     where: { id: unitId },
     select: { Tag: true },
@@ -1831,6 +1953,7 @@ export const getTagsForUnit = async (unitId: string) => {
 };
 export const deleteTag = async (tagId: string) => {
   const response = await db.tag.delete({ where: { id: tagId } });
+  updateTag(`unit-tags-${response.unitId}`);
   return response;
 };
 export const upsertTask = async (
@@ -1860,6 +1983,11 @@ export const upsertTask = async (
     },
   });
 
+  if (response.Lane) {
+    updateTag(`unit-tasks-${response.Lane.unitId}`);
+    updateTag(`unit-lanes-${response.Lane.unitId}`);
+  }
+
   return response;
 };
 export const deleteTask = async (taskId: string) => {
@@ -1867,11 +1995,21 @@ export const deleteTask = async (taskId: string) => {
     where: {
       id: taskId,
     },
+    include: {
+      Lane: true,
+    },
   });
+
+  if (response.Lane) {
+    updateTag(`unit-tasks-${response.Lane.unitId}`);
+    updateTag(`unit-lanes-${response.Lane.unitId}`);
+  }
 
   return response;
 };
 export const getLanesWithTaskAndTags = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-lanes-${unitId}`);
   const response = await db.lane.findMany({
     where: {
       unitId,
@@ -1912,10 +2050,13 @@ export const upsertLane = async (lane: Prisma.LaneUncheckedCreateInput) => {
     create: { ...lane, order },
   });
 
+  updateTag(`unit-lanes-${response.unitId}`);
+
   return response;
 };
 export const deleteLane = async (laneId: string) => {
   const resposne = await db.lane.delete({ where: { id: laneId } });
+  updateTag(`unit-lanes-${resposne.unitId}`);
   return resposne;
 };
 export const updateTaskOrder = async (tasks: Task[]) => {
@@ -1933,6 +2074,18 @@ export const updateTaskOrder = async (tasks: Task[]) => {
     );
 
     await db.$transaction(updateTrans);
+
+    if (tasks.length > 0) {
+      const task = await db.task.findUnique({
+        where: { id: tasks[0].id },
+        include: { Lane: true },
+      });
+      if (task?.Lane?.unitId) {
+        updateTag(`unit-lanes-${task.Lane.unitId}`);
+        updateTag(`unit-tasks-${task.Lane.unitId}`);
+      }
+    }
+
     console.log("🟢 Task Done reordered 🟢");
   } catch (error) {
     console.log(error, "🔴 ERROR UPDATE TASK ORDER");
@@ -1952,6 +2105,16 @@ export const updateLanesOrder = async (lanes: Lane[]) => {
     );
 
     await db.$transaction(updateTrans);
+
+    if (lanes.length > 0) {
+      const lane = await db.lane.findUnique({
+        where: { id: lanes[0].id },
+      });
+      if (lane?.unitId) {
+        updateTag(`unit-lanes-${lane.unitId}`);
+      }
+    }
+
     console.log("🟢 Done reordered 🟢");
   } catch (error) {
     console.log(error, "ERROR UPDATE LANES ORDER");

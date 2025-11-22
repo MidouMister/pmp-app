@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { updateTag } from "next/cache";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -135,6 +136,8 @@ export const updateProductTaux = async (productId: string) => {
         montantProd: montantTotal,
       },
     });
+
+    updateTag(`product-${productId}`);
 
     return updatedProduct;
   } catch (error) {

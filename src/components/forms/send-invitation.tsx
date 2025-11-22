@@ -1,6 +1,7 @@
 "use client";
-import type React from "react";
-import { z } from "zod";
+import Loading from "@/components/global/loading";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,8 +17,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -26,29 +25,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import Loading from "@/components/global/loading";
 import {
   getCompanyUnits,
   saveActivityLogsNotification,
   sendInvitation,
 } from "@/lib/queries";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-import { useState, useEffect } from "react";
+import { useModal } from "@/providers/modal-provider";
 import type { Unit } from "@prisma/client";
-import { toast } from "sonner";
 import {
-  Mail,
-  User,
   Briefcase,
   Building2,
+  Mail,
   Send,
   Shield,
+  User,
   UserCheck,
 } from "lucide-react";
-import { useModal } from "@/providers/modal-provider";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface SendInvitationProps {
   companyId: string;
@@ -111,15 +111,18 @@ const SendInvitation: React.FC<SendInvitationProps> = ({
         unitId || values.unitId,
         values.jobTitle
       );
-      await saveActivityLogsNotification({
-        companyId: companyId,
-        description: `Invited ${res.email}`,
-        unitId: unitId || values.unitId,
-        type: "INVITATION",
-      });
-      toast.success("Invitation envoyée avec succès !");
-      form.reset();
-      setClose();
+      if (res) {
+        await saveActivityLogsNotification({
+          companyId: companyId,
+          description: `Invited ${res.email}`,
+          unitId: unitId || values.unitId,
+          type: "INVITATION",
+        });
+
+        toast.success("Invitation envoyée avec succès !");
+        form.reset();
+        setClose();
+      }
     } catch (error) {
       console.error("Failed to send invitation:", error);
       toast.error("Échec de l'envoi de l'invitation. Veuillez réessayer.");

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Table,
   TableBody,
@@ -16,12 +15,13 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import React from "react";
 
+import CustomModal from "@/components/global/custom-model";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useModal } from "@/providers/modal-provider";
 import { Plus, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import CustomModal from "@/components/global/custom-model";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

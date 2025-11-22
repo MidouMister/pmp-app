@@ -1,15 +1,15 @@
-import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
+import { Suspense } from "react";
 
 import { Plus } from "lucide-react";
 
 import SendInvitation from "@/components/forms/send-invitation";
-import DataTable from "./data-table";
-import { columns } from "./columns";
-import TeamSkeleton from "./team-skeleton";
-import { getCompanyUsersWithUnit } from "@/lib/queries";
 import Unauthorized from "@/components/unauthorized";
+import { getCompanyUsersWithUnit } from "@/lib/queries";
 import { cacheLife, cacheTag } from "next/cache";
+import { columns } from "./columns";
+import DataTable from "./data-table";
+import TeamSkeleton from "./team-skeleton";
 
 const TeamPage = async ({
   params,
@@ -51,7 +51,7 @@ export default TeamPage;
 async function UserTable({ companyId }: { companyId: string }) {
   "use cache";
   cacheLife("hours");
-  cacheTag("company-users");
+  cacheTag(`company-users-${companyId}`);
   const teamMembers = await getCompanyUsersWithUnit(companyId);
   return (
     <DataTable

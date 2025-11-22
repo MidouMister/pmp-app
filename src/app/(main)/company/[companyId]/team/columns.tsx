@@ -1,19 +1,10 @@
 "use client";
 
-import clsx from "clsx";
-import { ColumnDef } from "@tanstack/react-table";
 import { Role } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
+import clsx from "clsx";
 import Image from "next/image";
 
-import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,18 +16,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useModal } from "@/providers/modal-provider";
+import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { UsersWithCompanyUnit } from "@/lib/types";
-import { deleteUser, getUser } from "@/lib/queries";
-import { toast } from "sonner";
-import CustomModal from "@/components/global/custom-model";
 import UserDetails from "@/components/forms/user-details";
+import CustomModal from "@/components/global/custom-model";
+import { deleteUser, getUser } from "@/lib/queries";
+import { UsersWithCompanyUnit } from "@/lib/types";
+import { toast } from "sonner";
 
 export const columns: ColumnDef<UsersWithCompanyUnit>[] = [
   {

@@ -1,9 +1,17 @@
 "use client";
 
-import { User, Role } from "@prisma/client";
+import { updateUser } from "@/lib/queries";
+import { useModal } from "@/providers/modal-provider";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Role, User } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
+import FileUpload from "../global/file-upload";
+import Loading from "../global/loading";
+import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import {
   Form,
@@ -13,6 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
@@ -20,15 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { updateUser } from "@/lib/queries";
-import Loading from "../global/loading";
-import FileUpload from "../global/file-upload";
-import { useModal } from "@/providers/modal-provider";
 
 type Props = {
   data?: Partial<User> | null;

@@ -1,16 +1,14 @@
-import { db } from "@/lib/db";
-
-import { Plus } from "lucide-react";
 import SendInvitation from "@/components/forms/send-invitation";
+import { Plus } from "lucide-react";
 
-import DataTable from "./data-table";
-import { columns } from "./columns";
-import { Suspense } from "react";
 import TeamSkeleton from "@/app/(main)/company/[companyId]/team/team-skeleton";
+import Unauthorized from "@/components/unauthorized";
+import { getAuthUserDetails, getUnitUsers } from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getAuthUserDetails } from "@/lib/queries";
-import Unauthorized from "@/components/unauthorized";
+import { Suspense } from "react";
+import { columns } from "./columns";
+import DataTable from "./data-table";
 
 const UnitUsersPage = async ({
   params,
@@ -52,7 +50,6 @@ async function UnitTeamData({
   unitId: string;
   userEmail: string;
 }) {
-  "use cache";
   const authUser = await getAuthUserDetails(userEmail);
   if (!authUser) {
     redirect("/sign-in");
@@ -64,11 +61,7 @@ async function UnitTeamData({
   if (!companyId) {
     redirect("/company");
   }
-  const unitUsers = await db.user.findMany({
-    where: {
-      unitId,
-    },
-  });
+  const unitUsers = await getUnitUsers(unitId);
 
   return (
     <DataTable
