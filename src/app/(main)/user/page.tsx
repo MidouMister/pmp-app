@@ -10,7 +10,12 @@ const Page = async () => {
   if (!user) return redirect("/sign-in");
   if (user.privateMetadata.role !== "USER  ") return <Unauthorized />;
 
-  const companyId = await verifyAndAcceptInvitation();
+  const companyId = await verifyAndAcceptInvitation(
+    user.id,
+    user.emailAddresses[0].emailAddress,
+    `${user.firstName} ${user.lastName}`,
+    user.imageUrl
+  );
   if (!companyId) return null;
   return (
     <Suspense

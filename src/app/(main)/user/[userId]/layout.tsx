@@ -9,11 +9,11 @@ import {
   verifyAndAcceptInvitation,
 } from "@/lib/queries";
 import { NotificationWithUser } from "@/lib/types";
+import { NotificationProvider } from "@/providers/notification-provider";
 import { currentUser } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import React from "react";
-import { NotificationProvider } from "@/providers/notification-provider";
 
 type Props = {
   children: React.ReactNode;
@@ -22,13 +22,20 @@ type Props = {
 
 const UserLayout = async ({ children, params }: Props) => {
   const { userId } = await params;
-  const companyId = await verifyAndAcceptInvitation();
-  if (!companyId) {
-    return <Unauthorized />;
-  }
   const user = await currentUser();
   if (!user) {
     return redirect("/");
+  }
+
+  const companyId = await verifyAndAcceptInvitation(
+    user.id,
+    user.emailAddresses[0].emailAddress,
+    `${user.firstName} ${user.lastName}`,
+    user.imageUrl
+  );
+
+  if (!companyId) {
+    return <Unauthorized />;
   }
 
   // Get user data including their unit
