@@ -41,6 +41,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
@@ -162,6 +163,9 @@ export const MenuOptions = ({
         )}
 
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+        <SheetDescription className="sr-only">
+          Menu de navigation principal
+        </SheetDescription>
 
         {/* Modern Header */}
         <div
@@ -180,6 +184,7 @@ export const MenuOptions = ({
                   src={sidebarLogo || "/placeholder.svg"}
                   alt="Logo"
                   fill
+                  sizes="(max-width: 768px) 100vw, 20vw"
                   className="object-contain p-1 rounded-lg filter drop-shadow-sm"
                 />
               </div>
@@ -323,6 +328,7 @@ export const MenuOptions = ({
                                 src={user.Company.logo || "/placeholder.svg"}
                                 alt={`${user.Company.name} Logo`}
                                 fill
+                                sizes="40px"
                                 className="object-contain p-1"
                               />
                             </div>
@@ -356,6 +362,7 @@ export const MenuOptions = ({
                                   src={user.Company.logo || "/placeholder.svg"}
                                   alt={`${user.Company.name} Logo`}
                                   fill
+                                  sizes="40px"
                                   className="object-contain p-1"
                                 />
                               </div>

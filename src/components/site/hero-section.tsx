@@ -1,13 +1,13 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { TextEffect } from "@/components/motion-primitives/text-effect";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 import { HeroHeader } from "@/components/site/hero5-header";
-import { TextShimmerWave } from "../motion-primitives/text-shimmer-wave";
-import { AnimatedGroup } from "../motion-primitives/animated-group";
 import LightRays from "../LightRays";
+import { AnimatedGroup } from "../motion-primitives/animated-group";
+import { TextShimmerWave } from "../motion-primitives/text-shimmer-wave";
 
 const transitionVariants = {
   item: {
@@ -24,6 +24,9 @@ const transitionVariants = {
         type: "spring",
         bounce: 0.3,
         duration: 1.5,
+        filter: {
+          bounce: 0,
+        },
       },
     },
   },

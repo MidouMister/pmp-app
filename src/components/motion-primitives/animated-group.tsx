@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { ReactNode } from "react";
 import { motion, Variants } from "motion/react";
-import React from "react";
+import React, { ReactNode } from "react";
 
 export type PresetType =
   | "fade"
@@ -52,12 +51,19 @@ const presetVariants: Record<PresetType, Variants> = {
     visible: { scale: 1 },
   },
   blur: {
-    hidden: { filter: "blur(4px)" },
-    visible: { filter: "blur(0px)" },
+    hidden: { filter: "blur(5px)" },
+    visible: {
+      filter: "blur(0px)",
+      transition: { type: "spring", bounce: 0 },
+    },
   },
   "blur-slide": {
-    hidden: { filter: "blur(4px)", y: 20 },
-    visible: { filter: "blur(0px)", y: 0 },
+    hidden: { filter: "blur(5px)", y: 20 },
+    visible: {
+      filter: "blur(0px)",
+      y: 0,
+      transition: { type: "spring", bounce: 0 },
+    },
   },
   zoom: {
     hidden: { scale: 0.5 },
