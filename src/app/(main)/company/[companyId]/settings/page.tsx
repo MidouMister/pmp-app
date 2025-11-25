@@ -43,17 +43,15 @@ export default async function SettingsPage({
   }
   const emailAddress = user.emailAddresses[0].emailAddress;
   return (
-    <div className="min-h-screen bg-background ">
-      <div className="container mx-auto py-6 ">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Paramètres</h1>
-          <p className="text-muted-foreground">
-            Gérez les informations de votre entreprise et votre profil
-            utilisateur.
-          </p>
-        </div>
-        <Separator className="my-6" />
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Paramètres</h1>
+        <p className="text-muted-foreground">
+          Gérez les informations de votre entreprise et votre profil
+          utilisateur.
+        </p>
       </div>
+      <Separator className="my-2" />
       <Suspense fallback={<TabsContentSkeleton />}>
         <TabsContentComponent userEmail={emailAddress} />
       </Suspense>
@@ -62,8 +60,8 @@ export default async function SettingsPage({
 }
 async function TabsContentComponent({ userEmail }: { userEmail: string }) {
   "use cache";
-  cacheLife("hours")
-  cacheTag("company-settings")
+  cacheLife("hours");
+  cacheTag("company-settings");
   const userData = await getAuthUserDetails(userEmail);
   const company = userData?.Company as Company;
   // Create default plans if they don't exist

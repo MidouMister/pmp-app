@@ -13,6 +13,7 @@ import { NotificationWithUser } from "@/lib/types";
 import { NotificationProvider } from "@/providers/notification-provider";
 import { currentUser } from "@clerk/nextjs/server";
 import { Role } from "@prisma/client";
+import { cacheTag } from "next/cache";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
@@ -26,15 +27,19 @@ const UnitLayout = async ({ children, params }: Props) => {
   const clerkUser = await currentUser();
   if (!clerkUser) {
     return redirect("/");
-  }// Verify if user is invited
-   const userEmail = clerkUser.emailAddresses[0].emailAddress;
+  } // Verify if user is invited
+  const userEmail = clerkUser.emailAddresses[0].emailAddress;
   const userId = clerkUser.id;
   const userName = `${clerkUser.firstName} ${clerkUser.lastName}`;
   const userImage = clerkUser.imageUrl;
-  
-  const companyId = await verifyAndAcceptInvitation(userId, userEmail, userName, userImage);
 
-        
+  const companyId = await verifyAndAcceptInvitation(
+    userId,
+    userEmail,
+    userName,
+    userImage
+  );
+
   if (!companyId) {
     return <Unauthorized />;
   }
@@ -77,6 +82,7 @@ async function LayoutContent({
   userEmail: string;
 }) {
   "use cache";
+  cacheTag(`unit-layout-${unitId}`);
   const user = await getAuthUserDetails(userEmail);
   if (!user) {
     return <Unauthorized />;
@@ -99,6 +105,7 @@ async function LayoutContent({
     <div className="h-screen overflow-hidden">
       <ResponsiveLayoutWrapper>
         <Sidebar
+          key={`unit-${unitId}`}
           id={unitId}
           type={
             user.role === "OWNER" || user.role === "ADMIN" ? "unit" : "user"
@@ -115,7 +122,7 @@ async function LayoutContent({
             role={userRole}
             unitId={unitId}
           />
-          <div className="relative">
+          <div className="relative h-screen">
             <BlurPage className="mt-14 p-1">{children} </BlurPage>
           </div>
         </NotificationProvider>

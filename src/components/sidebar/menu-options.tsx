@@ -15,6 +15,7 @@ import {
   PlusCircleIcon,
   User,
 } from "lucide-react";
+import { updateTag } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -115,7 +116,9 @@ export const MenuOptions = ({
   }, [user, units]);
 
   // Handle popover close when navigating
-  const handleNavigation = () => {
+  const handleNavigation = (companyId?: string, unitId?: string) => {
+    updateTag(`company-layout-${companyId}`);
+    updateTag(`unit-layout-${unitId}`);
     setIsPopoverOpen(false);
   };
 
@@ -321,7 +324,12 @@ export const MenuOptions = ({
                                 ),
                               }
                             )}
-                            onClick={handleNavigation}
+                            onClick={() =>
+                              handleNavigation(
+                                user?.Company?.id,
+                                user?.Unit?.id
+                              )
+                            }
                           >
                             <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
                               <Image
@@ -355,7 +363,12 @@ export const MenuOptions = ({
                                   ),
                                 }
                               )}
-                              onClick={handleNavigation}
+                              onClick={() =>
+                                handleNavigation(
+                                  user?.Company?.id,
+                                  user?.Unit?.id
+                                )
+                              }
                             >
                               <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
                                 <Image
@@ -398,7 +411,9 @@ export const MenuOptions = ({
                                   ),
                                 }
                               )}
-                              onClick={handleNavigation}
+                              onClick={() =>
+                                handleNavigation(unit.id, unit.companyId)
+                              }
                             >
                               <div className="h-10 w-10 flex items-center justify-center shrink-0 rounded-lg bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
                                 <Building2 className="h-5 w-5 text-sidebar-foreground/70" />
@@ -426,7 +441,9 @@ export const MenuOptions = ({
                                     ),
                                   }
                                 )}
-                                onClick={handleNavigation}
+                                onClick={() =>
+                                  handleNavigation(unit.id, unit.companyId)
+                                }
                               >
                                 <div className="h-10 w-10 flex items-center justify-center shrink-0 rounded-lg bg-gradient-to-br from-sidebar-accent/30 to-sidebar-accent/10 border border-sidebar-border/30">
                                   <Building2 className="h-5 w-5 text-sidebar-foreground/70" />

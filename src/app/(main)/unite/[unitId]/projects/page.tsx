@@ -1,10 +1,10 @@
-import { getUnitProjects } from "@/lib/queries";
-import { redirect } from "next/navigation";
-import Unauthorized from "@/components/unauthorized";
-import UnitProjects from "./unit-projects";
-import { Suspense } from "react";
 import UnitProjectsSkeleton from "@/components/skeletons/unit-projects-skeleton";
+import Unauthorized from "@/components/unauthorized";
+import { getUnitProjects } from "@/lib/queries";
 import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import UnitProjects from "./unit-projects";
 
 const ProjectsPage = async ({
   params,

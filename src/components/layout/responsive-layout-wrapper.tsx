@@ -14,7 +14,7 @@ export default function ResponsiveLayoutWrapper({
 
   return (
     <div
-      className={`transition-all duration-300 ${
+      className={`transition-all duration-300 h-full ${
         isCollapsed ? "md:pl-[65px]" : "md:pl-[280px]"
       }`}
     >
