@@ -22,8 +22,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
 import {
   Select,
   SelectContent,
@@ -31,25 +29,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import {
-  User2,
   CalendarIcon,
-  Save,
   CheckCircle2,
   Clock,
+  Save,
   Target,
+  User2,
 } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
-import Loading from "../global/loading";
-import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
 import { toast } from "sonner";
+import Loading from "../global/loading";
 import TagCreator from "../global/tag-creator";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Calendar } from "../ui/calendar";
+import { Input } from "../ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Switch } from "../ui/switch";
+import { Textarea } from "../ui/textarea";
 
 type Props = {
   laneId: string;
@@ -171,7 +171,7 @@ const TaskForm = ({
           ...values,
           laneId,
           id: taskData?.id,
-          assignedUserId: assignedTo || null,
+          assignedUserId: assignedTo === "unassigned" ? null : assignedTo,
           unitId,
         },
         tags

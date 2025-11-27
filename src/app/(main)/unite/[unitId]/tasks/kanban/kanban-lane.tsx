@@ -1,74 +1,81 @@
 "use client";
 
-import type { Lane } from "@prisma/client";
+import LaneForm from "@/components/forms/lane-form";
+import TaskForm from "@/components/forms/task-form";
+import { deleteLane } from "@/lib/queries";
 import type { TaskWithTags } from "@/lib/types";
 import { useModal } from "@/providers/modal-provider";
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { Lane } from "@prisma/client";
+import { GripVertical, MoreHorizontal, PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import CustomModal from "../../../../../../components/global/custom-model";
 import { Button } from "../../../../../../components/ui/button";
-import { PlusIcon, MoreHorizontal, GripVertical } from "lucide-react";
-import KanbanTask from "./kanban-task";
-import { SortableContext } from "@dnd-kit/sortable";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../../../../../components/ui/dropdown-menu";
-import LaneForm from "@/components/forms/lane-form";
-import TaskForm from "@/components/forms/task-form";
-import { deleteLane } from "@/lib/queries";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import CustomModal from "../../../../../../components/global/custom-model";
+import KanbanTask from "./kanban-task";
 
-// Définition des couleurs pour les colonnes
+// Définition des couleurs pour les colonnes - Modern HSL-based gradients
 const laneColors = [
   {
-    bg: " bg-blue-900/20",
-    text: "text-blue-700  ",
-    border: "border-blue-800 ",
+    bg: "bg-gradient-to-br from-blue-500/10 to-blue-600/5",
+    text: "text-blue-700 dark:text-blue-400",
+    border: "border-blue-500/30",
+    shadow: "shadow-blue-500/10",
   },
   {
-    bg: " bg-green-900/20",
-    text: "text-green-700  ",
-    border: "border-green-800  ",
+    bg: "bg-gradient-to-br from-emerald-500/10 to-emerald-600/5",
+    text: "text-emerald-700 dark:text-emerald-400",
+    border: "border-emerald-500/30",
+    shadow: "shadow-emerald-500/10",
   },
   {
-    bg: " bg-purple-900/20",
-    text: "text-purple-700  ",
-    border: "border-purple-800  ",
-  },
-
-  {
-    bg: " bg-pink-900/20",
-    text: "text-pink-700  ",
-    border: "border-pink-800  ",
+    bg: "bg-gradient-to-br from-purple-500/10 to-purple-600/5",
+    text: "text-purple-700 dark:text-purple-400",
+    border: "border-purple-500/30",
+    shadow: "shadow-purple-500/10",
   },
   {
-    bg: " bg-indigo-900/20",
-    text: "text-indigo-700  ",
-    border: "border-indigo-800  ",
+    bg: "bg-gradient-to-br from-pink-500/10 to-pink-600/5",
+    text: "text-pink-700 dark:text-pink-400",
+    border: "border-pink-500/30",
+    shadow: "shadow-pink-500/10",
   },
   {
-    bg: " bg-rose-900/20",
-    text: "text-rose-700  ",
-    border: "border-rose-800 ",
+    bg: "bg-gradient-to-br from-indigo-500/10 to-indigo-600/5",
+    text: "text-indigo-700 dark:text-indigo-400",
+    border: "border-indigo-500/30",
+    shadow: "shadow-indigo-500/10",
   },
   {
-    bg: " bg-cyan-900/20",
-    text: "text-cyan-700 ",
-    border: "border-cyan-800  ",
+    bg: "bg-gradient-to-br from-rose-500/10 to-rose-600/5",
+    text: "text-rose-700 dark:text-rose-400",
+    border: "border-rose-500/30",
+    shadow: "shadow-rose-500/10",
   },
   {
-    bg: "bg-teal-900/20",
-    text: "text-teal-700  ",
-    border: "border-teal-800  ",
+    bg: "bg-gradient-to-br from-cyan-500/10 to-cyan-600/5",
+    text: "text-cyan-700 dark:text-cyan-400",
+    border: "border-cyan-500/30",
+    shadow: "shadow-cyan-500/10",
   },
   {
-    bg: "   bg-orange-900/20",
-    text: "text-orange-700  ",
-    border: "border-orange-800 ",
+    bg: "bg-gradient-to-br from-teal-500/10 to-teal-600/5",
+    text: "text-teal-700 dark:text-teal-400",
+    border: "border-teal-500/30",
+    shadow: "shadow-teal-500/10",
+  },
+  {
+    bg: "bg-gradient-to-br from-orange-500/10 to-orange-600/5",
+    text: "text-orange-700 dark:text-orange-400",
+    border: "border-orange-500/30",
+    shadow: "shadow-orange-500/10",
   },
 ];
 
@@ -85,7 +92,7 @@ const getColorIndexFromName = (name: string): number => {
 const getLaneColorClasses = (name: string): string => {
   const colorIndex = getColorIndexFromName(name);
   const color = laneColors[colorIndex];
-  return `${color.bg} ${color.text} ${color.border}`;
+  return `${color.bg} ${color.text} ${color.border} ${color.shadow}`;
 };
 
 // Fonction pour obtenir les classes de couleur pour le compteur de tâches
@@ -211,22 +218,22 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
     <div
       ref={setNodeRef}
       style={style}
-      className="w-[320px] min-w-[320px] bg-card border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col max-h-[calc(100vh-160px)] group"
+      className="w-[320px] min-w-[320px] bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col max-h-[calc(100vh-160px)] group"
     >
       {/* Lane Header */}
-      <div className="p-4 pb-3 border-b border-border/30">
+      <div className="p-4 pb-3 border-b border-border/20 bg-gradient-to-r from-muted/30 to-transparent">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <div
-              className="cursor-grab hover:cursor-grabbing p-1.5 rounded-lg hover:bg-muted/50 transition-colors opacity-50 group-hover:opacity-100"
+              className="cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-muted/70 transition-all duration-200 opacity-0 group-hover:opacity-100"
               {...attributes}
               {...listeners}
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <h3
-                className={`rounded-sm p-1 text-sm font-semibold border ${getLaneColorClasses(
+                className={`rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider border shadow-sm ${getLaneColorClasses(
                   lane.name
                 )}`}
               >
@@ -234,7 +241,7 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
               </h3>
               {tasks.length > 0 && (
                 <div
-                  className={`flex items-center justify-center min-w-[20px] h-5 text-xs px-1.5 rounded-full font-medium ${getLaneCountColorClasses(
+                  className={`flex items-center justify-center min-w-[22px] h-6 text-xs px-2 rounded-full font-bold shadow-sm ${getLaneCountColorClasses(
                     lane.name
                   )}`}
                 >
@@ -280,7 +287,7 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
       </div>
 
       {/* Tasks Container */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-primary/20 hover:scrollbar-thumb-primary/40 scrollbar-track-transparent">
         <SortableContext items={tasks.map((task) => task.id)}>
           {tasks.map((task) => (
             <KanbanTask
@@ -293,17 +300,17 @@ const KanbanLane = ({ lane, tasks, unitId, onTaskUpdate }: KanbanLaneProps) => {
         </SortableContext>
 
         {tasks.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
-              <PlusIcon size={20} className="text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center mb-4 shadow-inner">
+              <PlusIcon size={24} className="text-muted-foreground/40" />
             </div>
-            <p className="text-sm text-muted-foreground mb-4 text-center">
+            <p className="text-sm text-muted-foreground/80 mb-5 text-center font-medium">
               Aucune tâche pour le moment
             </p>
             <Button
               variant="outline"
               size="sm"
-              className="border-dashed border-muted-foreground/30 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="border-dashed border-2 border-primary/30 text-muted-foreground hover:bg-primary/5 hover:text-foreground hover:border-primary/50 transition-all duration-300 rounded-lg"
               onClick={openAddTaskModal}
             >
               <PlusIcon size={14} className="mr-2" />

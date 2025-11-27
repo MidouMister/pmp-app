@@ -1,18 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import TaskForm from "@/components/forms/task-form";
+import CustomModal from "@/components/global/custom-model";
+import CustomSheet from "@/components/global/custom-sheet";
+import TagComponent from "@/components/global/tag";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useModal } from "@/providers/modal-provider";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { getLanesWithTaskAndTags, deleteTask } from "@/lib/queries";
-import type { LaneDetail, TaskWithTags } from "@/lib/types";
-import { Search } from "lucide-react";
-import TaskForm from "@/components/forms/task-form";
-import CustomSheet from "@/components/global/custom-sheet";
-import CustomModal from "@/components/global/custom-model";
 import {
   Table,
   TableBody,
@@ -21,10 +15,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { deleteTask, getLanesWithTaskAndTags } from "@/lib/queries";
+import type { LaneDetail, TaskWithTags } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { useModal } from "@/providers/modal-provider";
+import { format } from "date-fns";
+import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import TaskTableSkeleton from "../../../../../../components/skeletons/task-table-skeleton";
-import TagComponent from "@/components/global/tag";
 
 type TaskTableProps = {
   unitId: string;
@@ -218,79 +218,92 @@ const TaskTable = ({ unitId, initialLanes }: TaskTableProps) => {
 
   return (
     <div className="h-full w-full flex flex-col">
-      <div className="flex justify-between items-center mb-4">
-        <div className="relative w-80  ">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex justify-between items-center mb-6">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
           <Input
             placeholder="Rechercher des tâches..."
-            className="pl-8 bg-background/50 border-border/50 focus-visible:ring-primary/20"
+            className="pl-10 bg-muted/30 border-border/40 focus-visible:ring-primary/30 focus-visible:border-primary/40 rounded-xl transition-all duration-200"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto rounded-xl border border-border/40 bg-card/50 backdrop-blur-sm shadow-md">
         <Table>
-          <TableHeader className="bg-muted/50 sticky top-0">
+          <TableHeader className="bg-gradient-to-r from-muted/60 to-muted/40 sticky top-0 backdrop-blur-sm">
             <TableRow>
               <TableHead
-                className="cursor-pointer hover:text-primary"
+                className="cursor-pointer hover:text-primary transition-colors duration-200 font-semibold"
                 onClick={() => handleSort("title")}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   Titre
                   {sortConfig.key === "title" && (
-                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                    <span className="text-primary">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </TableHead>
               <TableHead
-                className="cursor-pointer hover:text-primary"
+                className="cursor-pointer hover:text-primary transition-colors duration-200 font-semibold"
                 onClick={() => handleSort("lane")}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   Colonne
                   {sortConfig.key === "lane" && (
-                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                    <span className="text-primary">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </TableHead>
-              <TableHead>Tags</TableHead>
+              <TableHead className="font-semibold">Tags</TableHead>
               <TableHead
-                className="cursor-pointer hover:text-primary"
+                className="cursor-pointer hover:text-primary transition-colors duration-200 font-semibold"
                 onClick={() => handleSort("dueDate")}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   Date d&apos;échéance
                   {sortConfig.key === "dueDate" && (
-                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                    <span className="text-primary">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </TableHead>
               <TableHead
-                className="cursor-pointer hover:text-primary"
+                className="cursor-pointer hover:text-primary transition-colors duration-200 font-semibold"
                 onClick={() => handleSort("status")}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   Statut
                   {sortConfig.key === "status" && (
-                    <span>{sortConfig.direction === "asc" ? "↑" : "↓"}</span>
+                    <span className="text-primary">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
                   )}
                 </div>
               </TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right font-semibold">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedTasks.length > 0 ? (
               sortedTasks.map((task) => (
-                <TableRow key={task.id}>
+                <TableRow
+                  key={task.id}
+                  className="hover:bg-muted/40 transition-colors duration-200 border-b border-border/30"
+                >
                   <TableCell>{task.title}</TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
-                      className="bg-primary/10 text-primary"
+                      className="bg-primary/5 text-primary border-primary/20 font-medium shadow-sm"
                     >
                       {task.laneName}
                     </Badge>
@@ -317,9 +330,10 @@ const TaskTable = ({ unitId, initialLanes }: TaskTableProps) => {
                     <Badge
                       variant="outline"
                       className={cn(
+                        "font-medium shadow-sm transition-all duration-200",
                         task.complete
-                          ? "text-emerald-400 border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50 dark:border-emerald-600 dark:hover:border-emerald-400 dark:hover:bg-emerald-950/30"
-                          : "bg-orange-500/10 text-orange-400 border border-orange-400 shadow-sm hover:shadow-md"
+                          ? "text-emerald-600 border-emerald-400/50 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-400"
+                          : "bg-orange-50 text-orange-600 border-orange-400/50 dark:border-orange-500/30 dark:bg-orange-950/30 dark:text-orange-400"
                       )}
                     >
                       {task.complete ? "Terminée" : "En cours"}
@@ -330,6 +344,7 @@ const TaskTable = ({ unitId, initialLanes }: TaskTableProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="hover:bg-primary/10 hover:text-primary transition-all duration-200"
                         onClick={() => openEditTaskModal(task)}
                       >
                         Modifier
@@ -337,7 +352,7 @@ const TaskTable = ({ unitId, initialLanes }: TaskTableProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive/80"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
                         onClick={() => openDeleteTaskModal(task)}
                       >
                         Supprimer
@@ -350,11 +365,18 @@ const TaskTable = ({ unitId, initialLanes }: TaskTableProps) => {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center text-muted-foreground h-24"
+                  className="text-center text-muted-foreground h-32"
                 >
-                  {searchTerm
-                    ? "Aucune tâche ne correspond à votre recherche"
-                    : "Aucune tâche disponible"}
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center">
+                      <Search className="h-5 w-5 text-muted-foreground/40" />
+                    </div>
+                    <p className="font-medium">
+                      {searchTerm
+                        ? "Aucune tâche ne correspond à votre recherche"
+                        : "Aucune tâche disponible"}
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

@@ -1,33 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { Lane, Task } from "@prisma/client";
-import type { LaneDetail, TaskWithTags } from "@/lib/types";
-import { useModal } from "@/providers/modal-provider";
 import {
   getLanesWithTaskAndTags,
   updateLanesOrder,
   updateTaskOrder,
 } from "@/lib/queries";
+import type { LaneDetail, TaskWithTags } from "@/lib/types";
+import { useModal } from "@/providers/modal-provider";
 import {
   DndContext,
   type DragEndEvent,
   type DragOverEvent,
+  DragOverlay,
   type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
-import KanbanLane from "./kanban-lane";
-import { Button } from "../../../../../../components/ui/button";
+import type { Lane, Task } from "@prisma/client";
 import { PlusIcon } from "lucide-react";
-import LaneForm from "../../../../../../components/forms/lane-form";
-import { DragOverlay } from "@dnd-kit/core";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import KanbanTask from "./kanban-task";
+import LaneForm from "../../../../../../components/forms/lane-form";
 import CustomModal from "../../../../../../components/global/custom-model";
 import KanbanBoardSkeleton from "../../../../../../components/skeletons/kanban-board-skeleton";
+import { Button } from "../../../../../../components/ui/button";
+import KanbanLane from "./kanban-lane";
+import KanbanTask from "./kanban-task";
 
 type KanbanBoardProps = {
   unitId: string;
@@ -373,14 +373,14 @@ const KanbanBoard = ({ unitId, initialLanes }: KanbanBoardProps) => {
   }
 
   return (
-    <div className="h-full w-full  p-1">
-      <div className="flex justify-between items-center mb-4">
+    <div className="h-full w-full p-2">
+      <div className="flex justify-between items-center mb-6">
         <Button
           onClick={openAddLaneModal}
-          className="flex items-center gap-2 bg-chart-4 hover:bg-chart-4/70 text-primary-foreground shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl px-5 py-2.5"
         >
-          <PlusIcon size={16} />
-          Ajouter une Colonne
+          <PlusIcon size={18} className="font-bold" />
+          <span className="font-semibold">Ajouter une Colonne</span>
         </Button>
       </div>
 
@@ -390,7 +390,7 @@ const KanbanBoard = ({ unitId, initialLanes }: KanbanBoardProps) => {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto pb-6 h-full scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 border border-dashed rounded-md p-2  ">
+        <div className="flex gap-6 overflow-x-auto pb-6 h-full scrollbar-thin scrollbar-thumb-primary/30 hover:scrollbar-thumb-primary/50 scrollbar-track-transparent border-2 border-dashed border-border/30 rounded-2xl p-4 bg-gradient-to-br from-muted/20 to-transparent">
           <SortableContext items={lanes.map((lane) => lane.id)}>
             {lanes.map((lane) => (
               <KanbanLane
@@ -408,10 +408,15 @@ const KanbanBoard = ({ unitId, initialLanes }: KanbanBoardProps) => {
             <Button
               variant="outline"
               onClick={openAddLaneModal}
-              className="w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary hover:bg-primary/5 transition-all duration-200 flex flex-col items-center justify-center gap-2"
+              className="w-full h-32 border-2 border-dashed border-primary/30 hover:border-primary/60 bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:to-primary/5 transition-all duration-300 flex flex-col items-center justify-center gap-3 rounded-2xl group shadow-sm hover:shadow-md"
             >
-              <PlusIcon size={24} className="text-slate-400" />
-              <span className="text-slate-600 dark:text-slate-400">
+              <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
+                <PlusIcon
+                  size={24}
+                  className="text-primary/60 group-hover:text-primary transition-colors duration-300"
+                />
+              </div>
+              <span className="text-muted-foreground group-hover:text-foreground font-medium transition-colors duration-300">
                 Ajouter une Nouvelle Colonne
               </span>
             </Button>

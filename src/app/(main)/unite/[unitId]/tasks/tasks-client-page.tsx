@@ -1,10 +1,10 @@
 // app/unite/[unitId]/tasks/tasks-client-page.tsx (Client Component)
 "use client";
 
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import type { LaneDetail } from "@/lib/types";
 import { LayoutGrid, List } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import KanbanBoard from "./kanban/kanban-board";
 import TaskTable from "./table/task-table";
 // Nouveau composant pour le sélecteur de vue
@@ -16,24 +16,32 @@ function ViewSelector({
   setView: (view: "kanban" | "table") => void;
 }) {
   return (
-    <div className="bg-card border border-border/30 rounded-xl p-1 flex items-center shadow-sm">
+    <div className="relative bg-muted/40 backdrop-blur-sm border border-border/40 rounded-xl p-1.5 flex items-center gap-1 shadow-sm">
       <Button
         variant={view === "kanban" ? "default" : "ghost"}
         size="sm"
         onClick={() => setView("kanban")}
-        className="flex items-center gap-2 rounded-lg"
+        className={`flex items-center gap-2 rounded-lg transition-all duration-300 ${
+          view === "kanban"
+            ? "shadow-md scale-100"
+            : "hover:bg-muted/50 scale-95 opacity-70 hover:opacity-100"
+        }`}
       >
         <LayoutGrid size={16} />
-        <span>Kanban</span>
+        <span className="font-medium">Kanban</span>
       </Button>
       <Button
         variant={view === "table" ? "default" : "ghost"}
         size="sm"
         onClick={() => setView("table")}
-        className="flex items-center gap-2 rounded-lg"
+        className={`flex items-center gap-2 rounded-lg transition-all duration-300 ${
+          view === "table"
+            ? "shadow-md scale-100"
+            : "hover:bg-muted/50 scale-95 opacity-70 hover:opacity-100"
+        }`}
       >
         <List size={16} />
-        <span>Tableau</span>
+        <span className="font-medium">Tableau</span>
       </Button>
     </div>
   );

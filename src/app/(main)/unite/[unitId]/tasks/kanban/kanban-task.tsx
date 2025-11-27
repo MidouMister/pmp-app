@@ -6,18 +6,18 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import {
-  Clock,
-  MoreHorizontal,
+  CalendarIcon,
   CheckCircle2,
   Circle,
-  CalendarIcon,
+  Clock,
+  MoreHorizontal,
 } from "lucide-react";
 
 import TaskForm from "@/components/forms/task-form";
-import { deleteTask } from "@/lib/queries";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import CustomModal from "@/components/global/custom-model";
+import CustomSheet from "@/components/global/custom-sheet";
+import TagComponent from "@/components/global/tag";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,9 +25,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import TagComponent from "@/components/global/tag";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import CustomSheet from "@/components/global/custom-sheet";
+import { deleteTask } from "@/lib/queries";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type KanbanTaskProps = {
   task: TaskWithTags[0];
@@ -146,14 +146,14 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
       className={`group relative cursor-grab select-none
         ${
           isDragging
-            ? "shadow-2xl scale-105 rotate-2 z-50"
-            : "shadow-sm hover:shadow-lg"
+            ? "shadow-2xl scale-105 rotate-2 z-50 ring-2 ring-primary/30"
+            : "shadow-md hover:shadow-xl"
         }
-        ${task.complete ? "opacity-50" : "hover:shadow-md"}
-        bg-card border border-border/20 rounded-xl p-3.5 
+        ${task.complete ? "opacity-60" : "hover:shadow-lg"}
+        bg-card/95 backdrop-blur-sm border border-border/30 rounded-xl p-4
         transition-all duration-300 ease-out
-        hover:border-primary/20 hover:-translate-y-0.5
-        active:scale-95`}
+        hover:border-primary/30 hover:-translate-y-1
+        active:scale-[0.98]`}
       {...attributes}
       {...listeners}
       onClick={openEditTaskModal}
@@ -162,18 +162,18 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
       <div className="flex items-start gap-2.5 mb-3">
         {/* Completion Status */}
         <button
-          className="mt-0.5 flex-shrink-0 transition-transform hover:scale-110"
+          className="mt-0.5 flex-shrink-0 transition-all duration-200 hover:scale-125 active:scale-95"
           onClick={(e) => {
             e.stopPropagation();
             // Handle completion toggle here
           }}
         >
           {task.complete ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-500 drop-shadow-sm" />
           ) : (
             <Circle
-              className="h-5 w-5 text-muted-foreground/40 
-                              group-hover:text-primary/60 transition-colors"
+              className="h-5 w-5 text-muted-foreground/30
+                              group-hover:text-primary/70 transition-colors duration-200"
             />
           )}
         </button>
@@ -181,12 +181,12 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
         {/* Task Title */}
         <div className="flex-1 min-w-0">
           <h3
-            className={`font-medium text-sm leading-snug tracking-tight
+            className={`font-semibold text-sm leading-snug tracking-tight
             ${
               task.complete
-                ? "text-muted-foreground line-through decoration-2"
-                : "text-foreground group-hover:text-primary/90"
-            } transition-colors duration-200`}
+                ? "text-muted-foreground/70 line-through decoration-2"
+                : "text-foreground group-hover:text-primary transition-colors duration-200"
+            }`}
           >
             {task.title}
           </h3>
@@ -230,9 +230,9 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
 
       {/* Task Description */}
       {task.description && (
-        <div className="mb-3">
+        <div className="mb-3.5">
           <p
-            className="text-muted-foreground text-xs leading-relaxed line-clamp-2 
+            className="text-muted-foreground/90 text-xs leading-relaxed line-clamp-2
                        tracking-wide"
           >
             {task.description}
@@ -259,8 +259,8 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
 
       {/* Task Footer */}
       <div
-        className="flex items-center justify-between pt-2.5 
-                     border-t border-border/10"
+        className="flex items-center justify-between pt-3
+                     border-t border-border/20"
       >
         {/* Assignee */}
         <div className="flex items-center">
@@ -292,12 +292,12 @@ const KanbanTask = ({ task, unitId, onTaskUpdate }: KanbanTaskProps) => {
           )}
           {dueDate && (
             <div
-              className={`flex items-center gap-1.5 text-xs font-medium 
-              px-1.5 py-0.5 rounded-md transition-colors
+              className={`flex items-center gap-1.5 text-xs font-semibold
+              px-2 py-1 rounded-lg transition-all duration-200 shadow-sm
               ${
                 isOverdue
-                  ? "text-red-600 bg-red-50 dark:bg-red-950/20 dark:text-red-400"
-                  : "text-muted-foreground bg-muted/30"
+                  ? "text-red-600 bg-red-50 dark:bg-red-950/30 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-900"
+                  : "text-muted-foreground bg-muted/40 hover:bg-muted/60"
               }`}
             >
               <CalendarIcon size={12} />
