@@ -2131,3 +2131,119 @@ export const _getTasksWithAllRelations = async (laneId: string) => {
   });
   return response;
 };
+
+// Dashboard data aggregation
+export const getUnitDashboardData = async (unitId: string) => {
+  "use cache";
+  cacheTag(`unit-dashboard-${unitId}`);
+
+  try {
+    // Get unit details
+    const unit = await db.unit.findUnique({
+      where: { id: unitId },
+    });
+
+    if (!unit) {
+      throw new Error("Unit not found");
+    }
+
+    // Get all projects with status breakdown
+    const projects = await db.project.findMany({
+      where: { unitId },
+      include: {
+        Client: true,
+        phases: {
+          include: {
+            Product: {
+              include: {
+                Productions: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Calculate project statistics
+    const projectStats = {
+      total: projects.length,
+      byStatus: {
+        New: projects.filter((p) => p.status === "New").length,
+        InProgress: projects.filter((p) => p.status === "InProgress").length,
+        Pause: projects.filter((p) => p.status === "Pause").length,
+        Complete: projects.filter((p) => p.status === "Complete").length,
+      },
+      totalValue: projects.reduce((sum, p) => sum + p.montantHT, 0),
+      completedValue: projects
+        .filter((p) => p.status === "Complete")
+        .reduce((sum, p) => sum + p.montantHT, 0),
+    };
+
+    // Get recent projects (last 5)
+    const recentProjects = projects.slice(0, 5);
+
+    // Get all tasks with lanes
+    const lanes = await db.lane.findMany({
+      where: { unitId },
+      include: {
+        Tasks: {
+          include: {
+            Tags: true,
+            Assigned: true,
+          },
+        },
+      },
+    });
+
+    // Calculate task statistics
+    const allTasks = lanes.flatMap((lane) => lane.Tasks);
+    const now = new Date();
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const taskStats = {
+      total: allTasks.length,
+      completed: allTasks.filter((t) => t.complete).length,
+      byLane: lanes.map((lane) => ({
+        name: lane.name,
+        count: lane.Tasks.length,
+      })),
+      overdue: allTasks.filter(
+        (t) => !t.complete && t.dueDate && new Date(t.dueDate) < now
+      ).length,
+      upcoming: allTasks.filter(
+        (t) =>
+          !t.complete &&
+          t.dueDate &&
+          new Date(t.dueDate) >= now &&
+          new Date(t.dueDate) <= nextWeek
+      ).length,
+    };
+
+    // Get team members
+    const teamMembers = await db.user.findMany({
+      where: { unitId },
+      orderBy: { name: "asc" },
+    });
+
+    // Get clients count
+    const clientsCount = await db.client.count({
+      where: { unitId },
+    });
+
+    return {
+      unit,
+      stats: {
+        projects: projectStats,
+        tasks: taskStats,
+        teamMembers: teamMembers.length,
+        clients: clientsCount,
+      },
+      recentProjects,
+      teamMembers,
+    };
+  } catch (error) {
+    console.error("Error fetching unit dashboard data:", error);
+    throw error;
+  }
+};
