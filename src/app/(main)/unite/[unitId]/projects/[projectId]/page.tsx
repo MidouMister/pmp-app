@@ -1,11 +1,11 @@
-import { getProjectDetails, getAuthUserDetails } from "@/lib/queries";
-import { redirect } from "next/navigation";
-import Unauthorized from "@/components/unauthorized";
 import Loading from "@/components/global/loading";
-import { Suspense } from "react";
-import ProjectDashboard from "./_components/project-dashboard";
+import Unauthorized from "@/components/unauthorized";
+import { getAuthUserDetails, getProjectDetails } from "@/lib/queries";
 import { ProjectWithDetails } from "@/lib/types";
 import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import ProjectDashboard from "./_components/project-dashboard";
 
 const ProjectPage = async ({
   params,
@@ -44,6 +44,7 @@ async function ProjectDetailsComponents({
   unitId: string;
 }) {
   "use cache";
+
   const userData = await getAuthUserDetails(userEmail);
   if (!userData) {
     redirect("/sign-in");

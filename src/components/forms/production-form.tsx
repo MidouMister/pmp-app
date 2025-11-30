@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -15,18 +13,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn, formatAmount } from "@/lib/utils";
-import { formatMonthYear } from "@/lib/utils";
-import { useState, useEffect, useCallback } from "react";
+import { cn, formatAmount, formatMonthYear } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 
 // Schéma de validation pour le formulaire de production
 const productionFormSchema = z.object({
@@ -135,7 +134,7 @@ export default function ProductionForm({
       const url = "/api/productions";
       const method = production ? "PATCH" : "POST";
 
-      // Calculer le montant produit
+      // Calculer le montant produit pour affichage (recalculé côté serveur)
       const montant = calculateMontantProduit(data.taux);
 
       const response = await fetch(url, {
@@ -149,13 +148,14 @@ export default function ProductionForm({
           phaseId,
           date: data.date,
           taux: data.taux,
-          montant: montant,
+          // Note: montant is calculated server-side for validation
         }),
       });
 
       const responseData = await response.json();
 
       if (!response.ok) {
+        // Show specific validation error from server
         throw new Error(responseData.error || "Une erreur est survenue");
       }
 
@@ -167,7 +167,9 @@ export default function ProductionForm({
       router.refresh();
       onSuccess();
     } catch (error: any) {
+      // Display specific error message
       toast.error(error.message || "Une erreur est survenue");
+      console.error("Erreur lors de la soumission:", error);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -15,20 +13,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn, formatAmount, formatMonthYear } from "@/lib/utils";
 import { useModal } from "@/providers/modal-provider";
-import { cn, formatAmount } from "@/lib/utils";
-import { formatMonthYear } from "@/lib/utils";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import type { Phase, Project } from "@prisma/client";
+import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { Badge } from "../ui/badge";
 import {
   Select,
   SelectContent,
@@ -36,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Badge } from "../ui/badge";
 
 // Schéma de validation pour le formulaire de production unitaire
 const unitProductionFormSchema = z.object({
@@ -68,16 +67,14 @@ export default function UnitProductionForm({
   const { setClose } = useModal();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [selectedPhase, setSelectedPhase] = useState<string>("");
-  const [phaseMontantHT, setPhaseMontantHT] = useState<number>(0);
-  const [montantProduit, setMontantProduit] = useState<number>(0);
+  // Removed redundant local state: selectedProject, selectedPhase
+  // We will use form.watch values directly
 
   // Valeurs par défaut du formulaire
   const defaultValues: Partial<UnitProductionFormValues> = {
     date: new Date(),
     taux: 0,
-    montant: 0,
+    // montant: 0, // Removed unused field
   };
 
   const form = useForm<UnitProductionFormValues>({
@@ -85,62 +82,33 @@ export default function UnitProductionForm({
     defaultValues,
   });
 
-  // Watch form values
-  const projectIdValue = form.watch("projectId");
-  const phaseIdValue = form.watch("phaseId");
-  const tauxValue = form.watch("taux");
+  // Watch form values for reactive UI
+  const projectId = form.watch("projectId");
+  const phaseId = form.watch("phaseId");
+  const taux = form.watch("taux");
 
-  // Memoize availablePhases to prevent unnecessary re-renders
-  const availablePhases = useMemo(() => {
-    return selectedProject
-      ? projects.find((p) => p.id === selectedProject)?.phases || []
-      : [];
-  }, [selectedProject, projects]);
-
-  // Memoize the calculation function to prevent unnecessary re-renders
-  const calculateMontantProduit = useCallback(
-    (taux: number) => {
-      const montant = (taux * phaseMontantHT) / 100;
-      setMontantProduit(montant);
-      return montant;
-    },
-    [phaseMontantHT]
+  // Derived state
+  const selectedProjectObj = useMemo(
+    () => projects.find((p) => p.id === projectId),
+    [projectId, projects]
   );
 
-  // Mettre à jour le projet sélectionné lorsque le champ projectId change
-  useEffect(() => {
-    const projectId = form.getValues("projectId");
-    if (projectId) {
-      setSelectedProject(projectId);
-    }
-  }, [projectIdValue, form]);
+  const availablePhases = useMemo(
+    () => selectedProjectObj?.phases || [],
+    [selectedProjectObj]
+  );
 
-  // Mettre à jour la phase sélectionnée lorsque le champ phaseId change
-  useEffect(() => {
-    const phaseId = form.getValues("phaseId");
-    if (phaseId) {
-      // Récupérer le montant HT de la phase sélectionnée
-      const phase = availablePhases.find((p) => p.id === phaseId);
-      if (phase) {
-        setPhaseMontantHT(phase.montantHT);
+  const selectedPhaseObj = useMemo(
+    () => availablePhases.find((p) => p.id === phaseId),
+    [phaseId, availablePhases]
+  );
 
-        // Vérifier si la phase a un produit associé
-        if (phase.Product) {
-          setSelectedPhase(phase.Product.id);
-        } else {
-          // Si pas de produit, on utilise l'ID de la phase
-          // On créera un produit au moment de la soumission
-          setSelectedPhase(phaseId);
-        }
-      }
-    }
-  }, [phaseIdValue, availablePhases, form]);
+  const phaseMontantHT = selectedPhaseObj?.montantHT || 0;
 
-  // Mettre à jour le montant produit lorsque le taux change
-  useEffect(() => {
-    const taux = form.getValues("taux");
-    calculateMontantProduit(taux);
-  }, [tauxValue, phaseMontantHT, calculateMontantProduit, form]);
+  // Calculate montant produit based on watched values
+  const montantProduit = useMemo(() => {
+    return (taux * phaseMontantHT) / 100;
+  }, [taux, phaseMontantHT]);
 
   // Fonction pour créer un produit pour une phase si nécessaire
   const createProductForPhase = async (phaseId: string) => {
@@ -159,27 +127,18 @@ export default function UnitProductionForm({
       }
 
       const product = await response.json();
-      toast.success("Production initialisée avec succès");
       return product.id;
     } catch (error: any) {
-      toast.error(
+      console.error("Erreur lors de la création du produit:", error);
+      throw new Error(
         error.message || "Erreur lors de l'initialisation de la production"
       );
-      return null;
     }
   };
 
   const onSubmit = async (data: UnitProductionFormValues) => {
     setIsSubmitting(true);
     try {
-      // Calculer le montant produit
-      const montant = calculateMontantProduit(data.taux);
-
-      // Récupérer la phase sélectionnée
-      const selectedPhaseObj = availablePhases.find(
-        (p) => p.id === data.phaseId
-      );
-
       // Déterminer le productId à utiliser
       let productId;
 
@@ -188,12 +147,8 @@ export default function UnitProductionForm({
         productId = selectedPhaseObj.Product.id;
       } else {
         // Sinon, créer un nouveau produit
+        toast.info("Initialisation de la production...");
         productId = await createProductForPhase(data.phaseId);
-
-        // Si la création du produit a échoué, arrêter le processus
-        if (!productId) {
-          throw new Error("Impossible de créer un produit pour cette phase");
-        }
       }
 
       // Appel à l'API pour créer une nouvelle production
@@ -206,13 +161,14 @@ export default function UnitProductionForm({
           productId: productId,
           date: data.date,
           taux: data.taux,
-          montant: montant,
+          // Note: montant is calculated server-side for validation
         }),
       });
 
       const responseData = await response.json();
 
       if (!response.ok) {
+        // Show specific validation error from server
         throw new Error(responseData.error || "Une erreur est survenue");
       }
 
@@ -220,8 +176,9 @@ export default function UnitProductionForm({
       router.refresh();
       setClose();
     } catch (error: any) {
+      // Display specific error message
       toast.error(error.message || "Une erreur est survenue");
-      console.error(error);
+      console.error("Erreur lors de l'ajout de la production:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -244,12 +201,8 @@ export default function UnitProductionForm({
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
-                    setSelectedProject(value);
-                    // Réinitialiser la phase sélectionnée
+                    // Reset phase when project changes
                     form.setValue("phaseId", "");
-                    setSelectedPhase("");
-                    setPhaseMontantHT(0);
-                    setMontantProduit(0);
                   }}
                   defaultValue={field.value}
                 >
@@ -292,20 +245,9 @@ export default function UnitProductionForm({
               <FormItem>
                 <FormLabel>Phase</FormLabel>
                 <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    setSelectedPhase(value);
-                    // Récupérer le montant HT de la phase sélectionnée
-                    const phase = availablePhases.find((p) => p.id === value);
-                    if (phase) {
-                      setPhaseMontantHT(phase.montantHT);
-                      // Recalculer le montant produit
-                      const taux = form.getValues("taux");
-                      calculateMontantProduit(taux);
-                    }
-                  }}
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
-                  disabled={!selectedProject}
+                  disabled={!projectId}
                 >
                   <FormControl>
                     <SelectTrigger className="h-12 text-left">
@@ -341,7 +283,7 @@ export default function UnitProductionForm({
         </div>
 
         {/* Affichage du montant HT de la phase */}
-        {selectedPhase && (
+        {phaseId && (
           <div className="p-5 bg-muted/50 rounded-lg border">
             <div className="mb-3">
               <h3 className="text-sm font-medium text-muted-foreground">
@@ -415,12 +357,6 @@ export default function UnitProductionForm({
                   max="100"
                   placeholder="Entrez le taux de production"
                   {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    calculateMontantProduit(
-                      Number.parseFloat(e.target.value) || 0
-                    );
-                  }}
                 />
               </FormControl>
               <FormDescription>
@@ -440,7 +376,7 @@ export default function UnitProductionForm({
           >
             Annuler
           </Button>
-          <Button type="submit" disabled={isSubmitting || !selectedPhase}>
+          <Button type="submit" disabled={isSubmitting || !phaseId}>
             {isSubmitting ? "Enregistrement..." : "Ajouter"}
           </Button>
         </div>

@@ -1,10 +1,13 @@
-import { getUnitProductionsWithDetails } from "@/lib/queries";
-import { getProjectsByUnitId } from "@/lib/queries";
+import UnitProductionForm from "@/components/forms/unit-production-form";
+import {
+  getProjectsByUnitId,
+  getUnitProductionsWithDetails,
+} from "@/lib/queries";
+import { Activity, BarChart3, TrendingUp } from "lucide-react";
+import { cacheTag } from "next/cache";
+import { Suspense } from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import UnitProductionForm from "@/components/forms/unit-production-form";
-import { BarChart3, TrendingUp, Activity } from "lucide-react";
-import { Suspense } from "react";
 
 async function UniteProduction({
   params,
@@ -66,6 +69,8 @@ export default UniteProduction;
 
 async function CardProductionStats({ unitId }: { unitId: string }) {
   "use cache";
+  cacheTag(`unit-productions-${unitId}`);
+
   // Récupérer les productions avec détails
   const productions = await getUnitProductionsWithDetails(unitId);
 
@@ -133,6 +138,8 @@ async function CardProductionStats({ unitId }: { unitId: string }) {
 
 async function UnitProductionsTable({ unitId }: { unitId: string }) {
   "use cache";
+  cacheTag(`unit-productions-${unitId}`);
+
   // Récupérer les projets de l'unité
   const projects = await getProjectsByUnitId(unitId);
 
