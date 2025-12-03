@@ -87,7 +87,7 @@ const Sidebar = ({ id, type, user }: Props) => {
           id: "1",
           name: "Tableau de Bord",
           icon: <LayoutDashboard />,
-          link: `/unite/${id}/dashboard`,
+          link: `/unite/${id}`,
         },
         {
           id: "2",

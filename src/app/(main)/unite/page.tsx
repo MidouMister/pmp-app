@@ -11,16 +11,20 @@ const UnitePage = async () => {
   if (!clerkUser) {
     return redirect("/sign-in");
   }
- // Verify if user is invited
- 
-   const userEmail = clerkUser.emailAddresses[0].emailAddress;
+  // Verify if user is invited
+
+  const userEmail = clerkUser.emailAddresses[0].emailAddress;
   const userId = clerkUser.id;
   const userName = `${clerkUser.firstName} ${clerkUser.lastName}`;
   const userImage = clerkUser.imageUrl;
-  
-  const companyId = await verifyAndAcceptInvitation(userId, userEmail, userName, userImage);
 
-  
+  const companyId = await verifyAndAcceptInvitation(
+    userId,
+    userEmail,
+    userName,
+    userImage
+  );
+
   if (!companyId) {
     return redirect("/company");
   }
@@ -32,10 +36,7 @@ const UnitePage = async () => {
         </div>
       }
     >
-      <UnitePageContent
-        userEmail={userEmail}
-        companyId={companyId}
-      />
+      <UnitePageContent userEmail={userEmail} companyId={companyId} />
     </Suspense>
   );
 };
@@ -47,9 +48,6 @@ const UnitePageContent = async ({
   userEmail: string;
   companyId: string;
 }) => {
-   
-
- 
   const user = await getAuthUserDetails(userEmail);
   if (!user) return null;
 

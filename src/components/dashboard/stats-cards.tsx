@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardData } from "@/app/(main)/unite/[unitId]/dashboard/actions";
+import { DashboardData } from "@/app/(main)/unite/[unitId]/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Briefcase,
