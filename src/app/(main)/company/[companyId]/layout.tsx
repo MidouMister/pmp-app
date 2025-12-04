@@ -71,7 +71,7 @@ async function LayoutContent({
   "use cache";
   cacheTag(`company-layout-${companyId}`);
   const user = await getAuthUserDetails(userEmail);
-  const notifications = await getNotificationAndUser(companyId, userId);
+  const notifications = await getNotificationAndUser(companyId);
   const allNoti: NotificationWithUser = notifications || [];
 
   return (

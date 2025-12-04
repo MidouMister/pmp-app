@@ -297,20 +297,13 @@ export const saveActivityLogsNotification = async ({
 };
 export const getNotificationAndUser = async (
   companyId: string,
-  userId: string,
   unitId?: string
 ) => {
-  if (!userId) {
-    console.log("User not authenticated.");
-    return [];
-  }
-
   try {
     const response = await db.notification.findMany({
       where: {
         companyId: companyId,
         ...(unitId && { unitId: unitId }),
-        userId: userId, // Filter by authenticated user's ID
       },
       include: {
         User: true,
@@ -322,6 +315,7 @@ export const getNotificationAndUser = async (
     return response;
   } catch (error) {
     console.log(error);
+    return [];
   }
 };
 // Function to fetch a single notification with user data

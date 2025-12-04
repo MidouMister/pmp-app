@@ -57,7 +57,7 @@ const UserLayout = async ({ children, params }: Props) => {
   if (!user.privateMetadata.role) {
     return <Unauthorized />;
   } else {
-    const allNotifications = await getNotificationAndUser(companyId, unitId);
+    const allNotifications = await getNotificationAndUser(companyId);
     if (
       user.privateMetadata.role === "OWNER" ||
       user.privateMetadata.role === "ADMIN"

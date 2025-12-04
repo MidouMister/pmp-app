@@ -88,7 +88,7 @@ async function LayoutContent({
     return <Unauthorized />;
   }
   let notifications: NotificationWithUser = [];
-  const allNotifications = await getNotificationAndUser(companyId, userId);
+  const allNotifications = await getNotificationAndUser(companyId);
 
   if (user.role === "OWNER" || user.role === "ADMIN") {
     notifications = allNotifications || [];
