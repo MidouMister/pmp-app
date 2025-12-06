@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { ThemeProvider } from "@/providers/theme-provider";
+import Loading from "@/components/global/loading";
 import { Toaster } from "@/components/ui/sonner";
 import ModalProvider from "@/providers/modal-provider";
 import { SidebarCollapseProvider } from "@/providers/sidebar-collapse-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { Suspense } from "react";
-import Loading from "@/components/global/loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,8 +36,8 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange
         >
           <ModalProvider>

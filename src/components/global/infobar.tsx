@@ -1,43 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import type { NotificationItem, NotificationWithUser } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+import { useNotificationContext } from "@/providers/notification-provider";
+import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
 import { UserButton } from "@clerk/nextjs";
-import { twMerge } from "tailwind-merge";
+import type { NotificationType, Role } from "@prisma/client";
 import {
-  Bell,
-  Check,
-  Star,
-  CheckCheck,
-  Users,
-  Calendar,
-  Building2,
-  ClipboardList,
-  UserPlus,
   Activity,
-  X,
-  Trash2,
+  Bell,
+  Building2,
+  Calendar,
+  Check,
+  CheckCheck,
   ChevronDown,
+  ClipboardList,
   Search,
   SlidersHorizontal,
+  Star,
+  Trash2,
+  UserPlus,
+  Users,
+  X,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
-import type { Role, NotificationType } from "@prisma/client";
-import { Button } from "../ui/button";
+import { useState } from "react";
+import { twMerge } from "tailwind-merge";
 import { Badge } from "../ui/badge";
-import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
-  DropdownMenuSeparator,
+  DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Input } from "../ui/input";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
-import type { NotificationItem, NotificationWithUser } from "@/lib/types";
-import { ModeToggle } from "./mode-toggle";
-import { useSidebarCollapseContext } from "@/providers/sidebar-collapse-provider";
-import { useNotificationContext } from "@/providers/notification-provider";
 
 type Props = {
   notifications: NotificationWithUser | [];
@@ -333,7 +332,7 @@ const InfoBar = ({ notifications, unitId, className, role }: Props) => {
             </Button>
           </div>
 
-          <ModeToggle />
+          {/* <ModeToggle /> */}
         </div>
       </div>
 

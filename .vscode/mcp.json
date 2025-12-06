@@ -1,21 +1,28 @@
 {
-	"servers": {
-		"next-devtools": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"next-devtools-mcp@latest"
-			],
-			"type": "stdio"
-		},
-		"context7": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"-y",
-				"@upstash/context7-mcp"
-			]
-		}
-	},
-	"inputs": []
+  "servers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ],
+      "type": "stdio"
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    }
+  },
+  "inputs": []
 }

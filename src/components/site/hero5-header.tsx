@@ -1,14 +1,13 @@
 "use client";
-import Link from "next/link";
-import { Logo } from "./logo";
-import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React, { Suspense } from "react";
 import { cn } from "@/lib/utils";
-import { ModeToggle } from "../global/mode-toggle";
-import AgentPulse from "../global/agentPulse";
 import { UserButton, useAuth } from "@clerk/nextjs";
+import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import React, { Suspense } from "react";
+import AgentPulse from "../global/agentPulse";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Logo } from "./logo";
 
 const menuItems = [
   { name: "Features", href: "#link" },
@@ -141,7 +140,7 @@ export const HeroHeader = () => {
                 >
                   <UserButton />
                 </Suspense>
-                <ModeToggle />
+                {/* <ModeToggle /> */}
               </div>
             </div>
           </div>
