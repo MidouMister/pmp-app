@@ -151,21 +151,13 @@ export default function HeroSection() {
       <section className="relative min-h-screen overflow-hidden">
         {/* Background Gradients */}
         <div className="absolute inset-0 -z-10">
-          {/* Animated orbs - Light mode */}
-          <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-blue-400/40 rounded-full blur-[100px] animate-pulse dark:hidden" />
+          {/* Animated orbs */}
+          <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] animate-pulse" />
           <div
-            className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-purple-400/40 rounded-full blur-[100px] animate-pulse dark:hidden"
+            className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] animate-pulse"
             style={{ animationDelay: "1s" }}
           />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-300/30 to-purple-300/30 rounded-full blur-[120px] dark:hidden" />
-
-          {/* Animated orbs - Dark mode */}
-          <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] animate-pulse hidden dark:block" />
-          <div
-            className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-[100px] animate-pulse hidden dark:block"
-            style={{ animationDelay: "1s" }}
-          />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-[120px] hidden dark:block" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-[120px]" />
         </div>
 
         <div className="relative pt-32 md:pt-40 pb-20">
@@ -173,12 +165,12 @@ export default function HeroSection() {
             <div className="text-center">
               {/* Badge */}
               <AnimatedGroup variants={transitionVariants}>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-500/20 dark:border-blue-500/30 backdrop-blur-sm mb-8">
-                  <Sparkles className="w-4 h-4 text-blue-500" />
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 backdrop-blur-sm mb-8">
+                  <Sparkles className="w-4 h-4 text-blue-400" />
                   <span className="text-sm font-medium text-foreground">
                     Nouvelle version disponible
                   </span>
-                  <ArrowRight className="w-4 h-4 text-blue-500" />
+                  <ArrowRight className="w-4 h-4 text-blue-400" />
                 </div>
               </AnimatedGroup>
 
@@ -199,7 +191,7 @@ export default function HeroSection() {
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground">
                   Gérez vos projets
                 </h1>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mt-2">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mt-2">
                   partout, en un seul endroit
                 </h1>
               </AnimatedGroup>
@@ -235,7 +227,7 @@ export default function HeroSection() {
                 <Button
                   asChild
                   size="lg"
-                  className="group relative px-8 py-6 text-lg rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25 dark:shadow-blue-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105"
+                  className="group relative px-8 py-6 text-lg rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105"
                 >
                   <Link href="/company">
                     <span>Commencer gratuitement</span>
@@ -271,7 +263,7 @@ export default function HeroSection() {
               >
                 {stats.map((stat, index) => (
                   <div key={index} className="text-center">
-                    <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                    <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                       {stat.value}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
@@ -300,19 +292,11 @@ export default function HeroSection() {
                 {/* Glow effect behind image */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-3xl scale-95" />
 
-                <div className="relative rounded-2xl border border-border/50 bg-background/80 backdrop-blur-sm p-2 shadow-2xl shadow-blue-500/10 dark:shadow-blue-500/5">
+                <div className="relative rounded-2xl border border-border/50 bg-background/80 backdrop-blur-sm p-2 shadow-2xl shadow-blue-500/5">
                   <Image
-                    className="rounded-xl hidden dark:block"
+                    className="rounded-xl"
                     src="/assets/dark-card.webp"
-                    alt="Interface PMP - Mode sombre"
-                    width={2700}
-                    height={1440}
-                    priority
-                  />
-                  <Image
-                    className="rounded-xl dark:hidden"
-                    src="/assets/card.png"
-                    alt="Interface PMP - Mode clair"
+                    alt="Interface PMP"
                     width={2700}
                     height={1440}
                     priority
